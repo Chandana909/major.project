@@ -1,0 +1,88 @@
+  C1: 6/6 invoices, 0 s
+{
+ "invoices": 6,
+ "invoices_flagged": 0,
+ "agent_flags": 0,
+ "flags_removed_by_challenger": 0,
+ "routes": {
+  "approve": 6
+ },
+ "llm_calls": 0,
+ "cache_hits": 0,
+ "prompt_tokens": 0,
+ "completion_tokens": 0,
+ "model_time_s": 0.0,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C1-demo.jsonl
+C1: 8 s
+  C3: 6/6 invoices, 47458 s
+{
+ "invoices": 6,
+ "invoices_flagged": 4,
+ "agent_flags": 5,
+ "flags_removed_by_challenger": 0,
+ "routes": {
+  "approve": 2,
+  "escalate": 4
+ },
+ "llm_calls": 18,
+ "cache_hits": 2,
+ "prompt_tokens": 57767,
+ "completion_tokens": 694,
+ "model_time_s": 50520.3,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C3-demo.jsonl
+C3: 47473 s
+  C4: 6/6 invoices, 885 s
+{
+ "invoices": 6,
+ "invoices_flagged": 3,
+ "agent_flags": 3,
+ "flags_removed_by_challenger": 2,
+ "routes": {
+  "approve": 3,
+  "escalate": 3
+ },
+ "llm_calls": 22,
+ "cache_hits": 18,
+ "prompt_tokens": 73597,
+ "completion_tokens": 932,
+ "model_time_s": 51405.1,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C4-demo.jsonl
+C4: 922 s
+  C5: 6/6 invoices, 511 s
+{
+ "invoices": 6,
+ "invoices_flagged": 3,
+ "agent_flags": 3,
+ "flags_removed_by_challenger": 2,
+ "routes": {
+  "approve": 3,
+  "sample": 1,
+  "escalate": 2
+ },
+ "llm_calls": 31,
+ "cache_hits": 22,
+ "prompt_tokens": 106948,
+ "completion_tokens": 1876,
+ "model_time_s": 52743.9,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C5-demo.jsonl
+C5: 517 s

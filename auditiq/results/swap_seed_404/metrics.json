@@ -1,0 +1,35 @@
+{
+ "dataset": "swap_seed_404",
+ "seed": 404,
+ "n_invoices": 5000,
+ "n_boundary": 150,
+ "bootstrap_resamples": 1000,
+ "metrics": {
+  "C1 under v2.5": {
+   "policy_adherence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "boundary_flagged": {
+    "value": 150.0
+   },
+   "others_flagged": {
+    "value": 0.0
+   }
+  },
+  "C1 under v2.6": {
+   "policy_adherence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "boundary_flagged": {
+    "value": 0.0
+   },
+   "others_flagged": {
+    "value": 0.0
+   }
+  }
+ }
+}

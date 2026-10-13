@@ -1,0 +1,30 @@
+# PostgreSQL for AuditIQ in a container. An alternative to scripts/pg_local.py
+# for machines that have Docker. Not run on the machine this project was
+# developed on (it has no Docker); the application side is the same either way.
+#
+#   set POSTGRES_PASSWORD in the environment, then:
+#   docker compose -f deploy/postgres/docker-compose.yml up -d
+#
+# and in .env:
+#   AUDITIQ_DATABASE_URL=postgresql://auditiq:<password>@localhost:5544/auditiq
+#   AUDITIQ_TEST_DATABASE_URL=postgresql://auditiq:<password>@localhost:5544/auditiq_test
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: auditiq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: auditiq
+    ports:
+      - "127.0.0.1:5544:5432"
+    volumes:
+      - auditiq_pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auditiq -d auditiq"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+volumes:
+  auditiq_pgdata:

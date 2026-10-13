@@ -1,0 +1,1418 @@
+{
+ "dataset": "bench_seed_303",
+ "seed": 303,
+ "policy_version": "2.5",
+ "n_invoices": 5000,
+ "n_subset": 1200,
+ "bootstrap_resamples": 1000,
+ "metrics": {
+  "C0-IF": {
+   "detection_recall": {
+    "value": 0.5714285714285714,
+    "ci_low": 0.5223798287971905,
+    "ci_high": 0.6243910868832191
+   },
+   "detection_precision": {
+    "value": 0.5286343612334802,
+    "ci_low": 0.4831418838154435,
+    "ci_high": 0.5769251626898048
+   },
+   "detection_f1": {
+    "value": 0.5491990846681922,
+    "ci_low": 0.5079627424587562,
+    "ci_high": 0.5909128085654803
+   },
+   "detection_accuracy": {
+    "value": 0.9212,
+    "ci_low": 0.9136,
+    "ci_high": 0.9288
+   },
+   "flagged_share": {
+    "value": 0.0908,
+    "ci_low": 0.0834,
+    "ci_high": 0.0992
+   },
+   "prevalence": {
+    "value": 0.084,
+    "ci_low": 0.0764,
+    "ci_high": 0.091805
+   },
+   "fpr": {
+    "value": 0.046724890829694325,
+    "ci_low": 0.04074917485436157,
+    "ci_high": 0.05291959632834382
+   },
+   "fpr_ordinary": {
+    "value": 0.03834080717488789,
+    "ci_low": 0.03260329529902395,
+    "ci_high": 0.044165684551085826
+   },
+   "fpr_hard_negative": {
+    "value": 0.35833333333333334,
+    "ci_low": 0.2761607142857143,
+    "ci_high": 0.44447194719471944
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.199733978761911,
+    "ci_low": 0.17669218718847274,
+    "ci_high": 0.22850064185554148
+   },
+   "detected:R1": {
+    "value": 0.43333333333333335,
+    "ci_low": 0.2631578947368421,
+    "ci_high": 0.6207974137931034
+   },
+   "detected:R2": {
+    "value": 0.6333333333333333,
+    "ci_low": 0.45,
+    "ci_high": 0.7916666666666666
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8249632352941176,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8333333333333334,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 0.8666666666666667,
+    "ci_low": 0.7391304347826086,
+    "ci_high": 0.96875
+   },
+   "detected:R7": {
+    "value": 0.3333333333333333,
+    "ci_low": 0.17497282608695652,
+    "ci_high": 0.5
+   },
+   "detected:R8": {
+    "value": 0.8,
+    "ci_low": 0.6451612903225806,
+    "ci_high": 0.9393939393939394
+   },
+   "detected:R9": {
+    "value": 0.23333333333333334,
+    "ci_low": 0.09084224598930488,
+    "ci_high": 0.3870967741935484
+   },
+   "detected:R10": {
+    "value": 0.6666666666666666,
+    "ci_low": 0.4857142857142857,
+    "ci_high": 0.84
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.13333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.27280564263322876
+   },
+   "detected:J3": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.1111111111111111
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C0-SVM": {
+   "detection_recall": {
+    "value": 0.5023809523809524,
+    "ci_low": 0.4517628587666951,
+    "ci_high": 0.5492795566502463
+   },
+   "detection_precision": {
+    "value": 0.4988179669030733,
+    "ci_low": 0.4517532485678357,
+    "ci_high": 0.5461649874055415
+   },
+   "detection_f1": {
+    "value": 0.5005931198102017,
+    "ci_low": 0.45779299872122764,
+    "ci_high": 0.5415689490494635
+   },
+   "detection_accuracy": {
+    "value": 0.9158,
+    "ci_low": 0.908,
+    "ci_high": 0.923
+   },
+   "flagged_share": {
+    "value": 0.0846,
+    "ci_low": 0.077,
+    "ci_high": 0.0924
+   },
+   "prevalence": {
+    "value": 0.084,
+    "ci_low": 0.0764,
+    "ci_high": 0.091805
+   },
+   "fpr": {
+    "value": 0.0462882096069869,
+    "ci_low": 0.04010343435938561,
+    "ci_high": 0.052367756717688375
+   },
+   "fpr_ordinary": {
+    "value": 0.032511210762331835,
+    "ci_low": 0.02729461981051812,
+    "ci_high": 0.03813857322983118
+   },
+   "fpr_hard_negative": {
+    "value": 0.5583333333333333,
+    "ci_low": 0.47164479081214117,
+    "ci_high": 0.6514303257964313
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.18133202235173587,
+    "ci_low": 0.1575926615021287,
+    "ci_high": 0.20692764662092084
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8333333333333334,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.1,
+    "ci_low": 0.0,
+    "ci_high": 0.2222222222222222
+   },
+   "detected:R5": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.120030303030303
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 0.8666666666666667,
+    "ci_low": 0.7240900383141763,
+    "ci_high": 0.9696969696969697
+   },
+   "detected:R8": {
+    "value": 0.1,
+    "ci_low": 0.0,
+    "ci_high": 0.21739130434782608
+   },
+   "detected:R9": {
+    "value": 0.13333333333333333,
+    "ci_low": 0.02857142857142857,
+    "ci_high": 0.2647058823529412
+   },
+   "detected:R10": {
+    "value": 0.6666666666666666,
+    "ci_low": 0.5,
+    "ci_high": 0.8333333333333334
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.16666666666666666,
+    "ci_low": 0.037037037037037035,
+    "ci_high": 0.31584928229665066
+   },
+   "detected:J3": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.11538461538461539
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C1": {
+   "detection_recall": {
+    "value": 0.7142857142857143,
+    "ci_low": 0.6728417735521531,
+    "ci_high": 0.7586226898151852
+   },
+   "detection_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detection_f1": {
+    "value": 0.8333333333333334,
+    "ci_low": 0.8044296623435612,
+    "ci_high": 0.8627463914325625
+   },
+   "detection_accuracy": {
+    "value": 0.976,
+    "ci_low": 0.971595,
+    "ci_high": 0.9806
+   },
+   "flagged_share": {
+    "value": 0.06,
+    "ci_low": 0.054,
+    "ci_high": 0.0668
+   },
+   "prevalence": {
+    "value": 0.084,
+    "ci_low": 0.0764,
+    "ci_high": 0.091805
+   },
+   "fpr": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_ordinary": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_hard_negative": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:J1": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J2": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J3": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J4": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_f1_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_recall_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_f1_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_recall_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "citation_correctness": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "exact_match": {
+    "value": 0.976,
+    "ci_low": 0.971595,
+    "ci_high": 0.9806
+   },
+   "escalation_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "escalation_recall": {
+    "value": 0.7272727272727273,
+    "ci_low": 0.6815089285714286,
+    "ci_high": 0.7745281663153861
+   },
+   "escalated_share": {
+    "value": 0.048,
+    "ci_low": 0.042595,
+    "ci_high": 0.0538
+   },
+   "sampled_share": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_count": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_true_anomalies": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "approved_share": {
+    "value": 0.952,
+    "ci_low": 0.9462,
+    "ci_high": 0.9574050000000001
+   },
+   "approved_high_anomalies": {
+    "value": 90.0,
+    "ci_low": 72.0,
+    "ci_high": 109.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  }
+ },
+ "metrics_on_weighted_subset": {
+  "C0-IF": {
+   "detection_recall": {
+    "value": 0.5714285714285714,
+    "ci_low": 0.5261904761904762,
+    "ci_high": 0.6190476190476191
+   },
+   "detection_precision": {
+    "value": 0.5298598079258197,
+    "ci_low": 0.4654747147224405,
+    "ci_high": 0.597080143335112
+   },
+   "detection_f1": {
+    "value": 0.5498596712297382,
+    "ci_low": 0.5015930599222684,
+    "ci_high": 0.5977141646028002
+   },
+   "detection_accuracy": {
+    "value": 0.9213785514205681,
+    "ci_low": 0.9092420468187273,
+    "ci_high": 0.9321128451380551
+   },
+   "flagged_share": {
+    "value": 0.09062625050020008,
+    "ci_low": 0.07989030612244899,
+    "ci_high": 0.10289645858343337
+   },
+   "prevalence": {
+    "value": 0.08403361344537816,
+    "ci_low": 0.08403361344537816,
+    "ci_high": 0.08403361344537816
+   },
+   "fpr": {
+    "value": 0.04651594582787243,
+    "ci_low": 0.03515984054172128,
+    "ci_high": 0.058758519003931836
+   },
+   "fpr_ordinary": {
+    "value": 0.038122476446837146,
+    "ci_low": 0.02661283086585913,
+    "ci_high": 0.05127635711081202
+   },
+   "fpr_hard_negative": {
+    "value": 0.35833333333333334,
+    "ci_low": 0.275,
+    "ci_high": 0.44166666666666665
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.20045132197493593,
+    "ci_low": 0.16227754084857882,
+    "ci_high": 0.2479186564034316
+   },
+   "detected:R1": {
+    "value": 0.43333333333333335,
+    "ci_low": 0.25925925925925924,
+    "ci_high": 0.6071816770186335
+   },
+   "detected:R2": {
+    "value": 0.6333333333333333,
+    "ci_low": 0.45454545454545453,
+    "ci_high": 0.8
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8275487256371814,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8333333333333334,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 0.8666666666666667,
+    "ci_low": 0.7307432432432432,
+    "ci_high": 0.9687736742424242
+   },
+   "detected:R7": {
+    "value": 0.3333333333333333,
+    "ci_low": 0.16125806451612906,
+    "ci_high": 0.5
+   },
+   "detected:R8": {
+    "value": 0.8,
+    "ci_low": 0.625,
+    "ci_high": 0.9354838709677419
+   },
+   "detected:R9": {
+    "value": 0.23333333333333334,
+    "ci_low": 0.09375,
+    "ci_high": 0.4
+   },
+   "detected:R10": {
+    "value": 0.6666666666666666,
+    "ci_low": 0.48,
+    "ci_high": 0.8275862068965517
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.13333333333333333,
+    "ci_low": 0.02857142857142857,
+    "ci_high": 0.26481900452488677
+   },
+   "detected:J3": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.11121794871794861
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C0-SVM": {
+   "detection_recall": {
+    "value": 0.5023809523809524,
+    "ci_low": 0.45,
+    "ci_high": 0.5476785714285715
+   },
+   "detection_precision": {
+    "value": 0.513007537077559,
+    "ci_low": 0.4548413166622638,
+    "ci_high": 0.5746266290159777
+   },
+   "detection_f1": {
+    "value": 0.5076386382773969,
+    "ci_low": 0.46063483585194775,
+    "ci_high": 0.5527368579803403
+   },
+   "detection_accuracy": {
+    "value": 0.9181072428971588,
+    "ci_low": 0.9079021608643456,
+    "ci_high": 0.9275123049219689
+   },
+   "flagged_share": {
+    "value": 0.08229291716686674,
+    "ci_low": 0.0728251300520208,
+    "ci_high": 0.09315926370548219
+   },
+   "prevalence": {
+    "value": 0.08403361344537816,
+    "ci_low": 0.08403361344537816,
+    "ci_high": 0.08403361344537816
+   },
+   "fpr": {
+    "value": 0.043752730449978156,
+    "ci_low": 0.034873307121013546,
+    "ci_high": 0.05430723023154216
+   },
+   "fpr_ordinary": {
+    "value": 0.029901301031852845,
+    "ci_low": 0.02168012561686855,
+    "ci_high": 0.041410946612830866
+   },
+   "fpr_hard_negative": {
+    "value": 0.5583333333333333,
+    "ci_low": 0.475,
+    "ci_high": 0.65
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.18984531061694157,
+    "ci_low": 0.1565420151459178,
+    "ci_high": 0.23106555447279725
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 0.9333333333333333,
+    "ci_low": 0.8333333333333334,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.1,
+    "ci_low": 0.0,
+    "ci_high": 0.2222222222222222
+   },
+   "detected:R5": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.10716698841698839
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 0.8666666666666667,
+    "ci_low": 0.7241379310344828,
+    "ci_high": 0.9705882352941176
+   },
+   "detected:R8": {
+    "value": 0.1,
+    "ci_low": 0.0,
+    "ci_high": 0.23076923076923078
+   },
+   "detected:R9": {
+    "value": 0.13333333333333333,
+    "ci_low": 0.03223286290322583,
+    "ci_high": 0.26931818181818173
+   },
+   "detected:R10": {
+    "value": 0.6666666666666666,
+    "ci_low": 0.479842105263158,
+    "ci_high": 0.8285714285714286
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.16666666666666666,
+    "ci_low": 0.037037037037037035,
+    "ci_high": 0.3076923076923077
+   },
+   "detected:J3": {
+    "value": 0.03333333333333333,
+    "ci_low": 0.0,
+    "ci_high": 0.11770588235294112
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C1": {
+   "detection_recall": {
+    "value": 0.7142857142857143,
+    "ci_low": 0.6738095238095239,
+    "ci_high": 0.7524404761904762
+   },
+   "detection_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detection_f1": {
+    "value": 0.8333333333333334,
+    "ci_low": 0.8051209103840683,
+    "ci_high": 0.8587343667040293
+   },
+   "detection_accuracy": {
+    "value": 0.9759903961584634,
+    "ci_low": 0.9725890356142457,
+    "ci_high": 0.9791966786714686
+   },
+   "flagged_share": {
+    "value": 0.060024009603841535,
+    "ci_low": 0.05662264905962385,
+    "ci_high": 0.06323029211684673
+   },
+   "prevalence": {
+    "value": 0.08403361344537816,
+    "ci_low": 0.08403361344537816,
+    "ci_high": 0.08403361344537816
+   },
+   "fpr": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_ordinary": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_hard_negative": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:J1": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J2": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J3": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J4": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_f1_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_recall_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_f1_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_recall_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "citation_correctness": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "exact_match": {
+    "value": 0.9759903961584634,
+    "ci_low": 0.9725890356142457,
+    "ci_high": 0.9791966786714686
+   },
+   "escalation_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "escalation_recall": {
+    "value": 0.7272727272727273,
+    "ci_low": 0.6825350140056022,
+    "ci_high": 0.7727272727272727
+   },
+   "escalated_share": {
+    "value": 0.04801920768307323,
+    "ci_low": 0.04421768707482993,
+    "ci_high": 0.052025810324129645
+   },
+   "sampled_share": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_count": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_true_anomalies": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "approved_share": {
+    "value": 0.9519807923169268,
+    "ci_low": 0.9479741896758703,
+    "ci_high": 0.95578231292517
+   },
+   "approved_high_anomalies": {
+    "value": 90.0,
+    "ci_low": 74.0,
+    "ci_high": 106.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  }
+ },
+ "construction_checks": {
+  "C1 reports every invoice of R1-R10 under the labelled clause": true,
+  "C1 reports no invoice of J1-J4": true,
+  "C1 raises no flag on ordinary clean invoices": true,
+  "C1 raises no flag on hard negatives": true,
+  "every clause cited by C1 on an anomalous invoice is the labelled clause": true,
+  "C1 routes no transaction to sampled review": true
+ },
+ "mcnemar_detection": {
+  "C1 vs C0-IF": {
+   "only_a_correct": 309,
+   "only_b_correct": 35,
+   "p_value": 6.112268079907804e-56,
+   "p_holm": 6.112268079907804e-56,
+   "reject": true
+  },
+  "C1 vs C0-SVM": {
+   "only_a_correct": 337,
+   "only_b_correct": 36,
+   "p_value": 2.0824482220599035e-62,
+   "p_holm": 4.164896444119807e-62,
+   "reject": true
+  }
+ }
+}

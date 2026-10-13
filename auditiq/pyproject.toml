@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auditiq"
+version = "0.3.0"
+description = "Controls-first multi-agent audit of procure-to-pay transactions, with AuditIQ-Bench"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=1.0",
+    "httpx>=0.27",
+    "python-dotenv>=1.0",
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "psycopg[binary]>=3.2",
+    "Faker>=20",
+    "scikit-learn>=1.5",
+    "statsmodels>=0.14",
+    "reportlab>=4",
+    "PyMuPDF>=1.24",
+    "streamlit>=1.46",
+    "altair>=5",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.11"]
+
+[project.scripts]
+auditiq = "auditiq.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["auditiq*", "auditiq_bench*", "evaluation*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q -p no:cacheprovider"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["data", "results", ".auditiq"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",   # long lines are allowed in tables of text; the formatter is not used
+    "UP037",  # quoted annotations are kept where they read better
+    "UP038",  # isinstance with a tuple of types is clear and faster
+    "B905",   # zip() is used on sequences built to the same length
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["auditiq", "auditiq_bench", "evaluation"]

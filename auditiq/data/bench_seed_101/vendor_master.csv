@@ -1,0 +1,251 @@
+vendor_id,vendor_name,official_gstin,pan_number,vendor_category,city,state,country,gstin_status,kyc_status,is_active,blacklisted,blacklist_status
+VEND1001,"Hayer, Zacharia and Parmer",19YSJDU3562J9Z1,YSJDU3562J,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1002,Bava-Thakur,07ZRFVU3614O1Z1,ZRFVU3614O,IT Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1003,Kapadia LLC,36KKJLQ4365B4ZM,KKJLQ4365B,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1004,Kala-Narasimhan,19VXVMR6449L8ZO,VXVMR6449L,MRO,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1005,Bobal-Kumer,29YCUFJ8415T9ZD,YCUFJ8415T,Professional Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1006,Dyal Inc,19MECGM6220M1ZL,MECGM6220M,Utilities,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1007,Yogi-Peri,07EJOZP3974K7ZB,EJOZP3974K,Logistics,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1008,Sodhi LLC,24ZQBYX2116C1ZL,ZQBYX2116C,IT Services,Ahmedabad,Gujarat,India,Suspended,Verified,True,False,False
+VEND1009,Raval Group,33XEUCR9622X5ZC,XEUCR9622X,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1010,Bhatnagar Group,33LHTXJ1928Y9Z1,LHTXJ1928Y,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1011,Modi-Kakar,24MRNWO6068L6ZK,MRNWO6068L,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1012,Narasimhan Ltd,19CHJMR1470X6ZS,CHJMR1470X,Utilities,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1013,Rana-Raghavan,32ESEYZ1685P8ZB,ESEYZ1685P,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1014,Sampath Inc,27PWKVK0084F1ZH,PWKVK0084F,IT Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1015,Sahota-Ahuja,07LOIRA0660O3ZR,LOIRA0660O,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1016,Kalita-Warrior,33JVRNH7393C7ZN,JVRNH7393C,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1017,Pai Inc,36GMVHS0790X1Z9,GMVHS0790X,Professional Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1018,Parsa-Andra,27FHCVC5520H3ZM,FHCVC5520H,Utilities,Pune,Maharashtra,India,Active,Verified,True,True,True
+VEND1019,Dube-Banerjee,32VCUYT7185F8ZF,VCUYT7185F,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1020,Golla-Mall,32CJTCJ3681V6ZI,CJTCJ3681V,IT Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1021,Dora Group,09QISWD4023L3ZI,QISWD4023L,Raw Materials,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1022,"Patil, Soman and Ganesan",32HPCGK8938C3ZF,HPCGK8938C,MRO,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1023,Uppal-Mukhopadhyay,24WFHUP0489S2ZD,WFHUP0489S,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1024,Wali Ltd,07MEXQI4158H5Z9,MEXQI4158H,Utilities,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1025,Chad Inc,07BNLZU9046L4ZM,BNLZU9046L,Logistics,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1026,Pal PLC,09CXUMG9722G2Z8,CXUMG9722G,IT Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1027,"Sathe, Dani and Sharma",36WODJZ0232Z6ZS,WODJZ0232Z,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1028,"Dey, Gola and Iyer",33LTVPM9238M8ZJ,LTVPM9238M,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1029,"Sekhon, Dewan and Bumb",32YTHVH2230I7Z5,YTHVH2230I,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1030,Muni LLC,09WCDAY8700O2ZS,WCDAY8700O,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1031,Bir-Bhasin,33UZURF3396C6ZY,UZURF3396C,Logistics,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1032,"Palla, Sheth and Bhandari",07RKOMU0847N9ZK,RKOMU0847N,IT Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1033,Mallick Ltd,09IXHZG1039R5ZD,IXHZG1039R,Raw Materials,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1034,Chana-Mammen,19AICUA7090T6ZH,AICUA7090T,MRO,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1035,Krishna Group,36CZITW5803D7ZL,CZITW5803D,Professional Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1036,Sandal Inc,09VBEOA3037C3ZZ,VBEOA3037C,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1037,"Nagar, Konda and Chandran",32EJWSA1363I6ZZ,EJWSA1363I,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1038,Goda-Arora,29WHEKO2476U3ZR,WHEKO2476U,IT Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1039,Rana PLC,19JTMOM0202J1Z4,JTMOM0202J,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1040,Basu-Nayar,33CZMDL2459D3ZN,CZMDL2459D,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1041,Mahajan Group,19MWSUM3085G1ZR,MWSUM3085G,Professional Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1042,"Hayre, Wason and Murty",09YGNIU1522H9ZT,YGNIU1522H,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1043,Badami-Deol,36NKDFQ3682E9ZQ,NKDFQ3682E,Logistics,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1044,Pai-Patla,29NKFAW8009L9ZD,NKFAW8009L,IT Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1045,Rattan-Bhagat,33BZHER4369C2ZR,BZHER4369C,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1046,"Kannan, Varty and Bhatti",29SWYIB0061H9Z1,SWYIB0061H,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1047,Divan Ltd,32HRFHD3770S7Z3,HRFHD3770S,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1048,Dhingra LLC,36FABSV3597T5ZX,FABSV3597T,Utilities,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1049,Pingle Inc,24XWGIK0936U2ZM,XWGIK0936U,Logistics,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1050,Jain-Patla,27YXVDA9572G3Z7,YXVDA9572G,IT Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1051,"Joshi, Datta and Shanker",24RQAQA1290E8ZG,RQAQA1290E,Raw Materials,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1052,"Nadkarni, Mital and Mitra",09TPALG6518N6Z2,TPALG6518N,MRO,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1053,"Kumer, Khosla and Saran",32WOOVW3148P1Z9,WOOVW3148P,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1054,Sha LLC,09BTYKK7026E4Z0,BTYKK7026E,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1055,Korpal Inc,19ZNOXQ6913I3ZL,ZNOXQ6913I,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1056,"Oommen, Sarna and Sarna",36IYYXZ4956W8ZC,IYYXZ4956W,IT Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1057,"Behl, Luthra and Jayaraman",27XVOKI3541T9ZV,XVOKI3541T,Raw Materials,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1058,Shroff PLC,19DIVVT2819W8ZD,DIVVT2819W,MRO,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1059,Arya Group,19WHESF3534R9ZN,WHESF3534R,Professional Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1060,Mahal-Dhar,32HSEAL6106S4ZX,HSEAL6106S,Utilities,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1061,Bhatia-Banik,36ECKND6947E7ZM,ECKND6947E,Logistics,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1062,"Lata, Dara and Chadha",24SIVAQ4905A6ZQ,SIVAQ4905A,IT Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1063,"Sengupta, Nori and Venkatesh",19AXKPJ8194H7ZW,AXKPJ8194H,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1064,"Bora, Din and Singh",19FUXWA9590Q3ZE,FUXWA9590Q,MRO,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1065,"Sahni, Chopra and Lanka",33XAMGC3025Q9ZH,XAMGC3025Q,Professional Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1066,Khare LLC,07XQVPL9440H1ZE,XQVPL9440H,Utilities,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1067,Wali Inc,32JSBEU6488M2ZB,JSBEU6488M,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1068,Handa Ltd,29JTZRD7466S2ZK,JTZRD7466S,IT Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1069,Gera Ltd,19PPAAZ3532I2ZD,PPAAZ3532I,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1070,"Handa, Sen and Devan",36VRGNY8935Y2ZM,VRGNY8935Y,MRO,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1071,Gulati PLC,24QRIET2865N2ZS,QRIET2865N,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1072,"Vaidya, Karan and Cheema",09OACTK2670I5Z2,OACTK2670I,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1073,"Wable, Arora and Natarajan",29KSXXX3370R2ZH,KSXXX3370R,Logistics,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1074,"Dave, Srivastava and Dave",32IXYNL8431J2ZU,IXYNL8431J,IT Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1075,Choudhry Inc,07JXFRA9895C8ZJ,JXFRA9895C,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1076,Chand-Maharaj,32YUQMP1521O9Z5,YUQMP1521O,MRO,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1077,Desai-Bhasin,07XDBGK3722Y6ZZ,XDBGK3722Y,Professional Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1078,Mani Ltd,32OLCCO5442V1ZR,OLCCO5442V,Utilities,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1079,"Bhatia, Char and Mishra",09MAJZJ6595T4Z9,MAJZJ6595T,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1080,Keer-Gandhi,24OAWBT9248D9ZW,OAWBT9248D,IT Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1081,"Rama, Raghavan and Doshi",33PKCXP9287L2ZM,PKCXP9287L,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1082,"Natarajan, Bali and Khatri",07UFYTG8441P7ZW,UFYTG8441P,MRO,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1083,Ramachandran-Khurana,19OITQZ8274Q7ZD,OITQZ8274Q,Professional Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1084,Kohli-Iyer,27VBMVV6482S1ZI,VBMVV6482S,Utilities,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1085,Dora-Gala,09TSWIK0375F4Z7,TSWIK0375F,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1086,Sarna-Sur,19KQDIV8930V6ZX,KQDIV8930V,IT Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1087,Mahal Inc,07RFCME0508N9ZZ,RFCME0508N,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1088,Narayan Inc,24VOLKZ8958R4Z5,VOLKZ8958R,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1089,Muni PLC,36KKTVD2513G3ZZ,KKTVD2513G,Professional Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1090,Bandi-Prashad,24PVOMS9205X8ZG,PVOMS9205X,Utilities,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1091,Kumar PLC,27WAFSM0956U2ZU,WAFSM0956U,Logistics,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1092,"Pingle, Shanker and Lalla",33ALMMF5487B7ZG,ALMMF5487B,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1093,Setty Ltd,32SWLEI0836K7ZO,SWLEI0836K,Raw Materials,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1094,Chand-Goda,24VEZIM3010J9ZL,VEZIM3010J,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1095,"Bail, Prabhu and Subramaniam",32OFKDY2361V9ZR,OFKDY2361V,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1096,Rajagopalan Inc,09ANQLO7707E8ZB,ANQLO7707E,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1097,Bhandari-Kata,19AELAE0337L2ZG,AELAE0337L,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1098,Rai and Sons,09NQEXJ9346O7ZE,NQEXJ9346O,IT Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1099,Raman-Chawla,19GKWZD5502E3ZP,GKWZD5502E,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1100,"Grewal, Salvi and Sarma",27JZBCO0530Y2Z0,JZBCO0530Y,MRO,Pune,Maharashtra,India,Suspended,Verified,True,False,False
+VEND1101,Pillay-Kala,24WXSKG9285S1Z1,WXSKG9285S,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1102,"Mane, Ranganathan and Devi",36GRCMO9324W6ZI,GRCMO9324W,Utilities,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1103,Varty Ltd,09TBGCE1781P9ZY,TBGCE1781P,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1104,Mishra-Kashyap,27FBQMX9876M5Z6,FBQMX9876M,IT Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1105,Vora-Batra,09TJQIM0733P3ZK,TJQIM0733P,Raw Materials,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1106,"Anne, Suri and Mangal",36ZHQZJ3960G3ZH,ZHQZJ3960G,MRO,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1107,Pradhan-Mani,07VRGIM6944A3ZC,VRGIM6944A,Professional Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1108,Patla Group,24JHBMK0801Z3ZB,JHBMK0801Z,Utilities,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1109,Deshpande Group,33HDHFD7803O1ZZ,HDHFD7803O,Logistics,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1110,"Bhatt, Rama and Chaudhuri",19WAZLZ3806V1Z9,WAZLZ3806V,IT Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1111,"Subramaniam, Chatterjee and Bhat",33OMIDX8548J9ZB,OMIDX8548J,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,True,True
+VEND1112,"Setty, Magar and Pal",32IHQVT4122W9ZI,IHQVT4122W,MRO,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1113,Gala-Bose,29XQALW2558W4ZF,XQALW2558W,Professional Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1114,"Kaur, Yohannan and Uppal",09EIAVI1612K1Z5,EIAVI1612K,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1115,Sahota-Ghose,19WSAWG1402R5Z5,WSAWG1402R,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1116,"Bhagat, Prasad and Chauhan",27DISKB4129N7Z9,DISKB4129N,IT Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1117,Garde LLC,09MOCYQ2646J5ZI,MOCYQ2646J,Raw Materials,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1118,"Dutt, Wadhwa and Date",09GPMEW2307V4Z3,GPMEW2307V,MRO,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1119,"Mani, Wadhwa and Koshy",32HJXXC6753T8Z2,HJXXC6753T,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1120,"Chahal, Hans and Dey",33JSKEK6437Z2Z3,JSKEK6437Z,Utilities,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1121,Guha Group,24PLYZD3287J9ZP,PLYZD3287J,Logistics,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1122,Din Group,33TBENB4634N6ZB,TBENB4634N,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1123,Mody-Gour,19FZAHV0061Q1ZG,FZAHV0061Q,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1124,Grewal and Sons,09CFVEJ4794Y6Z8,CFVEJ4794Y,MRO,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1125,Samra-Srivastava,33NOHAR4378E2Z4,NOHAR4378E,Professional Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1126,Garg LLC,09ICQRQ9742L4ZD,ICQRQ9742L,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1127,Krishna and Sons,19HXIJP4880M2ZT,HXIJP4880M,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1128,"Agrawal, Amble and Nagy",24AMYEX6519V5ZG,AMYEX6519V,IT Services,Ahmedabad,Gujarat,India,Suspended,Verified,True,False,False
+VEND1129,Dubey LLC,09VVKPG4169G3ZB,VVKPG4169G,Raw Materials,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1130,Dutta Ltd,29SHWCK3331W8ZH,SHWCK3331W,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1131,Korpal-Issac,27FISNM7027Q7Z9,FISNM7027Q,Professional Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1132,Din-Natt,27CKZDY6304R2ZW,CKZDY6304R,Utilities,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1133,Rajagopalan-Nagar,33LXYFL3202J8ZC,LXYFL3202J,Logistics,Chennai,Tamil Nadu,India,Active,Verified,True,True,True
+VEND1134,Mitra LLC,33LLQUN6905D8ZO,LLQUN6905D,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1135,Varty-Sami,29TUKFF0148W9ZJ,TUKFF0148W,Raw Materials,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1136,Dhingra Ltd,29IWSFL6855S4ZV,IWSFL6855S,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1137,Purohit Inc,33XOMCX0915Z3ZH,XOMCX0915Z,Professional Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1138,"Sarin, Gole and Krishna",24XMANN2947R7Z4,XMANN2947R,Utilities,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1139,Sehgal Group,32BDBDH1250O7ZN,BDBDH1250O,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1140,"Kadakia, Dass and Cheema",36DNEEH0144X5ZZ,DNEEH0144X,IT Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1141,Sachdeva Ltd,36UKXMI2669D6ZT,UKXMI2669D,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1142,Apte-Mitter,27OBBHD3021J4ZM,OBBHD3021J,MRO,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1143,Dave PLC,24ICIDF4974J6ZI,ICIDF4974J,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1144,"Ravi, Bhat and Pandya",09VWLAI8225V9ZZ,VWLAI8225V,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1145,"Bumb, Goel and Jayaraman",07HMTVH9259W2ZC,HMTVH9259W,Logistics,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1146,"Morar, Acharya and Gera",33DBCIM4666E9ZV,DBCIM4666E,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1147,Raju LLC,07DXMKW3644Y8ZY,DXMKW3644Y,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1148,"Thaman, Iyer and Wadhwa",32CVXXI7042S1ZS,CVXXI7042S,MRO,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1149,Dora-Kashyap,27MSVEI7565W5Z8,MSVEI7565W,Professional Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1150,Gera-Arora,19RGZKD7755Y5ZT,RGZKD7755Y,Utilities,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1151,Shroff-Keer,19FNUQI4920Z1ZH,FNUQI4920Z,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1152,Sastry-Nagi,33JJFTP6258R9ZT,JJFTP6258R,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1153,Salvi Ltd,07NLWAV3745Z7ZU,NLWAV3745Z,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1154,Pant-Barad,09SMQSW7835V7ZR,SMQSW7835V,MRO,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1155,"Pall, Sura and Baral",07VEDQY7860I3ZI,VEDQY7860I,Professional Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1156,Pau LLC,09BXVOK2032C2Z5,BXVOK2032C,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1157,"Narang, Biswas and Bhardwaj",29GYBGW8695R7ZW,GYBGW8695R,Logistics,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1158,Sidhu Group,09RMSUJ8863M4ZD,RMSUJ8863M,IT Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1159,Kapoor-Maharaj,36AZSCS0360A9Z8,AZSCS0360A,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1160,Ghosh PLC,07QOPXS7878U4Z9,QOPXS7878U,MRO,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1161,Deshmukh PLC,24HBMXH8101I6ZL,HBMXH8101I,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1162,"Mangal, Loyal and Chauhan",32CRQOZ8422R5ZV,CRQOZ8422R,Utilities,Kochi,Kerala,India,Suspended,Verified,True,False,False
+VEND1163,"Dhawan, Parikh and Bala",24BNLWT4519K2Z8,BNLWT4519K,Logistics,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1164,Mandal-Prakash,09YEHTI7738A9ZP,YEHTI7738A,IT Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1165,"Nazareth, Dhingra and Sagar",36DXDEN8989Z5ZN,DXDEN8989Z,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1166,"Trivedi, Vasa and Kara",24FHHTF9953P6ZI,FHHTF9953P,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1167,Bhat-Bajwa,09SHNUZ7928K7Z8,SHNUZ7928K,Professional Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1168,Prabhakar-Hayre,36UCLZV8300A3ZD,UCLZV8300A,Utilities,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1169,Narayanan and Sons,33MGJIC9285Q4Z1,MGJIC9285Q,Logistics,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1170,More Inc,27FXABO7076Y6Z4,FXABO7076Y,IT Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1171,Yohannan-Mahajan,33OFKQH5493T2Z0,OFKQH5493T,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1172,Pal Inc,24GAWLV8204M3Z1,GAWLV8204M,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1173,"Kant, Khosla and Bandi",29IYSMJ3675X2Z7,IYSMJ3675X,Professional Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1174,"Ahuja, Mani and Rastogi",24FPARZ1330H7Z0,FPARZ1330H,Utilities,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1175,Sharma LLC,09OKHKI7529I8ZE,OKHKI7529I,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1176,Rattan Group,36IPMRV1694M9ZT,IPMRV1694M,IT Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1177,Nayak-Sagar,29ESULC8284N5ZY,ESULC8284N,Raw Materials,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1178,Chokshi LLC,29KYKBH0255M7ZL,KYKBH0255M,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1179,Singh-Borah,19XRURF0566H8Z3,XRURF0566H,Professional Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1180,Issac-Dube,27DRMJW5995M6ZZ,DRMJW5995M,Utilities,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1181,Kar Group,29DNBVS5821C4Z4,DNBVS5821C,Logistics,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1182,Choudhary Inc,09QCKJZ8662A2ZG,QCKJZ8662A,IT Services,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1183,"Dyal, Vora and Manda",07DRBBZ1858A7Z8,DRBBZ1858A,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1184,Rai Group,33GBMUP5865A2ZW,GBMUP5865A,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1185,Dyal LLC,24QCUCV3169Y9ZH,QCUCV3169Y,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1186,Dugar-Chadha,24PNHOG6801J6ZF,PNHOG6801J,Utilities,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1187,Mall Inc,09LZANZ5668A1Z1,LZANZ5668A,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1188,"Goswami, Palla and Bhalla",33HLIPI9307M8Z2,HLIPI9307M,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1189,Bali-Gara,33ZFFKW2837R9Z2,ZFFKW2837R,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1190,Wali-Basu,24OSWRD8878K3ZO,OSWRD8878K,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1191,"Jayaraman, De and Hari",32JQYLP2435V8ZD,JQYLP2435V,Professional Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1192,Chad-Ramakrishnan,27DLUAA0311Y1Z1,DLUAA0311Y,Utilities,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1193,Sampath and Sons,32VVMUD7932G8Z4,VVMUD7932G,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1194,Vora-Narayanan,32VPVNX0306R9ZG,VPVNX0306R,IT Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1195,"Brar, Chaudhari and Varkey",29YDPOJ2595E4ZA,YDPOJ2595E,Raw Materials,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1196,Rout and Sons,36CIRMT4034K3ZW,CIRMT4034K,MRO,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1197,"Sharaf, Dugar and Kumar",27WPFOE9844S7ZK,WPFOE9844S,Professional Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1198,"Shah, Das and Gopal",32VDWKK0519E6ZF,VDWKK0519E,Utilities,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1199,Seshadri and Sons,09MJWQV6294B6Z0,MJWQV6294B,Logistics,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1200,Kapur Inc,29DCFBZ2300X6Z1,DCFBZ2300X,IT Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1201,"Ahuja, Dayal and Mukherjee",29QBJAF1821C7ZV,QBJAF1821C,Raw Materials,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1202,Nath and Sons,07GCUGD6998U4ZJ,GCUGD6998U,MRO,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1203,Butala-Das,24TPGGB8220T8ZY,TPGGB8220T,Professional Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1204,Kala PLC,09ADWNV8561A1ZU,ADWNV8561A,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1205,"Kothari, Talwar and Sem",19WBTBP6419Z2ZO,WBTBP6419Z,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1206,Parsa Inc,24CHIVD3067S7ZT,CHIVD3067S,IT Services,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1207,Nadkarni LLC,07AREKA7790B4ZF,AREKA7790B,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1208,Behl PLC,27CCVOQ6506A9ZL,CCVOQ6506A,MRO,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1209,Gole-Mahal,29SECWW2626O5Z9,SECWW2626O,Professional Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1210,"Borde, Anne and Barad",09ZSHZN8890X7ZC,ZSHZN8890X,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1211,Bir Inc,19ULGWL1185T7ZV,ULGWL1185T,Logistics,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1212,Randhawa LLC,29ISUHG7690H8ZC,ISUHG7690H,IT Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1213,"Bhagat, Bhat and Dave",36QIBTG1521Y7ZK,QIBTG1521Y,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1214,"Choudhary, Taneja and Sarkar",29BGORT8478E1Z4,BGORT8478E,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1215,"Magar, Chowdhury and Suresh",19AQWGY6723H7ZV,AQWGY6723H,Professional Services,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1216,Dube-Oommen,33CJGIN1669J1ZR,CJGIN1669J,Utilities,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1217,Khanna-Nagi,27HDFRW3239P9ZG,HDFRW3239P,Logistics,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1218,"Divan, Gopal and Saxena",33KGKOI4454I6ZA,KGKOI4454I,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1219,Krishnamurthy-Bansal,36CAWWV0654H8ZK,CAWWV0654H,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1220,"Kari, Hayre and Barad",29OLWFQ0422R6Z1,OLWFQ0422R,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1221,Mann-Choudhury,29PJEHJ7150T3ZD,PJEHJ7150T,Professional Services,Bengaluru,Karnataka,India,Active,Verified,True,False,False
+VEND1222,Mand-Pant,33CHOYI8555F5ZD,CHOYI8555F,Utilities,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1223,Kulkarni-Sama,32JGKKF4596J1Z6,JGKKF4596J,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1224,Sachdev LLC,33UVFID0326B5ZJ,UVFID0326B,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1225,Nigam Inc,07SRAYG8093W9ZW,SRAYG8093W,Raw Materials,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1226,"Gole, Nagarajan and Kata",33DLYCB5568R9ZQ,DLYCB5568R,MRO,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1227,Ray PLC,32FXPTB4866K5Z4,FXPTB4866K,Professional Services,Kochi,Kerala,India,Active,Verified,True,True,True
+VEND1228,"Thaker, Tailor and Gokhale",09EPRSR1048M7Z2,EPRSR1048M,Utilities,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1229,"Natt, Krishnamurthy and Khalsa",36PBCTX3354J9ZX,PBCTX3354J,Logistics,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1230,"Banik, Bahri and Peri",07KMBJU2219C9ZY,KMBJU2219C,IT Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1231,Sampath PLC,33BJKLC4144B5ZI,BJKLC4144B,Raw Materials,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1232,"Chopra, Krishna and Gokhale",24KIXPU1155T7ZM,KIXPU1155T,MRO,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1233,Andra-Mammen,27TAQUT6579U4ZH,TAQUT6579U,Professional Services,Pune,Maharashtra,India,Active,Verified,True,False,False
+VEND1234,Yogi Group,07EYJJZ4954C5ZZ,EYJJZ4954C,Utilities,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1235,"Mangal, Wason and Bhatti",07IYBWP8769H5ZX,IYBWP8769H,Logistics,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1236,"Cherian, Mani and Deol",36IWIAX8077O5ZQ,IWIAX8077O,IT Services,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1237,"Agrawal, Golla and Taneja",24YUKAZ0409Y6ZS,YUKAZ0409Y,Raw Materials,Ahmedabad,Gujarat,India,Active,Verified,True,False,False
+VEND1238,Koshy Inc,19JRKIY5840C5Z9,JRKIY5840C,MRO,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1239,Lanka-Lanka,07TIARA2052H5ZZ,TIARA2052H,Professional Services,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1240,"Tailor, Bir and Kara",19BQDIC2484V6Z7,BQDIC2484V,Utilities,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1241,Shetty-Sabharwal,32PCQIQ7314R9ZI,PCQIQ7314R,Logistics,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1242,Hayre LLC,33QOBWE2195L6Z1,QOBWE2195L,IT Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1243,"Rege, Om and Goda",19WVIFL7419O5ZA,WVIFL7419O,Raw Materials,Kolkata,West Bengal,India,Active,Verified,True,False,False
+VEND1244,Sura-Comar,09JFRHX3851R9ZT,JFRHX3851R,MRO,Noida,Uttar Pradesh,India,Active,Verified,True,False,False
+VEND1245,Peri Group,33TNDBG8964S6Z4,TNDBG8964S,Professional Services,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1246,"Shroff, Chandra and Bal",07ZVTZU5541K7ZQ,ZVTZU5541K,Utilities,New Delhi,Delhi,India,Active,Verified,True,False,False
+VEND1247,Sankaran-Srinivas,33AJQIL3365Z6ZE,AJQIL3365Z,Logistics,Chennai,Tamil Nadu,India,Active,Verified,True,False,False
+VEND1248,Pingle-Suresh,32PHLUG9209I3ZG,PHLUG9209I,IT Services,Kochi,Kerala,India,Active,Verified,True,False,False
+VEND1249,"Gola, Nagi and Deo",36GDVLM9536Q9ZU,GDVLM9536Q,Raw Materials,Hyderabad,Telangana,India,Active,Verified,True,False,False
+VEND1250,"Das, Mohanty and Dora",29XUIMS7412P4Z2,XUIMS7412P,MRO,Bengaluru,Karnataka,India,Active,Verified,True,False,False

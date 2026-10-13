@@ -1,0 +1,1837 @@
+{
+ "produced": "2026-10-13 22:32",
+ "reference_version": "2.5",
+ "ledgers": [
+  "bench_seed_101",
+  "bench_seed_202",
+  "bench_seed_303",
+  "swap_seed_404",
+  "large_seed_505"
+ ],
+ "invoices": 40000,
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+ "reference_check": {
+  "bench_seed_101": {
+   "invoices": 5000,
+   "exact": 5000,
+   "stale_findings": 0,
+   "missed_exceptions": 0,
+   "needless_escalations": 0,
+   "missed_escalations": 0
+  },
+  "bench_seed_202": {
+   "invoices": 5000,
+   "exact": 5000,
+   "stale_findings": 0,
+   "missed_exceptions": 0,
+   "needless_escalations": 0,
+   "missed_escalations": 0
+  },
+  "bench_seed_303": {
+   "invoices": 5000,
+   "exact": 5000,
+   "stale_findings": 0,
+   "missed_exceptions": 0,
+   "needless_escalations": 0,
+   "missed_escalations": 0
+  },
+  "swap_seed_404": {
+   "invoices": 5000,
+   "exact": 5000,
+   "stale_findings": 0,
+   "missed_exceptions": 0,
+   "needless_escalations": 0,
+   "missed_escalations": 0
+  },
+  "large_seed_505": {
+   "invoices": 20000,
+   "exact": 20000,
+   "stale_findings": 0,
+   "missed_exceptions": 0,
+   "needless_escalations": 0,
+   "missed_escalations": 0
+  }
+ },
+ "audit_seconds": 12.6,
+ "audits": 560000,
+ "variants": [
+  {
+   "version": "3.01",
+   "name": "Tolerance 0.5%",
+   "change": "amount tolerance 1% to 0.5%",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.023,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39938,
+    "stale_findings": 0,
+    "missed_exceptions": 62,
+    "needless_escalations": 0,
+    "missed_escalations": 62
+   },
+   "affected": 62,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 11,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4989,
+      "stale_findings": 0,
+      "missed_exceptions": 11,
+      "needless_escalations": 0,
+      "missed_escalations": 11
+     }
+    },
+    "bench_seed_202": {
+     "affected": 9,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4991,
+      "stale_findings": 0,
+      "missed_exceptions": 9,
+      "needless_escalations": 0,
+      "missed_escalations": 9
+     }
+    },
+    "bench_seed_303": {
+     "affected": 12,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4988,
+      "stale_findings": 0,
+      "missed_exceptions": 12,
+      "needless_escalations": 0,
+      "missed_escalations": 12
+     }
+    },
+    "swap_seed_404": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 30,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19970,
+      "stale_findings": 0,
+      "missed_exceptions": 30,
+      "needless_escalations": 0,
+      "missed_escalations": 30
+     }
+    }
+   }
+  },
+  {
+   "version": "3.02",
+   "name": "Tolerance 2%",
+   "change": "amount tolerance 1% to 2%",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.026,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39993,
+    "stale_findings": 7,
+    "missed_exceptions": 0,
+    "needless_escalations": 7,
+    "missed_escalations": 0
+   },
+   "affected": 7,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 7,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4993,
+      "stale_findings": 7,
+      "missed_exceptions": 0,
+      "needless_escalations": 7,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 0,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.03",
+   "name": "Tolerance 5%",
+   "change": "amount tolerance 1% to 5%",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.024,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39937,
+    "stale_findings": 63,
+    "missed_exceptions": 0,
+    "needless_escalations": 63,
+    "missed_escalations": 0
+   },
+   "affected": 63,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 1,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4999,
+      "stale_findings": 1,
+      "missed_exceptions": 0,
+      "needless_escalations": 1,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 1,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4999,
+      "stale_findings": 1,
+      "missed_exceptions": 0,
+      "needless_escalations": 1,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 6,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4994,
+      "stale_findings": 6,
+      "missed_exceptions": 0,
+      "needless_escalations": 6,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 50,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4950,
+      "stale_findings": 50,
+      "missed_exceptions": 0,
+      "needless_escalations": 50,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 5,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19995,
+      "stale_findings": 5,
+      "missed_exceptions": 0,
+      "needless_escalations": 5,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.04",
+   "name": "Daily count 2",
+   "change": "invoices per vendor per day 3 to 2",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.026,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39571,
+    "stale_findings": 0,
+    "missed_exceptions": 429,
+    "needless_escalations": 0,
+    "missed_escalations": 428
+   },
+   "affected": 429,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 81,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4919,
+      "stale_findings": 0,
+      "missed_exceptions": 81,
+      "needless_escalations": 0,
+      "missed_escalations": 81
+     }
+    },
+    "bench_seed_202": {
+     "affected": 63,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4937,
+      "stale_findings": 0,
+      "missed_exceptions": 63,
+      "needless_escalations": 0,
+      "missed_escalations": 63
+     }
+    },
+    "bench_seed_303": {
+     "affected": 48,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4952,
+      "stale_findings": 0,
+      "missed_exceptions": 48,
+      "needless_escalations": 0,
+      "missed_escalations": 47
+     }
+    },
+    "swap_seed_404": {
+     "affected": 51,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4949,
+      "stale_findings": 0,
+      "missed_exceptions": 51,
+      "needless_escalations": 0,
+      "missed_escalations": 51
+     }
+    },
+    "large_seed_505": {
+     "affected": 186,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19814,
+      "stale_findings": 0,
+      "missed_exceptions": 186,
+      "needless_escalations": 0,
+      "missed_escalations": 186
+     }
+    }
+   }
+  },
+  {
+   "version": "3.05",
+   "name": "Daily count 5",
+   "change": "invoices per vendor per day 3 to 5",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.022,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39830,
+    "stale_findings": 170,
+    "missed_exceptions": 0,
+    "needless_escalations": 170,
+    "missed_escalations": 0
+   },
+   "affected": 170,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 30,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4970,
+      "stale_findings": 30,
+      "missed_exceptions": 0,
+      "needless_escalations": 30,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 30,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4970,
+      "stale_findings": 30,
+      "missed_exceptions": 0,
+      "needless_escalations": 30,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 30,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4970,
+      "stale_findings": 30,
+      "missed_exceptions": 0,
+      "needless_escalations": 30,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 50,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4950,
+      "stale_findings": 50,
+      "missed_exceptions": 0,
+      "needless_escalations": 50,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 30,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19970,
+      "stale_findings": 30,
+      "missed_exceptions": 0,
+      "needless_escalations": 30,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.06",
+   "name": "Manager limit 50,000",
+   "change": "Manager approval limit 100,000 to 50,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.035,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 32323,
+    "stale_findings": 0,
+    "missed_exceptions": 7677,
+    "needless_escalations": 0,
+    "missed_escalations": 7514
+   },
+   "affected": 7677,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 937,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4063,
+      "stale_findings": 0,
+      "missed_exceptions": 937,
+      "needless_escalations": 0,
+      "missed_escalations": 894
+     }
+    },
+    "bench_seed_202": {
+     "affected": 919,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4081,
+      "stale_findings": 0,
+      "missed_exceptions": 919,
+      "needless_escalations": 0,
+      "missed_escalations": 885
+     }
+    },
+    "bench_seed_303": {
+     "affected": 967,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4033,
+      "stale_findings": 0,
+      "missed_exceptions": 967,
+      "needless_escalations": 0,
+      "missed_escalations": 931
+     }
+    },
+    "swap_seed_404": {
+     "affected": 938,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4062,
+      "stale_findings": 0,
+      "missed_exceptions": 938,
+      "needless_escalations": 0,
+      "missed_escalations": 918
+     }
+    },
+    "large_seed_505": {
+     "affected": 3916,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 16084,
+      "stale_findings": 0,
+      "missed_exceptions": 3916,
+      "needless_escalations": 0,
+      "missed_escalations": 3886
+     }
+    }
+   }
+  },
+  {
+   "version": "3.07",
+   "name": "Manager limit 150,000",
+   "change": "Manager approval limit 100,000 to 150,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.022,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39931,
+    "stale_findings": 69,
+    "missed_exceptions": 0,
+    "needless_escalations": 69,
+    "missed_escalations": 0
+   },
+   "affected": 69,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 3,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4997,
+      "stale_findings": 3,
+      "missed_exceptions": 0,
+      "needless_escalations": 3,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 4,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4996,
+      "stale_findings": 4,
+      "missed_exceptions": 0,
+      "needless_escalations": 4,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 7,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4993,
+      "stale_findings": 7,
+      "missed_exceptions": 0,
+      "needless_escalations": 7,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 50,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4950,
+      "stale_findings": 50,
+      "missed_exceptions": 0,
+      "needless_escalations": 50,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 5,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19995,
+      "stale_findings": 5,
+      "missed_exceptions": 0,
+      "needless_escalations": 5,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.08",
+   "name": "Senior Manager limit 250,000",
+   "change": "Senior Manager approval limit 500,000 to 250,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.022,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 35741,
+    "stale_findings": 0,
+    "missed_exceptions": 4259,
+    "needless_escalations": 0,
+    "missed_escalations": 4161
+   },
+   "affected": 4259,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 541,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4459,
+      "stale_findings": 0,
+      "missed_exceptions": 541,
+      "needless_escalations": 0,
+      "missed_escalations": 521
+     }
+    },
+    "bench_seed_202": {
+     "affected": 583,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4417,
+      "stale_findings": 0,
+      "missed_exceptions": 583,
+      "needless_escalations": 0,
+      "missed_escalations": 562
+     }
+    },
+    "bench_seed_303": {
+     "affected": 501,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4499,
+      "stale_findings": 0,
+      "missed_exceptions": 501,
+      "needless_escalations": 0,
+      "missed_escalations": 481
+     }
+    },
+    "swap_seed_404": {
+     "affected": 520,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4480,
+      "stale_findings": 0,
+      "missed_exceptions": 520,
+      "needless_escalations": 0,
+      "missed_escalations": 511
+     }
+    },
+    "large_seed_505": {
+     "affected": 2114,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 17886,
+      "stale_findings": 0,
+      "missed_exceptions": 2114,
+      "needless_escalations": 0,
+      "missed_escalations": 2086
+     }
+    }
+   }
+  },
+  {
+   "version": "3.09",
+   "name": "Round multiple 5,000",
+   "change": "round-amount multiple 10,000 to 5,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.033,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "affected": 0,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 0,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.10",
+   "name": "Round multiple 50,000",
+   "change": "round-amount multiple 10,000 to 50,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.026,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39957,
+    "stale_findings": 43,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "affected": 43,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 14,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4986,
+      "stale_findings": 14,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 9,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4991,
+      "stale_findings": 9,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 10,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4990,
+      "stale_findings": 10,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 10,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19990,
+      "stale_findings": 10,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.11",
+   "name": "Six-day week",
+   "change": "Saturday becomes a business day",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.028,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 1,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39965,
+    "stale_findings": 35,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "affected": 35,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 12,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4988,
+      "stale_findings": 12,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 8,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4992,
+      "stale_findings": 8,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 9,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4991,
+      "stale_findings": 9,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 0,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 6,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19994,
+      "stale_findings": 6,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.12",
+   "name": "Strict policy",
+   "change": "tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.024,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 4,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 27726,
+    "stale_findings": 0,
+    "missed_exceptions": 12427,
+    "needless_escalations": 0,
+    "missed_escalations": 12012
+   },
+   "affected": 12274,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 1544,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 3456,
+      "stale_findings": 0,
+      "missed_exceptions": 1570,
+      "needless_escalations": 0,
+      "missed_escalations": 1481
+     }
+    },
+    "bench_seed_202": {
+     "affected": 1552,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 3448,
+      "stale_findings": 0,
+      "missed_exceptions": 1574,
+      "needless_escalations": 0,
+      "missed_escalations": 1497
+     }
+    },
+    "bench_seed_303": {
+     "affected": 1514,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 3486,
+      "stale_findings": 0,
+      "missed_exceptions": 1528,
+      "needless_escalations": 0,
+      "missed_escalations": 1457
+     }
+    },
+    "swap_seed_404": {
+     "affected": 1493,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 3507,
+      "stale_findings": 0,
+      "missed_exceptions": 1509,
+      "needless_escalations": 0,
+      "missed_escalations": 1464
+     }
+    },
+    "large_seed_505": {
+     "affected": 6171,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 13829,
+      "stale_findings": 0,
+      "missed_exceptions": 6246,
+      "needless_escalations": 0,
+      "missed_escalations": 6113
+     }
+    }
+   }
+  },
+  {
+   "version": "3.13",
+   "name": "Lenient policy",
+   "change": "tolerance 5%, daily count 5, Manager 150,000, six-day week, round multiple 50,000",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.022,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 5,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39620,
+    "stale_findings": 380,
+    "missed_exceptions": 0,
+    "needless_escalations": 302,
+    "missed_escalations": 0
+   },
+   "affected": 380,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 60,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4940,
+      "stale_findings": 60,
+      "missed_exceptions": 0,
+      "needless_escalations": 34,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 52,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4948,
+      "stale_findings": 52,
+      "missed_exceptions": 0,
+      "needless_escalations": 35,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 62,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4938,
+      "stale_findings": 62,
+      "missed_exceptions": 0,
+      "needless_escalations": 43,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 150,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4850,
+      "stale_findings": 150,
+      "missed_exceptions": 0,
+      "needless_escalations": 150,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 56,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19944,
+      "stale_findings": 56,
+      "missed_exceptions": 0,
+      "needless_escalations": 40,
+      "missed_escalations": 0
+     }
+    }
+   }
+  },
+  {
+   "version": "3.14",
+   "name": "Version 2.6",
+   "change": "tolerance 5%, daily count 5, Manager 150,000 (the policy-swap version)",
+   "problems": [],
+   "pages": 3,
+   "read_seconds": 0.025,
+   "parameters": 14,
+   "parameters_read_correctly": 14,
+   "rules": 16,
+   "rules_read_word_for_word": 16,
+   "parameters_changed": 3,
+   "driven": {
+    "invoices": 40000,
+    "exact": 40000,
+    "stale_findings": 0,
+    "missed_exceptions": 0,
+    "needless_escalations": 0,
+    "missed_escalations": 0
+   },
+   "frozen": {
+    "invoices": 40000,
+    "exact": 39698,
+    "stale_findings": 302,
+    "missed_exceptions": 0,
+    "needless_escalations": 302,
+    "missed_escalations": 0
+   },
+   "affected": 302,
+   "per_ledger": {
+    "bench_seed_101": {
+     "affected": 34,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4966,
+      "stale_findings": 34,
+      "missed_exceptions": 0,
+      "needless_escalations": 34,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_202": {
+     "affected": 35,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4965,
+      "stale_findings": 35,
+      "missed_exceptions": 0,
+      "needless_escalations": 35,
+      "missed_escalations": 0
+     }
+    },
+    "bench_seed_303": {
+     "affected": 43,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4957,
+      "stale_findings": 43,
+      "missed_exceptions": 0,
+      "needless_escalations": 43,
+      "missed_escalations": 0
+     }
+    },
+    "swap_seed_404": {
+     "affected": 150,
+     "driven": {
+      "invoices": 5000,
+      "exact": 5000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 5000,
+      "exact": 4850,
+      "stale_findings": 150,
+      "missed_exceptions": 0,
+      "needless_escalations": 150,
+      "missed_escalations": 0
+     }
+    },
+    "large_seed_505": {
+     "affected": 40,
+     "driven": {
+      "invoices": 20000,
+      "exact": 20000,
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "needless_escalations": 0,
+      "missed_escalations": 0
+     },
+     "frozen": {
+      "invoices": 20000,
+      "exact": 19960,
+      "stale_findings": 40,
+      "missed_exceptions": 0,
+      "needless_escalations": 40,
+      "missed_escalations": 0
+     }
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+version,clause_id,param_name,param_value
+2.5,2.1.1,amount_tolerance_pct,1.0
+2.5,3.1.1,gstin_length,15
+2.5,3.1.2,state_code_min,1
+2.5,3.1.2,state_code_max,37
+2.5,4.1.1,max_invoices_per_vendor_per_day,3
+2.5,4.1.2,guide_window_days,7
+2.5,4.1.2,guide_band_pct,15
+2.5,4.2.1,non_business_days,"[""Saturday"", ""Sunday""]"
+2.5,4.3.1,round_amount_multiple,10000
+2.5,4.4.1,blocked_gstin_statuses,"[""Suspended""]"
+2.5,5.1.1,approval_limits,"{""Manager"": 100000, ""Senior Manager"": 500000, ""Director"": 2500000, ""CFO"": 10000000}"
+2.6,2.1.1,amount_tolerance_pct,5.0
+2.6,3.1.1,gstin_length,15
+2.6,3.1.2,state_code_min,1
+2.6,3.1.2,state_code_max,37
+2.6,4.1.1,max_invoices_per_vendor_per_day,5
+2.6,4.1.2,guide_window_days,7
+2.6,4.1.2,guide_band_pct,15
+2.6,4.2.1,non_business_days,"[""Saturday"", ""Sunday""]"
+2.6,4.3.1,round_amount_multiple,10000
+2.6,4.4.1,blocked_gstin_statuses,"[""Suspended""]"
+2.6,5.1.1,approval_limits,"{""Manager"": 150000, ""Senior Manager"": 500000, ""Director"": 2500000, ""CFO"": 10000000}"

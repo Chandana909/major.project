@@ -1,0 +1,16 @@
+# The Flowise export of the hackathon prototype is kept locally for reference
+# only. It is not published: its files contain a hard-coded database password.
+AuditIQ-DeloitteHacksplosion-main/
+
+# secrets and local state
+.env
+.auditiq/
+.claude/
+
+# Python and tools
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv/

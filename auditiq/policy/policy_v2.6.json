@@ -1,0 +1,133 @@
+{
+  "policy_name": "Procurement & Vendor Auditing SOP",
+  "version": "2.6",
+  "effective_date": "2026-04-01",
+  "clauses": {
+    "2.1.1": {
+      "title": "Amount match",
+      "severity": "high",
+      "kind": "control",
+      "params": {
+        "amount_tolerance_pct": 5.0
+      }
+    },
+    "2.1.2": {
+      "title": "Quantity match",
+      "severity": "high",
+      "kind": "control",
+      "params": {}
+    },
+    "2.1.3": {
+      "title": "Missing reference",
+      "severity": "high",
+      "kind": "control",
+      "params": {}
+    },
+    "2.1.4": {
+      "title": "Receipt remarks",
+      "severity": "high",
+      "kind": "judgement",
+      "params": {}
+    },
+    "2.1.5": {
+      "title": "Description match",
+      "severity": "medium",
+      "kind": "judgement",
+      "params": {}
+    },
+    "2.2.1": {
+      "title": "Exact duplicate",
+      "severity": "critical",
+      "kind": "control",
+      "params": {}
+    },
+    "2.2.2": {
+      "title": "Near duplicate",
+      "severity": "critical",
+      "kind": "judgement",
+      "params": {}
+    },
+    "3.1.1": {
+      "title": "GSTIN format",
+      "severity": "medium",
+      "kind": "control",
+      "params": {
+        "gstin_length": 15
+      }
+    },
+    "3.1.2": {
+      "title": "GSTIN state code",
+      "severity": "medium",
+      "kind": "control",
+      "params": {
+        "state_code_min": 1,
+        "state_code_max": 37
+      }
+    },
+    "3.1.3": {
+      "title": "GSTIN vendor match",
+      "severity": "high",
+      "kind": "control",
+      "params": {}
+    },
+    "4.1.1": {
+      "title": "Same-day splitting",
+      "severity": "high",
+      "kind": "control",
+      "params": {
+        "max_invoices_per_vendor_per_day": 5
+      }
+    },
+    "4.1.2": {
+      "title": "Structuring across days",
+      "severity": "high",
+      "kind": "judgement",
+      "params": {
+        "guide_window_days": 7,
+        "guide_band_pct": 15
+      }
+    },
+    "4.2.1": {
+      "title": "Weekend date",
+      "severity": "medium",
+      "kind": "control",
+      "params": {
+        "non_business_days": [
+          "Saturday",
+          "Sunday"
+        ]
+      }
+    },
+    "4.3.1": {
+      "title": "Round amount",
+      "severity": "low",
+      "kind": "control",
+      "params": {
+        "round_amount_multiple": 10000
+      }
+    },
+    "4.4.1": {
+      "title": "Blocked vendor",
+      "severity": "critical",
+      "kind": "control",
+      "params": {
+        "blocked_gstin_statuses": [
+          "Suspended"
+        ]
+      }
+    },
+    "5.1.1": {
+      "title": "Approval limit",
+      "severity": "critical",
+      "kind": "control",
+      "params": {
+        "approval_limits": {
+          "Manager": 150000,
+          "Senior Manager": 500000,
+          "Director": 2500000,
+          "CFO": 10000000
+        }
+      }
+    }
+  }
+}

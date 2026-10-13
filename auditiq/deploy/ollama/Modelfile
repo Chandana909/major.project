@@ -1,0 +1,12 @@
+# qwen2.5:7b with a context window that holds the longest AuditIQ prompt.
+#
+# Ollama's default window is 4,096 tokens and a longer prompt is cut without an
+# error. The longest prompt of the pipeline (the single-prompt auditor of C2 on
+# a vendor with many invoices) is about 7,200 tokens including the reply.
+#
+#   ollama pull qwen2.5:7b
+#   ollama create qwen2.5:7b-ctx12k -f deploy/ollama/Modelfile
+#
+# then in .env:  AUDITIQ_LLM_MODEL=qwen2.5:7b-ctx12k  and  AUDITIQ_LLM_CONTEXT=12288
+FROM qwen2.5:7b
+PARAMETER num_ctx 12288
