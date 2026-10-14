@@ -23,8 +23,8 @@
   "seed": 0,
   "ids_file": "C:\\Users\\Chandana\\OneDrive\\Desktop\\pp1\\auditiq\\evaluation\\demo_ids.txt"
  },
- "started": "2026-10-13 22:18:35",
- "finished": "2026-10-13 22:27:06",
+ "started": "2026-10-14 08:50:14",
+ "finished": "2026-10-14 08:50:14",
  "summary": {
   "invoices": 6,
   "invoices_flagged": 3,
@@ -36,10 +36,10 @@
    "escalate": 2
   },
   "llm_calls": 31,
-  "cache_hits": 22,
+  "cache_hits": 31,
   "prompt_tokens": 106948,
   "completion_tokens": 1876,
-  "model_time_s": 52743.9,
+  "model_time_s": 8157.4,
   "failed_stages": 0,
   "repaired_replies": 0,
   "out_of_remit_flags": 0,

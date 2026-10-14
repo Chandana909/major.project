@@ -33,7 +33,7 @@ from .retrieval import Hit, PolicyIndex
 INVOICE_ID = re.compile(r"\bINV\d{3,}\b", re.IGNORECASE)
 
 ANSWER_SYSTEM = """\
-You answer the questions of an auditor about a procurement policy and about audited invoices. Use only the PASSAGES and, when present, the AUDIT RECORD in the user message. If they do not contain the answer, say that the documents do not answer the question. After every statement taken from a passage, cite the passage number in square brackets.
+You answer the questions of an auditor about a procurement policy and about audited invoices. Use only the PASSAGES and, when present, the AUDIT RECORD in the user message. The AUDIT RECORD is the authority on what was found for an invoice: name only the rules its findings cite, and never say that an invoice was flagged under a rule the record does not name. If the PASSAGES and the AUDIT RECORD do not contain the answer, say that the documents do not answer the question. After every statement taken from a passage, cite the passage number in square brackets.
 
 Reply with one JSON object and nothing else:
 {"answer": "<a few sentences, with [n] citations>", "passages_used": [<numbers of the passages used>]}"""
@@ -81,6 +81,12 @@ def answer(question: str, conn: db.Database, index: PolicyIndex, client: ChatCli
     if found:
         row = db.latest_result(conn, found)
         pack = json.loads(row["audit_pack"]) if row else None
+    if pack:
+        # For an audited invoice, the passages of the rules its findings cite come first: a question such as
+        # "why was it flagged" names no rule, so retrieval by its wording alone finds the wrong ones.
+        cited = list(dict.fromkeys(f["clause"] for f in pack.get("flags", [])))
+        first = [hit for clause in cited for hit in index.passages_of(clause)]
+        hits = (first + [h for h in hits if h.clause_id not in cited])[: max(k, len(first))]
     out = {"question": question, "passages": hits, "invoice_id": found, "audit_pack": pack,
            "answer": None, "sources": [], "calls": []}
     if client is None:

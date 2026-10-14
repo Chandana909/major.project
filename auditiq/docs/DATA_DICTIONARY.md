@@ -172,7 +172,7 @@ The policy the audit applies: the clause registry and the rendered text of every
 
 One row per version of the policy.
 
-- **Written by:** `policy/policy_v<version>.json` and the SOP text rendered from it
+- **Written by:** `setup` (from `policy/policy_v<version>.json` and the text rendered from it), and `python -m auditiq policy adopt <file.pdf>`, which reads a version from a policy document
 - **Used by:** The pipeline reads the active version when a run starts: the controls take their thresholds from `registry`, the agents read `markdown_content`.
 
 | Column | SQLite | PostgreSQL | Meaning |
@@ -181,14 +181,14 @@ One row per version of the policy.
 | `policy_name` | TEXT | TEXT | Title of the policy. |
 | `effective_date` | TEXT | DATE | First day the version is in force. |
 | `markdown_content` | TEXT NOT NULL | TEXT NOT NULL | The policy as text. This is what the agents read; it is rendered from the registry, so a threshold appears in the text exactly as the controls apply it. |
-| `registry` | TEXT NOT NULL | TEXT NOT NULL | The clause registry as JSON: every clause with its title, severity, kind and parameters. The only place where thresholds are stored. |
+| `registry` | TEXT NOT NULL | TEXT NOT NULL | The clause registry as JSON: every clause with its title, severity, kind and parameters. The only place where thresholds are stored. A version that a model helped to read from a document also records, under `adoption`, the model, the reviewer who confirmed the values, the time, and which values the reviewer supplied. |
 | `is_active` | INTEGER NOT NULL DEFAULT 0 | SMALLINT NOT NULL DEFAULT 0 | 1 for the version the audit applies, 0 for the others. Exactly one row has 1. |
 
 ### `policy_clauses`
 
 One row per clause of each policy version; the registry of `company_policies` in relational form.
 
-- **Written by:** `policy/policy_v<version>.json`
+- **Written by:** With the policy version: `setup` or `policy adopt`
 - **Used by:** The dashboard and the copilot. The pipeline reads the registry itself.
 
 | Column | SQLite | PostgreSQL | Meaning |
@@ -205,7 +205,7 @@ Also: `PRIMARY KEY (version, clause_id)`.
 
 One row per parameter of a clause: the thresholds of the policy.
 
-- **Written by:** `policy/policy_v<version>.json`
+- **Written by:** With the policy version: `setup` or `policy adopt`
 - **Used by:** The dashboard shows them and compares versions. The controls read the same values from the registry.
 
 | Column | SQLite | PostgreSQL | Meaning |
@@ -221,7 +221,7 @@ Also: `PRIMARY KEY (version, clause_id, param_name)`; `FOREIGN KEY (version, cla
 
 One row per ingested policy document (PDF).
 
-- **Written by:** `python -m auditiq policy ingest <file.pdf>`; `setup` ingests the PDFs in `policy/pdf`
+- **Written by:** `python -m auditiq policy ingest <file.pdf>` and `policy adopt <file.pdf>`; `setup` ingests the PDFs in `policy/pdf`
 - **Used by:** Citations name the document and the page of a passage.
 
 | Column | SQLite | PostgreSQL | Meaning |
@@ -238,7 +238,7 @@ One row per ingested policy document (PDF).
 
 One row per passage of a policy document: a clause, or a paragraph that is not a clause.
 
-- **Written by:** Policy ingestion; `python -m auditiq policy embed` fills the embedding columns
+- **Written by:** Policy ingestion and adoption; `python -m auditiq policy embed` fills the embedding columns
 - **Used by:** Policy search and the copilot retrieve passages; an audit pack cites the page of each clause it uses.
 
 | Column | SQLite | PostgreSQL | Meaning |
@@ -252,7 +252,7 @@ One row per passage of a policy document: a clause, or a paragraph that is not a
 | `section` | TEXT | TEXT | Heading of the section the passage stands under. |
 | `page` | INTEGER | INTEGER | Page of the PDF on which the passage begins, from 1. |
 | `text` | TEXT NOT NULL | TEXT NOT NULL | Text of the passage as extracted from the PDF. |
-| `verified` | INTEGER | SMALLINT | For a clause: 1 when the text extracted from the PDF equals the text of that clause in the registry of the same version, 0 when it differs. NULL for other passages. A clause that is not verified is reported at ingestion, because the PDF and the applied policy then disagree. |
+| `verified` | INTEGER | SMALLINT | For a clause: 1 when the text extracted from the PDF equals the text of that clause in the registry of the same version, 0 when it differs. NULL for other passages, and for the passages a model located in a policy written in its own wording. A clause that is not verified is reported at ingestion, because the PDF and the applied policy then disagree. |
 | `embedding` | BLOB | BYTEA | Embedding of the passage: a vector of 32-bit floats of unit length, stored as bytes. NULL until `policy embed` has run. |
 | `embed_model` | TEXT | TEXT | Identifier of the model that produced the embedding. |
 
@@ -400,7 +400,7 @@ Facts about the database itself.
 
 | Column | SQLite | PostgreSQL | Meaning |
 |---|---|---|---|
-| `key` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Name of the fact. `dataset` is the name of the loaded ledger. |
+| `key` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Name of the fact. `dataset` is the name of the loaded ledger; `schema` identifies the version of the schema the database has (on PostgreSQL also whether the copilot's read-only role has its grants), so that a connection to an up-to-date database changes nothing. |
 | `value` | TEXT | TEXT | Its value. |
 
 ## Views

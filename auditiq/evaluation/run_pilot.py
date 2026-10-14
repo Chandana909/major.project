@@ -40,6 +40,8 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--workers", type=int, default=1, help="invoices audited at the same time")
     ap.add_argument("--tag", default="pilot")
+    ap.add_argument("--report-only", action="store_true",
+                    help="audit nothing; write the report from the prediction files of this tag")
     args = ap.parse_args()
 
     folder = PROJECT_ROOT / "results" / args.dataset.name
@@ -50,7 +52,7 @@ def main() -> None:
         chosen = ["--stratified", str(args.n), "--subset-seed", str(args.seed)]
         sample = (f"{args.n} invoices requested, stratified over the classes and hard-negative types "
                   f"(seed {args.seed})")
-    for config in args.configs:
+    for config in [] if args.report_only else args.configs:
         began = time.time()
         subprocess.run([sys.executable, "-m", "evaluation.run_config", "--dataset", str(args.dataset),
                         "--config", config, "--policy", args.policy, "--scope", "subset",

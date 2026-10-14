@@ -83,6 +83,16 @@ def test_metrics_on_a_hand_checked_example():
     assert m["llm_calls_per_invoice"] == 2.0 and m["tokens_per_invoice"] == 120.0
 
 
+def test_findings_of_a_model_are_scored_apart_from_the_controls():
+    labels, predictions = tiny()
+    predictions["A"]["flags"] = [{"clause": "2.1.1", "source": "D"}, {"clause": "2.1.4", "source": "L"}]
+    predictions["B"]["flags"] = [{"clause": "2.1.4", "source": "L"}]
+    predictions["D"]["flags"] = [{"clause": "2.2.2", "source": "L"}]
+    m = compute(build_frame(labels, predictions, severity=SEVERITY))
+    assert math.isclose(m["model_rule_precision"], 1 / 3)       # only B's finding names a rule it violates
+    assert math.isnan(compute(build_frame(*tiny(), severity=SEVERITY))["model_rule_precision"])   # no model finding
+
+
 def test_detector_without_flags_has_only_detection_metrics():
     labels, predictions = tiny()
     c0 = {i: {"invoice_id": i, "config": "C0", "anomalous": p["anomalous"]} for i, p in predictions.items()}

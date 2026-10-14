@@ -1,0 +1,10 @@
+# Text is stored with LF line endings. Documents and images are binary: a line-ending
+# conversion would corrupt a PDF whose streams happen to contain no NUL byte.
+* text=auto
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.db binary
+*.xlsx binary

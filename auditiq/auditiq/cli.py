@@ -20,6 +20,7 @@ Policy documents and questions:
     python -m auditiq ask-data "Which five vendors have the most escalated invoices?"
 
 Other:
+    python -m auditiq serve                                REST API and web frontend on http://127.0.0.1:8000
     python -m auditiq status                               backend, ledger, row counts
     python -m auditiq export --out exports                 every table as CSV
     python -m auditiq graph --config C5
@@ -31,6 +32,7 @@ model from the environment (see .env.example).
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -38,7 +40,7 @@ from pathlib import Path
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from . import copilot, db, policy_extract, policy_ingest, service
+from . import copilot, db, policy_extract, policy_ingest, policy_llm, service
 from .audit_pack import render_markdown
 from .config import configure_logging
 from .extraction import extract
@@ -103,6 +105,8 @@ def cmd_policy(args: argparse.Namespace) -> int:
         if len(args.arguments) != 1:
             print("give one policy PDF", file=sys.stderr)
             return 2
+        if args.llm:
+            return adopt_with_model(conn, Path(args.arguments[0]), args)
         report = policy_extract.adopt(conn, Path(args.arguments[0]), reference_version=args.reference,
                                       activate=args.activate, replace=args.replace)
         print(f"{report['file']}: version {report['version']}, {report['pages']} page(s); compared with version "
@@ -134,6 +138,50 @@ def cmd_policy(args: argparse.Namespace) -> int:
         print(f"ranking: {mode}\n")
         for i, hit in enumerate(index.search(" ".join(args.arguments), k=args.k, mode=args.mode), start=1):
             print(f"[{i}] {hit.source}\n    {hit.text}\n")
+    return 0
+
+
+def adopt_with_model(conn, path: Path, args: argparse.Namespace) -> int:
+    """A policy in its own wording: the model proposes, code verifies, the named reviewer confirms."""
+    reference = db.read_policy(conn, args.reference).registry
+    settings = dataclasses.replace(LLMSettings.from_env(), max_tokens=2500)      # the reply lists every rule
+    client = OpenAIChatClient(settings, ResponseCache())
+    proposal = policy_llm.propose(path, reference, client)
+    print(f"{proposal.file}: version {proposal.version or 'not stated'}, {proposal.pages} page(s); read by "
+          f"{proposal.model}; compared with version {reference['version']}")
+    print(table([{"rule": i["clause"], "parameter": i["parameter"], "proposed": json.dumps(i["value"]),
+                  f"version {reference['version']}": json.dumps(i["reference"]), "status": i["status"],
+                  "page": i["page"] or "", "reason or quote": i["reason"] or i["quote"][:70]} for i in proposal.items],
+                ["rule", "parameter", "proposed", f"version {reference['version']}", "status", "page", "reason or quote"]))
+    for problem in proposal.problems:
+        print(f"  problem: {problem}", file=sys.stderr)
+    passages = dict(item.split("=", 1) for item in args.quote or [])
+    for clause in policy_llm.add_passages(proposal, passages):
+        print(f"  the passage given for rule {clause} is not in the document", file=sys.stderr)
+    try:
+        overrides = {tuple(key.rsplit(".", 1)): json.loads(value)
+                     for key, value in (item.split("=", 1) for item in args.set or [])}
+        values, still_open = policy_llm.decide(proposal, accept_verified=args.accept_verified, overrides=overrides)
+    except (ValueError, StopIteration) as error:
+        print(f"error in --set: {error}", file=sys.stderr)
+        return 2
+    still_open += proposal.problems
+    if still_open or not args.reviewer:
+        for line in still_open:
+            print(f"  open: {line}")
+        print("not adopted. To adopt, confirm the verified values with --accept-verified, supply any other value "
+              "with --set <rule>.<parameter>=<value>, give the passage of a rule that was not located with "
+              "--quote <rule>=<passage>, and name yourself with --reviewer.")
+        return 1
+    report = policy_llm.adopt(conn, path, proposal, reference, values, args.reviewer, version=args.version,
+                              activate=args.activate, replace=args.replace)
+    for problem in report["problems"]:
+        print(f"  problem: {problem}", file=sys.stderr)
+    if not report["adopted"]:
+        print("not adopted", file=sys.stderr)
+        return 1
+    print(f"adopted as policy version {report['version']} ({report['rules']} rules), confirmed by {args.reviewer}"
+          + ("; now the active version" if report["active"] else ""))
     return 0
 
 
@@ -260,6 +308,17 @@ def cmd_ask_data(args: argparse.Namespace) -> int:
 
 
 # ------------------------------------------------------------------- other
+def cmd_serve(args: argparse.Namespace) -> int:
+    from .api import FRONTEND, serve
+    print(f"AuditIQ API on http://{args.host}:{args.port}/api (documentation at /api/docs)")
+    if (FRONTEND / "index.html").exists():
+        print(f"web frontend on http://{args.host}:{args.port}/")
+    else:
+        print("the web frontend is not built: run `npm install` and `npm run build` in frontend/")
+    serve(args.host, args.port, target=args.db)
+    return 0
+
+
 def cmd_export(args: argparse.Namespace) -> int:
     conn = open_db(args)
     out = Path(args.out)
@@ -340,6 +399,15 @@ def main(argv: list[str] | None = None) -> int:
     pol.add_argument("--replace", action="store_true", help="adopt: replace a stored version of the same number")
     pol.add_argument("--reference", default=None, help="adopt: the version that defines the executable rules "
                                                        "(default: the active one)")
+    pol.add_argument("--llm", action="store_true", help="adopt: the document is not in the template's wording; let "
+                                                        "the model propose the thresholds for confirmation")
+    pol.add_argument("--accept-verified", action="store_true", help="adopt --llm: accept every value that was "
+                                                                    "verified against the document")
+    pol.add_argument("--set", action="append", metavar="RULE.PARAMETER=VALUE", help="adopt --llm: supply a value")
+    pol.add_argument("--quote", action="append", metavar="RULE=PASSAGE", help="adopt --llm: the passage of the "
+                                                                         "document that states a rule the model did not locate")
+    pol.add_argument("--reviewer", default="", help="adopt --llm: the person who confirms the values")
+    pol.add_argument("--version", default=None, help="adopt --llm: version number, if the document states none")
     pol.add_argument("-k", type=int, default=5)
     pol.add_argument("--mode", choices=["auto", "lexical", "dense", "hybrid"], default="auto")
     pol.set_defaults(run=cmd_policy)
@@ -394,6 +462,11 @@ def main(argv: list[str] | None = None) -> int:
     ask_data.add_argument("question", nargs="+")
     ask_data.add_argument("--no-cache", action="store_true")
     ask_data.set_defaults(run=cmd_ask_data)
+
+    serve_cmd = sub.add_parser("serve", help="run the REST API and the web frontend")
+    serve_cmd.add_argument("--host", default="127.0.0.1")
+    serve_cmd.add_argument("--port", type=int, default=8000)
+    serve_cmd.set_defaults(run=cmd_serve)
 
     export = sub.add_parser("export", help="write the tables of the database as CSV files")
     export.add_argument("--out", required=True, help="folder for the CSV files")

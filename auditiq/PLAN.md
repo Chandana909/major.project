@@ -116,7 +116,7 @@ What phase A showed (`results/summary.md`, run of 2026-10-13):
 | B6 | LangGraph graphs for C1 to C5; human review by `interrupt` and resume | Done |
 | B7 | Runner for any configuration over a dataset, resumable; comparison report | Done |
 | B8 | Smoke test on a real model | Done on one invoice, all stages; see section 6 |
-| B9 | Pilot on stratified invoices of the pilot ledger to fix the prompts and measure cost | Runner done (`evaluation.run_pilot`). A six-invoice run with the local 7B model is recorded in section 6; a pilot of 50 needs a faster endpoint (open decision 1) |
+| B9 | Pilot on stratified invoices of the pilot ledger to fix the prompts and measure cost | Done with the local 7B model on 20 invoices (one of each of the 14 classes, the five hard-negative types, one ordinary invoice) under C1 to C5, and on six invoices before that; both are recorded in section 6. A pilot of 50 or more needs a faster endpoint (open decision 1) |
 | B11 | Bounded prompts: at most 40 of a vendor's other invoices per selection rule | Done; no labelled case loses an invoice it depends on (`results/history_cap.md`) |
 | B10 | Full run: 3 seeds x C2 to C5; second model on the main comparison; consistency subset of 300; policy swap under v2.5 and v2.6 | Pending |
 
@@ -130,13 +130,17 @@ nothing about how well a model audits.
 |---|---|---|
 | C1 | Database (SQLite and PostgreSQL): ledger, policy store, audit runs, results, flags, per-stage audit trail, review decisions | Done; extraction from the database returns the same transactions as extraction from the files, on both backends |
 | C2 | Review queue that survives a restart; decisions with reviewer and justification | Done. Sending an analysis back for re-analysis is done by auditing the invoice again; the newer result takes its place in the queue |
-| C3 | Batch audit of the ledger, storing every result | Done; 20,000 invoices under C1 on PostgreSQL in about five minutes |
+| C3 | Batch audit of the ledger, storing every result | Done; 20,000 invoices under C1 in about one minute on SQLite and three on PostgreSQL (the ledger is read in bulk for a batch run) |
 | C4 | Policy PDFs: three sample documents, ingestion with page numbers, check against the registry, citations in audit packs | Done; all 16 clauses of each version come back from the PDF word for word |
 | C5 | Policy search: lexical, question rewriting, embeddings | Done and measured with `nomic-embed-text` (below) |
 | C6 | Copilot: policy and invoice questions with cited passages; data questions as one checked, read-only SELECT | Done; tested with a scripted model, and once with the local model (section 6) |
 | C7 | Streamlit dashboard: overview, review queue with decision form, invoice, policy, copilot | Done; headless tests and a visual check in the browser |
+| C14 | REST API (FastAPI) with background jobs, optional token, safe uploads, OpenAPI description; web application in React and TypeScript with 3D views in React Three Fiber (risk constellation, pipeline graph, policy-change bars) | Done (`docs/WEB.md`); 10 API tests on both backends, 26 frontend tests including the 3D scenes; visual check of every page in the browser; no known vulnerability in the frontend's packages (`npm audit`) |
 | C8 | Loading a new ledger from CSV | Done (`setup --dataset`). Excel upload and upload through the dashboard are not built |
-| C9 | Packaging | `pip install -e .` with an `auditiq` command; a PostgreSQL compose file and a CI workflow are written and have not been run (no Docker on the development machine, no GitHub repository yet) |
+| C9 | Packaging | `pip install -e .` with an `auditiq` command; `npm ci && npm run build` for the frontend. CI on GitHub runs ruff and the tests on SQLite and PostgreSQL, and lint, typecheck, tests, build and audit of the frontend, on every push. The PostgreSQL compose file has not been run (no Docker on the development machine) |
+| C11 | Policy adoption from a document: thresholds read from the PDF by pattern; command line and dashboard; re-audit of the ledger under the adopted version | Done and measured (`results/policy_change.md`, `docs/FEATURE_POLICY_AS_DATA.md`) |
+| C12 | Policies in their own wording: a model proposes rules and thresholds, code verifies them against the document, a named reviewer confirms | Done and measured on six free-form documents: 80 of 84 values proposed correctly; the code check verified 56, held back 24 correct ones for the reviewer, caught 2 wrong ones and passed 2 (`results/policy_llm.md`) |
+| C13 | Throughput of the control stage against worker processes and ledger size | Measured (`results/scalability.md`) |
 | C10 | Logging and failure messages | Done: one log format for the command line and the dashboard; an unreachable database and a failing model endpoint end with a message, not a traceback |
 
 Policy retrieval on 48 fixed questions (`results/retrieval.md`; the questions
@@ -327,19 +331,100 @@ What this means for open decision 1:
   the consistency subset. Output is small, around 100 tokens per call.
 - The paper should use a general-purpose open-weight model, not a coding model.
 
-### Real-model run on the pilot ledger (2026-10-13)
+### Real-model run on the pilot ledger (2026-10-13 and 14)
 
 `python -m evaluation.run_pilot --dataset data/pilot_seed_909 --ids-file evaluation/demo_ids.txt --tag demo`
-audits six invoices (one of each judgement class, one hard negative, one
-ordinary invoice) under C1 to C5 with `qwen2.5:7b` at a 12,288-token context.
-The report is `results/pilot_seed_909/demo.md`. It is six invoices: a check
-that every stage works against a real model with the bounded prompts, and a
-measurement of speed. It is not a result.
+audits six invoices (one of each judgement class J1 to J4, one hard negative
+with a similar invoice number, one ordinary invoice) under C1 to C5 with
+`qwen2.5:7b` at a 12,288-token context. The report is
+`results/pilot_seed_909/demo.md`. Six invoices are a check that every stage
+works against a real model, and a first look at cost; they are not a result,
+and no difference between configurations can be claimed from them.
 
-Speed on this laptop with the 7B model: the server log shows 7 to 12 prompt
-tokens per second while other programs are open, so a call takes two to seven
-minutes. A pilot of 50 invoices would take more than a day; the benchmark is
-out of reach here.
+- All five configurations completed. No stage failed; one reply of C2 needed
+  the repair request.
+- C3 raised the right rule on the J4 invoice (2.1.4, evidence found in the
+  records) and on the J1 invoice (2.2.2, but with evidence that is not in the
+  records). It missed J2 and J3, raised a wrong 2.2.2 on the J3 invoice, and
+  raised two findings on the hard negative.
+- C4: the challenger removed the right J1 finding and the wrong 4.1.2 on the
+  hard negative, and kept the two wrong 2.2.2 findings.
+- C5: the wrong 2.2.2 on the J3 invoice was repeated by one of three re-runs
+  (confidence 0.44), so the invoice moved from escalation to sampled review.
+  The wrong 2.2.2 on the hard negative was repeated by all three re-runs
+  (confidence 0.67, at the threshold) and stayed escalated. The right J4
+  finding had confidence 1.00. Confidence demoted one wrong finding and not the
+  other: it measures support and stability, not correctness.
+- C2, one prompt over the whole policy, raised five rule-defined findings on
+  the ordinary invoice, none of them true, and flagged all six invoices.
+- Cost per invoice: C3 3 calls and 9,744 tokens; C4 3.67 and 12,422; C5 5.17
+  and 18,137; C2 1.17 and 5,978. On this laptop one call took about four to six
+  minutes on average, waiting included.
+
+The benchmark (1,200 invoices per ledger, several calls each) is out of reach
+on this laptop; it needs a GPU or a hosted endpoint.
+
+### Real-model pilot of 20 invoices (2026-10-14)
+
+`python -m evaluation.run_pilot --dataset data/pilot_seed_909 --ids-file evaluation/pilot_ids.txt --tag pilot20`
+audits 20 invoices of the pilot ledger (one of each of the 14 anomaly classes,
+one of each of the five hard-negative types, one ordinary invoice) under C1 to
+C5 with `qwen2.5:7b` at a 12,288-token context, on the laptop's CPU (about five
+and a half minutes per model call). The report is
+`results/pilot_seed_909/pilot20.md`. Twenty invoices are a pilot: the intervals
+are wide, and no McNemar comparison is significant (C3 against C2: 9 invoices
+right only under C3, 2 only under C2, Holm-adjusted p = 0.196).
+
+| | C1 | C2 | C3 | C4 | C5 |
+|---|---|---|---|---|---|
+| Invoice-level recall | 0.714 | 0.929 | 0.929 | 0.857 | 0.857 |
+| Invoice-level precision | 1.000 | 0.722 | 0.812 | 0.800 | 0.800 |
+| Judgement classes found (of 4) | 0 | 1 | 2 | 1 | 1 |
+| Hard negatives flagged (of 5) | 0 | 4 | 3 | 3 | 3 |
+| Ordinary invoice flagged (of 1) | 0 | 1 | 0 | 0 | 0 |
+| Citation correctness | 1.000 | 0.091 | 0.500 | 0.688 | 0.688 |
+| Model calls per invoice | 0 | 1.15 | 3.00 | 3.60 | 4.95 |
+| Prompt and completion tokens per invoice | 0 | 5,835 | 9,557 | 12,005 | 16,779 |
+
+- C1 decided every rule-defined class right and flagged nothing else; it
+  cannot see the judgement classes, by design.
+- C3's agents found J4 (Rule 2.1.4, with the goods-receipt remark as evidence)
+  and J1 (Rule 2.2.2), missed J2 (the weekend bill) and cited the wrong rule
+  on J3. They also raised a wrong 2.2.2 on three hard negatives and extra
+  findings on six invoices the controls had already flagged.
+- C4's challenger removed most of the extra findings and the wrong 4.1.2 on
+  the similar-number hard negative, but also the right J1 finding, and kept the
+  wrong 2.2.2 on the three hard negatives.
+- C5's confidence sent two invoices to sampled review instead of escalation
+  (the J3 invoice, whose wrong-rule finding had confidence 0.44, and an R10
+  invoice); both are true anomalies. The wrong findings on the hard negatives
+  had confidence 0.67, 0.67 and 1.00 and stayed escalated: once more,
+  confidence measures support and stability, not correctness.
+- C2, one prompt over the whole policy, flagged 18 of the 20 invoices: five
+  wrong findings on the ordinary invoice, wrong rule-defined findings on most
+  invoices (macro-F1 on the rule-defined classes 0.095), and two failed stages.
+  The controls-first design avoids exactly this.
+
+### Real-model check through PostgreSQL (2026-10-14)
+
+`results/llm_checks.log`. One invoice of the 20,000-invoice ledger
+(`INV51287`, class J4: a goods-receipt remark says 28 rolls were returned)
+audited under C5 in PostgreSQL, then the copilot.
+
+- C5 made 7 model calls (16,020 prompt tokens), no stage failed. The Math and
+  Approvals agent raised Rule 2.1.4, all three re-runs repeated it (confidence
+  1.00), the invoice was escalated and entered the review queue, and the
+  finding cites the SOP, page 1.
+- **The copilot first answered wrongly.** Asked "Why was INV51287 flagged, and
+  which rule applies?", it said Rule 2.2.1 (exact duplicate): retrieval by the
+  question's wording had found the duplicate rules, and the model followed the
+  passages instead of the audit record it was also given. Fix: for an audited
+  invoice the passages of the rules its findings cite come first, and the
+  instructions say the audit record is the authority. Asked again, it answered
+  Rule 2.1.4 with the remark and the accepted quantity, citing page 1.
+- Data question "Which five vendors have the most invoices waiting for review?":
+  the model wrote a correct query over `v_review_queue`, which ran as the
+  read-only role.
 
 ## 7. Risks
 

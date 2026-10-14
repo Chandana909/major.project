@@ -14,6 +14,15 @@ pip install -e ".[dev]"
 This installs the packages listed in `pyproject.toml` and the `auditiq`
 command (the same as `python -m auditiq`).
 
+The web application also needs Node 20 or later, once, to build the frontend:
+
+```bash
+cd frontend && npm ci && npm run build
+```
+
+`npm ci` installs the exact versions recorded in `package-lock.json`; the build
+writes `frontend/dist`, which `python -m auditiq serve` serves.
+
 ## 2. First run, without a model or a server
 
 Nothing needs configuring for this: the database is a SQLite file and
@@ -32,14 +41,17 @@ python -m auditiq queue
 ```
 
 ```bash
-python -m streamlit run app/dashboard.py
+python -m auditiq serve
 ```
 
 `setup` loads the five ledger tables of the dataset, stores policy versions
 2.5 and 2.6 (2.5 active), writes the sample policy PDFs to `policy/pdf/` and
 ingests them. Loading a ledger replaces the ledger and clears earlier results.
 `run --config C1` audits every invoice and stores results, findings and the
-audit trail. `queue` lists what is waiting for a reviewer.
+audit trail. `queue` lists what is waiting for a reviewer. `serve` starts the
+web application at http://127.0.0.1:8000, with the API description at
+`/api/docs` ([WEB.md](WEB.md)); `python -m streamlit run app/dashboard.py` starts
+the simpler Streamlit dashboard instead.
 
 ## 3. Configuration
 
@@ -66,6 +78,8 @@ it holds the database password and any API key.
 | `AUDITIQ_EMBED_BASE_URL`, `AUDITIQ_EMBED_API_KEY` | embedding server | the chat model's |
 | `AUDITIQ_EMBED_QUERY_PREFIX`, `AUDITIQ_EMBED_DOCUMENT_PREFIX` | prefixes some embedding models expect | empty |
 | `AUDITIQ_LOG_LEVEL` | `DEBUG`, `INFO`, `WARNING` | `INFO` |
+| `AUDITIQ_API_TOKEN` | when set, every API request except `/api/health` needs `Authorization: Bearer <token>`; set it before the server is reachable from another machine | not set: no token |
+| `AUDITIQ_CORS_ORIGINS` | comma-separated origins allowed to call the API from a browser | the Vite development server (`http://localhost:5173`) |
 | `AUDITIQ_NO_DOTENV` | when set, `.env` is ignored (the tests set it) | not set |
 
 `python -m auditiq status` shows which database is in use, the loaded ledger,
@@ -109,7 +123,7 @@ it as in section 2 (`setup`, then `run`). To go back to SQLite, remove
 Measured on the development laptop (Intel i5-1235U, 16 GB) with PostgreSQL:
 `setup` with the 20,000-invoice ledger takes under two minutes including
 embedding the policy passages, and `run --config C1` over all 20,000 invoices
-takes about five minutes.
+takes about three minutes (the ledger is read in bulk for a batch run).
 
 ## 5. The chat model
 
@@ -185,12 +199,16 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | `python -m auditiq decide --result 17 --decision approve --reviewer "A. Auditor"` | record a decision; `override` needs `--justification` |
 | `python -m auditiq policy search "bill raised on the weekend"` | passages with document and page |
 | `python -m auditiq policy activate 2.6` | switch the policy the next audit applies |
-| `python -m auditiq policy ingest my_policy.pdf` | add a policy PDF |
+| `python -m auditiq policy ingest my_policy.pdf` | add a policy PDF for search and citation |
+| `python -m auditiq policy adopt company_policy.pdf --activate` | read the thresholds from a policy PDF in the template's wording and make it the policy the audit applies |
+| `python -m auditiq policy adopt company_policy.pdf --llm` | a policy in its own wording: the model proposes rules and thresholds, code verifies them against the document, and the command shows what it found |
+| `python -m auditiq policy adopt company_policy.pdf --llm --accept-verified --reviewer "A. Auditor"` | confirm the verified values and adopt; supply any other value with `--set 2.1.1.amount_tolerance_pct=0.5` |
 | `python -m auditiq ask "Why is INV40042 high risk?"` | a cited answer |
 | `python -m auditiq ask-data "Which five vendors have the most invoices waiting for review?"` | one read-only query |
 | `python -m auditiq export --out exports` | every table as CSV |
 | `python -m auditiq graph --config C5` | the pipeline as a Mermaid diagram |
-| `python -m streamlit run app/dashboard.py` | the dashboard |
+| `python -m auditiq serve --port 8000` | the web application and the REST API (`--host 0.0.0.0` to listen on every interface; set `AUDITIQ_API_TOKEN` first) |
+| `python -m streamlit run app/dashboard.py` | the Streamlit dashboard |
 
 ## 8. Reproducing the evaluation
 
@@ -203,7 +221,10 @@ In this order. Steps 1 to 3 need no model.
 | 3. Baselines, controls, policy swap | `python -m evaluation.run_all` | `results/summary.md`, `results/<name>/` |
 | 4. History cap check | `python -m evaluation.history_cap` | `results/history_cap.md` |
 | 5. Policy retrieval | `python -m evaluation.retrieval_eval --out results/retrieval.md` | `results/retrieval.md` |
-| 6. Pilot of the LLM configurations | `python -m evaluation.run_pilot --dataset data/pilot_seed_909 --n 50` | `results/pilot_seed_909/pilot.md` |
+| 5a. Policy change | `python -m evaluation.policy_change` | `results/policy_change.md`, the table and the figure |
+| 5b. Scalability of the control stage | `python -m evaluation.scalability` | `results/scalability.md` |
+| 5c. Policies in their own wording (needs a model) | `python -m evaluation.policy_llm_eval` | `results/policy_llm.md` |
+| 6. Pilot of the LLM configurations | `python -m evaluation.run_pilot --dataset data/pilot_seed_909 --ids-file evaluation/pilot_ids.txt --tag pilot20` | `results/pilot_seed_909/pilot20.md` |
 | 7. One LLM configuration on a benchmark ledger | `python -m evaluation.run_config --dataset data/bench_seed_101 --config C5` | `results/bench_seed_101/C5.jsonl` |
 | 8. Comparison | `python -m evaluation.report --dataset data/bench_seed_101 results/bench_seed_101/C*.jsonl --compare C3:C2 C4:C3 C5:C4` | a table |
 
@@ -245,6 +266,29 @@ the application's settings from `.env`, so they cannot touch the working
 database. `.github/workflows/ci.yml` (at the root of the repository) runs lint and
 tests on both backends on every push.
 
+The frontend has its own checks, run from `frontend/`:
+
+```bash
+npm run lint
+```
+
+```bash
+npm run typecheck
+```
+
+```bash
+npm test
+```
+
+```bash
+npm audit --omit=dev
+```
+
+The tests run in Node with a simulated browser and a mocked API, so they need
+neither the server nor a GPU; the 3D scenes are rendered with React Three
+Fiber's test renderer. CI runs these checks and a production build in a second
+job.
+
 After changing the schema or a column's meaning, regenerate the data
 dictionary; after regenerating datasets, the overview:
 
@@ -269,3 +313,7 @@ python -m auditiq_bench.overview
 | Policy search finds nothing for a paraphrased question | No embedding model is configured, so the ranking is lexical. Set `AUDITIQ_EMBED_MODEL` and run `policy embed`. |
 | Ingestion reports an unverified clause | The PDF's text of that rule differs from the registry of the same version. Regenerate the PDF (`python -m auditiq policy make-pdfs`) or correct the registry. |
 | A test of the data dictionary or the datasets overview fails | Regenerate the file with the command the failure message names. |
+| `serve` answers 404 at `/` | The frontend has not been built: `cd frontend && npm ci && npm run build`. The API works without it. |
+| The web application asks for an API token | `AUDITIQ_API_TOKEN` is set on the server; enter the same value. It is kept for the browser tab only. |
+| A 3D view shows a message instead of the scene | The browser has no WebGL (or it is switched off). The tables on the same page show the same data. |
+| The browser reports a CORS error during frontend development | Open the development server at `http://localhost:5173`, or add its origin to `AUDITIQ_CORS_ORIGINS`. |

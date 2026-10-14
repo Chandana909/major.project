@@ -1,29 +1,32 @@
 % ============================================================================
-% AuditIQ -- phase-1 project paper
-% Layout follows the first draft: Introduction, Related Work, (Base Papers),
-% Proposed Methodology, System Implementation, Experimental Setup,
-% (Expected) Results and Discussion, Explainability, Limitations, Future Work,
-% Conclusion, Data and Code Availability.
+% AuditIQ -- phase-1 project paper (base papers + one implemented extra feature)
 %
-% Compile:  pdflatex auditiq_paper.tex   (run twice; needs fig_architecture.pdf)
-% Figure:   python make_figure.py        (regenerates fig_architecture.pdf)
+% This file is self-contained: every figure is drawn inside it with TikZ and
+% pgfplots, and every table is typed in. No external image file is needed.
 %
-% BEFORE SENDING THIS TO AN EXTERNAL VENUE
-%  1. Run the protocol of Section VI and replace Section VII with measured
-%     results. This draft reports no performance numbers for AuditIQ, because
-%     none have been measured yet.
-%  2. Section III and Table I were written from the abstracts of the three
-%     base papers. Read the full papers and correct anything they contradict.
-%  3. Section V names the LLM only as "an open-weight LLM". Replace it with the
-%     exact model identifier and version used in the runs.
-%  4. The reference to Roumeliotis et al. is copied from the earlier draft; its
-%     DOI resolves, but confirm title, volume and pages on IEEE Xplore.
+% Compile:  tectonic auditiq_paper.tex      (or pdflatex, run twice)
+%
+% WHERE THE NUMBERS COME FROM
+%  * Section VIII-A to VIII-H report MEASURED results. Every number there was
+%    produced by the scripts of the project repository:
+%        python -m evaluation.policy_change   -> results/policy_change.md
+%        python -m evaluation.run_all         -> results/summary.md
+%        python -m evaluation.scalability     -> results/scalability.md
+%        python -m evaluation.policy_llm_eval -> results/policy_llm.md
+%        python -m evaluation.run_pilot --dataset data/pilot_seed_909 \
+%            --ids-file evaluation/pilot_ids.txt --tag pilot20
+%                                             -> results/pilot_seed_909/pilot20.md
+%    If an experiment is run again, update the numbers from those files.
+%  * Section VIII-H is a PILOT of 20 invoices with a local 7B model. It shows
+%    that the LLM stages run and what they cost; it is not a benchmark result.
+%  * Section VIII-I and Table XII give EXPECTED values for what has not been
+%    measured. They are targets fixed before measurement, not results.
+%  * Section III describes the two base papers from their published abstracts.
+%    Read the full papers and correct anything they contradict.
 % ============================================================================
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
-% T1 encoding makes XeTeX-based engines (e.g. Tectonic) use the same Times
-% fonts as pdfLaTeX; without it they fall back to Latin Modern with no bold
-% or italics.
+% T1 encoding makes XeTeX-based engines (e.g. Tectonic) use the Times fonts.
 \usepackage[T1]{fontenc}
 \usepackage{cite}
 \usepackage{amsmath,amssymb}
@@ -31,12 +34,18 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{url}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.16}
+% Clickable links for the DOIs and URLs of the reference list.
+\usepackage[hidelinks]{hyperref}
 
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
 \begin{document}
 
-\title{AuditIQ: A Controls-First Multi-Agent Framework with Evidence-Grounded Confidence Weighting for Explainable Procurement Audit}
+\title{A Distributed Multi-Agent AI Platform for Scalable Forensic Audit and Compliance}
 
 \author{\IEEEauthorblockN{Podichetty Samiksha}
 \IEEEauthorblockA{\textit{Department of Information Technology} \\
@@ -49,429 +58,748 @@ samiksha10.1b@gmail.com}
 \textit{Chaitanya Bharathi Institute of Technology}\\
 Hyderabad, Telangana, India \\
 chandanad3884@gmail.com}
+\and
+\IEEEauthorblockN{Medapally Shiva Reddy}
+\IEEEauthorblockA{\textit{Department of Information Technology} \\
+\textit{Chaitanya Bharathi Institute of Technology}\\
+Hyderabad, Telangana, India}
 }
 
 \maketitle
 
 \begin{abstract}
-Auditing procurement transactions means matching every invoice against its purchase order, goods receipt, vendor record and approval trail, and justifying each exception against a written policy. The base papers of this work leave three gaps: an anomaly detector returns a label without the violated rule; large language models (LLMs) explain the errors they find poorly and rarely cite the governing standard; and a multi-agent recommender does not use the reliability signal that agreement between its agents provides. This paper presents AuditIQ, a multi-agent pipeline for the procure-to-pay process that reads the active policy at run time, has a challenger agent remove unsupported findings, and routes high-risk transactions to a human reviewer. We extend the working prototype with five features: deterministic controls that run before any LLM; an evidence-grounded confidence for every finding; a confidence-weighted risk score with a sampled-review queue, which provably never changes which transactions are auto-approved; clause-level policy parameters; and AuditIQ-Bench, a synthetic benchmark with fourteen labelled anomaly classes. The paper gives the technology stack and implementation status of every feature and an evaluation protocol with six configurations. Expected results are stated as hypotheses with the observation that would refute each; measured results will follow the experimental runs.
+Auditing procurement means checking every vendor invoice against its purchase order, goods receipt, vendor record and approval trail, and justifying each exception against a written policy. AuditBench shows that large language models (LLMs) find injected errors in financial data but explain them poorly and rarely cite the governing standard; a survey of LLM-based multi-agent systems in finance shows that systems of specialised agents suit interactive financial tasks. We present AuditIQ, a platform for the forensic audit of procurement transactions built as separate services: audit workers, a policy service, a data store, a model endpoint, and a REST API with a web application for reviewers. Its base is a multi-agent audit pipeline that follows these two works, and we add one feature: \emph{policy-driven deterministic controls}. The system reads the organisation's policy PDF, takes every threshold from the wording of the rule that states it, and twelve controls execute these thresholds before any LLM is called; no threshold is written in code or in a prompt. Given fourteen policy documents, the system read 196 of 196 thresholds correctly and decided all 40{,}000 invoices of five synthetic ledgers as each policy requires, whereas the same controls with frozen thresholds decided up to 30.7\% of them against the policy in force. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000, against 0.536 and 0.498 for an isolation forest and a one-class SVM, and the control stage audited 172{,}000 invoices per second with eight processes on one laptop. With a local 7B model, a model-assisted reader proposed 80 of 84 thresholds of six free-form policies correctly, and a 20-invoice pilot ran every LLM stage end to end. The LLM stages have not been measured at benchmark scale; for them we state expected values fixed before measurement.
 \end{abstract}
 
 \begin{IEEEkeywords}
-audit analytics, multi-agent systems, large language models, procure-to-pay, three-way matching, explainable AI, human-in-the-loop, confidence weighting
+forensic audit, compliance, multi-agent systems, large language models, distributed platform, scalability, procure-to-pay, policy as data, deterministic controls, explainability
 \end{IEEEkeywords}
 
+% ---------------------------------------------------------------------------
 \section{Introduction}
-An auditor who tests procurement spend has to establish four things for every invoice: that it corresponds to an approved purchase order (PO), that the goods or services were received as recorded in a goods receipt note (GRN), that the vendor is legitimate and tax-compliant, and that the payment was approved within the approver's delegated limit. The evidence for these checks sits in separate records, and the definition of an exception is written in an organization-specific policy document. Because the work is repetitive, it is usually performed on a sample~\cite{elder2013}, which leaves most of the population untested. Continuous auditing proposes to test every transaction automatically~\cite{vasarhelyi1991}.
+\subsection{Background}
+An auditor who tests procurement spend must establish four things for every invoice: that it corresponds to an approved purchase order (PO); that the goods or services were received, as recorded in a goods receipt note (GRN); that the vendor is legitimate and tax-compliant; and that the payment was approved within the approver's delegated limit. The evidence sits in separate records, and what counts as an exception is defined in an organisation-specific policy document. Continuous auditing proposes to test every transaction automatically instead of a sample~\cite{vasarhelyi1991}.
 
-Three recent works approach this goal, and each leaves a gap (Section~\ref{sec:base}). An anomaly detector scores financial records accurately but returns a label~\cite{long2026}, not the violated rule and its evidence, which audit documentation standards require~\cite{isa230}. LLMs explain errors poorly and rarely cite the governing standard~\cite{wang2025auditbench}. A multi-agent recommender shows that agreement between specialist models predicts correctness, yet its combined accuracy does not exceed that of its best single model~\cite{toudas2026}.
+\subsection{Problem}
+LLMs are a natural candidate for this work because the policy is written in natural language. AuditBench~\cite{wang2025auditbench} shows the limits: LLMs identify errors when they are given the transaction history, but explain them poorly and rarely cite the relevant standard. Systems of several specialised LLM agents are increasingly used for financial tasks~\cite{liu2026survey}, and we built such a pipeline for procurement audit. In that pipeline we observed a second problem, which is the subject of this paper: \emph{the thresholds of the policy were not under control}. The tolerance of the amount match, the daily invoice count and the approval limits were stated in policy prose, one of them was repeated as a literal number inside an agent prompt, and whether a rule check ran at all depended on an agent choosing to call a tool. When the policy changes, such a system must be edited by hand, and nothing shows that the edit agrees with the document.
 
-This paper presents AuditIQ, a multi-agent pipeline for transaction-level procurement audit built on four principles.
+\subsection{Contribution}
+This paper presents AuditIQ, a multi-agent platform for forensic audit and compliance in procurement. \emph{Forensic} means that every decision can be reconstructed afterwards: each finding carries the rule, the evidence and the document page it rests on, and every stage writes to an audit trail. \emph{Distributed} means that the platform is a set of separate services that communicate over network interfaces (Section~\ref{sec:platform}). We keep the base multi-agent pipeline and add one feature, \emph{policy-driven deterministic controls}:
 \begin{itemize}
-\item \textit{Controls first.} Checks that are decidable by arithmetic or lookup are executed as code, before any LLM is called.
-\item \textit{Policy as data.} The active policy document is stored with a version number and read at run time; every finding cites one of its clauses.
-\item \textit{Adversarial verification.} A challenger agent reviews all findings and removes those the evidence does not support.
-\item \textit{Governed outcomes.} A risk score routes each transaction to automatic approval or to a human reviewer, and every stage writes to an audit trail.
+\item the policy \emph{document} (PDF) is the input of the system;
+\item every threshold is read from the wording of the rule that states it and stored in a clause registry;
+\item twelve deterministic controls execute the registry before any LLM is called, and contain no constant of their own;
+\item a document that the system cannot execute is refused with the reason.
 \end{itemize}
+The feature is implemented, tested and measured (Sections~\ref{sec:feature}--\ref{sec:results}), including its throughput against the number of worker processes and the size of the ledger. We also measure the controls against two classical anomaly detectors, a model-assisted reading of policies written in free prose with verification by code and confirmation by a person, and, as a pilot on 20 invoices, every LLM stage of the base system with a local model. The paper reports these measured results and, separately and clearly marked, expected values for what has not been measured.
 
-AuditIQ exists as a working prototype. This paper describes it, specifies five extra features, fixes their technology stack, and states the expected results in a form that measurement can refute. The main contributions are as follows.
-\begin{itemize}
-\item A controls-first multi-agent architecture for procure-to-pay audit, with a working prototype.
-\item An evidence-grounded confidence for every finding and a confidence-weighted risk score with a sampled-review tier, which provably leaves the set of auto-approved transactions unchanged.
-\item A policy store with clause-level parameters, so that a change of policy needs no change to the pipeline.
-\item AuditIQ-Bench, a specification for a synthetic procure-to-pay benchmark with fourteen labelled anomaly classes and purpose-built hard negatives.
-\item An evaluation protocol with six system configurations, and expected results stated as falsifiable hypotheses.
-\end{itemize}
+\subsection{Organisation}
+Section~II reviews related work. Section~III presents the two base papers. Section~IV describes the base system and Section~V the extra feature. Section~VI gives the implementation and technology stack, Section~VII the experimental setup, and Section~VIII the measured and the expected results. Sections~IX and~X give limitations and conclusions.
 
-The paper reports no measured performance for AuditIQ. Section~\ref{sec:expected} states expectations, not results.
-
+% ---------------------------------------------------------------------------
 \section{Related Work}
-\subsection{Anomaly Detection in Accounting Data}
-Statistical fraud detection has a long history~\cite{bolton2002}, and anomaly detection methods are surveyed in~\cite{chandola2009}. In auditing, digit-distribution tests based on Benford's law remain a standard screening tool~\cite{nigrini2017}. Unsupervised detectors such as isolation forests~\cite{liu2008} and one-class support vector machines~\cite{scholkopf2001} need no labelled fraud cases, and autoencoders have been applied to journal entries at scale~\cite{schreyer2017}. These methods rank records by how unusual they are. An unusual record is not necessarily a policy violation, and a violation, such as an invoice approved above a delegated limit, need not look unusual.
+\subsection{Anomaly Detection in Audit Data}
+Anomaly detection methods rank records by how unusual they are~\cite{chandola2009}; isolation forests~\cite{liu2008} and one-class support vector machines~\cite{scholkopf2001} are common unsupervised choices, and we use both as baselines. Long et al.~\cite{long2026} apply machine learning to anomaly detection in the financial audit of construction projects. Such detectors return a score or a label. An unusual record is not necessarily a policy violation, and a violation, such as an invoice approved above a delegated limit, need not look unusual. A detector also learns what is normal from data, so a change of policy requires new training.
 
 \subsection{Large Language Models in Auditing}
-LLMs have been applied to matching passages of financial reports against audit requirements~\cite{hillebrand2023} and to verifying the regulatory compliance of financial reports~\cite{berger2023}. Two known weaknesses of LLMs matter for audit use. Generated text can assert facts that the input does not support~\cite{ji2023}. Grounding the generation in retrieved documents~\cite{lewis2020} and delegating computation to tools~\cite{yao2023} reduce this risk but do not remove it.
+LLMs have been used to match passages of financial reports against audit requirements~\cite{hillebrand2023} and to verify the regulatory compliance of financial reports~\cite{berger2023}. AuditBench~\cite{wang2025auditbench} evaluates LLMs on financial statement auditing (Section~\ref{sec:base}). A known weakness is that generated text can assert facts that the input does not support~\cite{ji2023}, which is not acceptable in an audit, where the evidence for every conclusion has to be shown.
 
-\subsection{Multi-Agent Verification and Confidence}
-Letting agents criticize one another's answers improves factual accuracy~\cite{du2024}, and sampling a model several times and keeping the majority answer improves reasoning accuracy~\cite{wang2023sc}. Confidence is harder to obtain. Neural classifiers are often over-confident~\cite{guo2017}, and the confidence that an LLM states in words is poorly calibrated~\cite{xiong2024}. Roumeliotis et al.~\cite{roumeliotis2026} use trust scores when orchestrating agents. For high-stakes decisions, human review of uncertain cases is the accepted safeguard~\cite{mosqueira2023,nistrmf}.
+\subsection{LLM-Based Multi-Agent Systems}
+Systems in which several LLM agents with different roles cooperate are surveyed in general in~\cite{guo2024} and for financial markets in~\cite{liu2026survey}. Letting agents criticise one another's answers improves factual accuracy~\cite{du2024}. For high-stakes decisions, review of uncertain cases by a human remains the accepted safeguard~\cite{mosqueira2023}.
 
 \subsection{Research Gap}
-No work we know of executes audit controls as code, lets agents add only what code cannot decide, measures how well each finding is supported, and uses that measure to decide what a human must review.
+The works above either detect anomalies without naming a rule, or let an LLM reason over the policy text. We found no work in which the organisation's policy document itself configures executable audit controls, so that the thresholds a system applies are provably those the document states.
 
+% ---------------------------------------------------------------------------
 \section{Base Papers}
 \label{sec:base}
-AuditIQ builds on three recent works. This section states what each does, what it reports, and what it leaves open.
+This work builds on two papers. Table~\ref{tab:base} summarises what each contributes and what this work adds.
 
-\subsection{Audit Anomaly Detection with an Optimized One-Class SVM}
-Long et al.~\cite{long2026} address anomaly detection in the financial auditing of construction projects. They collect 2,400 financial records, comprising statements, invoices and transaction records, normalize the text, and handle missing values. Each record is represented by TF--IDF vectors and Word2Vec embeddings. A one-class support vector machine with adaptive sample weights learns the boundary of normal records, and its parameters are tuned with the Big Bang--Big Crunch metaheuristic. Consistency across validation folds is checked with paired $t$-tests. The reported detection metrics lie between 0.95 and 0.97 and exceed those of conventional machine-learning baselines.
+\subsection{Base Paper 1: AuditBench}
+\textit{What it does.} Wang et al.~\cite{wang2025auditbench} ask how well LLMs can audit financial statements. They build a benchmark that pairs real financial tables with synthesized transaction data into which errors are injected, and evaluate models in a five-stage framework; one stage asks the model to link each error to the accounting standard it violates.
 
-\textit{What it leaves open.} The model scores each record from its text features and returns an anomaly decision. It does not name the violated rule or the supporting evidence, and it learns what is normal from data, so a change of policy requires retraining.
+\textit{What it finds.} Current LLMs identify errors when given the historical transaction data, but are weak at explaining the errors and at citing the relevant accounting standards, and they struggle to complete a full audit and to make the required revisions.
 
-\subsection{AuditBench}
-Wang et al.~\cite{wang2025auditbench} ask how well LLMs can audit financial statements. They build a benchmark that pairs real financial tables with synthesized transaction data into which errors are injected, and evaluate models in a five-stage framework that includes mapping each error to the accounting standard it violates. Current LLMs identify errors when given the transaction history, but are markedly weaker at explaining them and at citing the relevant standard, and they struggle to carry out a complete audit.
+\textit{What we take from it.} (i) The construction of evaluation data: synthetic transactions with injected, labelled errors. (ii) The requirement that a finding must cite the rule it relies on, which AuditBench shows LLMs do poorly on their own.
 
-\textit{What it leaves open.} AuditBench measures models. It does not propose a system that overcomes the weaknesses it finds, and it concerns errors in financial statements, not the matching of procurement documents.
+\textit{What it leaves open.} AuditBench measures models; it does not propose a system that removes the weakness. It concerns financial statements, not the matching of procurement documents against an organisation's policy.
 
-\subsection{Explainable Multi-Agent Recommender}
-Toudas et al.~\cite{toudas2026} build an explainable recommender for access control over financial documents. FinBERT, BERT-base-uncased and GPT-4.1-mini are fine-tuned on Financial PhraseBank sentences labelled with four sensitivity levels. A GPT-5.1 orchestrator combines their predictions in zero-shot mode and writes a natural-language justification. The system reaches 83.71\% accuracy, against 82.80--84.93\% for the individual models. When all three models agree, which happens in 78.8\% of cases, accuracy is 92.28\%.
+\subsection{Base Paper 2: LLM-Based Multi-Agent Systems in Finance}
+\textit{What it does.} Liu et al.~\cite{liu2026survey} survey LLM-based multi-agent systems for financial markets. They argue that traditional models struggle with the strategic and interactive nature of markets, and that multi-agent systems, characterised by heterogeneity, autonomy, adaptability and bounded rationality, fit it better. The survey covers the enabling techniques of LLM agents, the mechanisms that produce collective intelligence, applications such as market simulation, systemic risk analysis and policy evaluation, and technical and regulatory challenges.
 
-\textit{What it leaves open.} Agreement predicts correctness, but the combined accuracy does not exceed the best single model, so the signal is not yet turned into a better decision. The task is the classification of single sentences, not the audit of linked records.
+\textit{What we take from it.} The architecture of the base system: several heterogeneous agents, each with its own role and its own view of the data, whose outputs are combined.
 
-\subsection{What AuditIQ Adopts}
-AuditIQ takes the detector family of Long et al. as a baseline; the injection of labelled errors into synthetic transactions and the measurement of citation quality from AuditBench; and specialist agents with agreement as a reliability signal from Toudas et al., feeding that signal into the risk score. Table~\ref{tab:positioning} summarizes the comparison.
+\textit{What it leaves open.} The survey concerns the simulation of markets, not audit. It names regulatory challenges of LLM agents; an audit system must answer them concretely, because every decision has to be traceable to a rule and to evidence.
 
 \begin{table*}[t]
-\caption{AuditIQ and Its Base Papers}
-\label{tab:positioning}
+\caption{The Base Papers and This Work}
+\label{tab:base}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.12}
-\begin{tabular}{L{2.2cm}L{4.0cm}L{3.9cm}L{3.4cm}L{3.5cm}}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{L{3.0cm}L{4.4cm}L{4.6cm}L{4.6cm}}
 \toprule
-Work & Task and data & Method & Rule and evidence in the output & Reliability signal \\
+Work & Task & Contribution used here & Left open \\
 \midrule
-Long et al.~\cite{long2026} & Anomaly detection over 2,400 construction-industry financial records & TF--IDF and Word2Vec features; optimized adaptive-weighted one-class SVM & Anomaly label & None reported \\
-Wang et al.~\cite{wang2025auditbench} & Benchmark of LLMs on financial-statement auditing with synthesized transactions & Single LLM evaluated in five stages & Explanation and standard citation are evaluated and found weak & None reported \\
-Toudas et al.~\cite{toudas2026} & Sensitivity classification of financial text into four classes & Three fine-tuned specialists and a zero-shot reasoning orchestrator & Natural-language justification & Agent agreement, analyzed after the decision \\
-AuditIQ (this work) & Transaction-level audit of linked invoice, PO, GRN, vendor and approval records & Deterministic controls, three specialist agents, challenger & Finding with policy clause and evidence fields; audit pack & Per-finding confidence from grounding, clause validity and agreement, used in scoring and routing \\
+AuditBench~\cite{wang2025auditbench} & Benchmark of LLMs on financial statement auditing & Synthetic transactions with injected, labelled errors; findings must cite the governing rule & No system that fixes the weak citation; not procurement; no organisation policy \\
+Liu et al.~\cite{liu2026survey} & Survey of LLM-based multi-agent systems for financial markets & Architecture of heterogeneous, autonomous specialist agents & Not audit; regulatory traceability named as a challenge \\
+This work & Transaction-level audit of invoices against an organisation's policy & Base multi-agent pipeline, plus one feature: controls executed from the policy document & LLM stages measured only in a 20-invoice pilot (Section~\ref{sec:pilot}) \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\section{Proposed Methodology}
-\label{sec:method}
-\subsection{System Overview}
-Fig.~\ref{fig:arch} shows the pipeline. A transaction $x$ is the tuple of records linked to one invoice: the invoice, its PO, its GRN, the vendor master record, and the approval log entries. A policy version $P_v$ is a document whose clauses carry identifiers; $K(P_v)$ denotes its set of clause identifiers. For each transaction the system outputs a set of findings, called flags, $F(x)$; a risk score; a route; and an audit pack. A flag is a tuple
+% ---------------------------------------------------------------------------
+\section{Base System}
+\label{sec:basesys}
+The base system is a multi-agent audit pipeline that follows the two base papers. Fig.~\ref{fig:arch} shows it together with the extra feature.
+
+\subsection{Inputs}
+A \emph{transaction} $x$ is one invoice together with the records linked to it: its PO, its GRN, the vendor master record, the approval log entries, and the vendor's other invoices. The policy is a document of numbered rules; each rule defines one exception and its severity.
+
+\subsection{Stages}
+\begin{enumerate}
+\item \textit{Evidence extraction.} The invoice identifier is resolved to a transaction by joining the linked records, so that every later stage sees the same values.
+\item \textit{Specialist agents.} Three LLM agents, each with a narrow remit, examine the transaction: a \emph{math and approvals} agent, a \emph{tax and identity} agent and a \emph{vendor intelligence} agent. Each returns its findings as structured output. This is the heterogeneous multi-agent design of~\cite{liu2026survey}.
+\item \textit{Challenger.} A further LLM agent reviews the findings and removes those the evidence does not support, in the spirit of~\cite{du2024}.
+\item \textit{Risk score and route.} With severity weights $w=(30,20,10,5)$ for critical, high, medium and low findings, the score is
 \begin{equation}
-f=(k,\,s,\,E,\,\sigma,\,c),
-\label{eq:flag}
+R(x)=\min\Bigl(100,\ \sum_{f\in F(x)} w_{s(f)}\Bigr),
+\label{eq:score}
 \end{equation}
-where $k\in K(P_v)$ is the cited clause, $s$ is the severity (critical, high, medium or low), $E$ is the set of evidence fields and the values the flag relies on, $\sigma\in\{\mathrm{D},\mathrm{L}\}$ records whether the flag comes from a deterministic control or an LLM agent, and $c\in[0,1]$ is its confidence. The ground truth of $x$ is the set $Y(x)\subseteq K(P_v)$ of clauses it violates; $x$ is clean when $Y(x)=\emptyset$.
+raised to at least 70 if $F(x)$ contains a critical finding and to at least 50 if it contains a high one. An invoice with $R(x)\ge 50$ is escalated to a human reviewer; the others are approved.
+\item \textit{Human review and audit pack.} The reviewer approves, rejects or overrides with a justification. An audit pack records the findings, their evidence, the cited rules and the decision.
+\end{enumerate}
+
+\subsection{Platform Architecture}
+\label{sec:platform}
+The platform consists of five services (Fig.~\ref{fig:deploy}). They share nothing but the data store and communicate over network interfaces, so each can run on its own machine.
+\begin{itemize}
+\item \textit{Audit workers} run the pipeline. One invoice is one unit of work: its transaction carries every record it needs, so auditing it requires nothing from any other audit, and workers need no coordination. Within one invoice the three specialist agents run in parallel; across invoices the batch runner audits several invoices at the same time.
+\item \textit{Policy service} adopts policy documents and keeps the versions (Section~\ref{sec:feature}).
+\item \textit{Data store} is a relational database (PostgreSQL as a server, or SQLite as a file). It holds the ledger, the policy versions and passages, and everything the audit produces.
+\item \textit{Model endpoint} is any server that offers an OpenAI-compatible HTTP interface, local or hosted. Only the agents and the challenger use it.
+\item \textit{REST API and web application.} An HTTP API exposes the ledger, the audit results, the review queue, the policy store and the copilot; long tasks, such as auditing the ledger again after a policy change, run as background jobs whose progress the client polls. A browser application for reviewers uses only this API (Section~\ref{sec:web}).
+\end{itemize}
+In the experiments of this paper all services ran on one laptop; a deployment on several machines has not been measured.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\footnotesize, node distance=6mm and 5mm,
+  svc/.style={draw, rounded corners=2pt, minimum height=9mm, text width=22mm, align=center, fill=white},
+  db/.style={draw, very thick, rounded corners=2pt, minimum height=9mm, text width=30mm, align=center, fill=black!10},
+  link/.style={{Stealth[length=1.8mm]}-{Stealth[length=1.8mm]}, semithick}]
+\node[db] (store) {Data store (PostgreSQL / SQLite): ledger, policy, findings, audit trail};
+\node[svc, above left=7mm and -6mm of store] (pol) {Policy service};
+\node[svc, above right=7mm and -6mm of store] (dash) {REST API and web application};
+\node[svc, below left=7mm and -6mm of store] (w1) {Audit worker 1};
+\node[svc, below right=7mm and -6mm of store] (wn) {Audit worker $n$};
+\node[svc, below=20mm of store] (llm) {Model endpoint (HTTP)};
+\node at ($(w1)!0.5!(wn)$) {$\cdots$};
+\draw[link] (pol.south) -- (store);
+\draw[link] (dash.south) -- (store);
+\draw[link] (w1.north) -- (store);
+\draw[link] (wn.north) -- (store);
+\draw[link] (w1.south) -- (llm);
+\draw[link] (wn.south) -- (llm);
+\end{tikzpicture}
+\caption{Services of the platform. Audit workers are independent of one another: each takes invoices, reads the ledger and the active policy from the data store, calls the model endpoint for the judgement rules, and writes its results back.}
+\label{fig:deploy}
+\end{figure}
+
+\subsection{Forensic Evidence Trail}
+For every audited invoice the platform stores the result, every finding with its evidence, the findings that the challenger removed together with its reason, one audit-trail entry per stage, the policy version that was applied and, after review, the reviewer's decision with name and justification as the last entry of the trail. Results are added and never replaced, so an invoice that is audited again under a new policy keeps its earlier results. This is what allows a later examiner to reconstruct how a decision was reached.
+
+\subsection{Weakness of the Base System}
+In the base system the agents perform every check, including those that are plain arithmetic. Three consequences follow. (i) Thresholds live in prose and prompts, so a policy change means editing the system. (ii) The text an agent reads and the number a tool applies can disagree unnoticed. (iii) Following AuditBench~\cite{wang2025auditbench}, the citation of the rule by an LLM cannot be relied on. The extra feature addresses these three points for every rule that can be decided by comparing fields.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{fig_architecture.pdf}
-\caption{AuditIQ pipeline with the extra features. Stages 1, 2, 5 and 6 are deterministic code; stages 3 and 4 use an LLM. The policy store is read at run time by the controls, the agents and the verifier. Every stage appends a record to the audit trail.}
+\begin{tikzpicture}[
+  node distance=5mm and 4.5mm, font=\footnotesize,
+  base/.style={draw, rounded corners=2pt, minimum height=9mm, text width=19mm, align=center, fill=white},
+  new/.style={draw, very thick, rounded corners=2pt, minimum height=9mm, text width=19mm, align=center, fill=black!10},
+  data/.style={draw, dashed, rounded corners=2pt, minimum height=9mm, text width=18mm, align=center},
+  arr/.style={-{Stealth[length=2mm]}, semithick}]
+% policy path (extra feature)
+\node[data] (pdf) {Policy document (PDF)};
+\node[new, right=of pdf] (read) {Read PDF: rules, pages};
+\node[new, right=of read] (ext) {Extract thresholds from wording};
+\node[new, right=of ext] (reg) {Clause registry (16 rules, 14 values)};
+\node[data, right=of reg] (store) {Policy store and passages};
+% audit path
+\node[data, below=13mm of pdf] (led) {Ledger: invoices, POs, GRNs, vendors, approvals};
+\node[base, right=of led] (evi) {Evidence extraction};
+\node[new, right=of evi] (ctl) {Deterministic controls (12)};
+\node[base, right=of ctl] (agt) {Three specialist agents (LLM)};
+\node[base, right=of agt] (chl) {Challenger (LLM)};
+\node[base, right=of chl] (scr) {Risk score and route};
+\node[base, right=of scr] (rev) {Human review, audit pack};
+\draw[arr] (pdf) -- (read); \draw[arr] (read) -- (ext); \draw[arr] (ext) -- (reg); \draw[arr] (reg) -- (store);
+\draw[arr] (led) -- (evi); \draw[arr] (evi) -- (ctl); \draw[arr] (ctl) -- (agt); \draw[arr] (agt) -- (chl);
+\draw[arr] (chl) -- (scr); \draw[arr] (scr) -- (rev);
+\draw[arr] ([xshift=-5mm]reg.south) -- ++(0,-4.5mm) -| node[pos=0.25, above, font=\scriptsize] {parameters} (ctl.north);
+\draw[arr] ([xshift=5mm]reg.south) -- ++(0,-4.5mm) -| (agt.north);
+\node[font=\scriptsize, anchor=west] at ($(agt.north)+(0.8mm,3.2mm)$) {policy text};
+\draw[arr] (store.south) -- ++(0,-4.5mm) -| node[pos=0.25, above, font=\scriptsize] {rule, document, page} (rev.north);
+\end{tikzpicture}
+\caption{The AuditIQ pipeline. White boxes are the base system; grey boxes with a thick border are the extra feature of this paper; dashed boxes are data. The policy document configures the controls, which run before any LLM is called.}
 \label{fig:arch}
 \end{figure*}
 
-\subsection{Existing Pipeline}
-\subsubsection{Evidence extraction}
-The input identifier is resolved to a transaction by a single SQL join of the invoice with its PO, GRN and vendor record, so every later stage sees the same values. A vendor identifier yields all of that vendor's invoices, which the pattern checks need.
+% ---------------------------------------------------------------------------
+\section{Extra Feature: Policy-Driven Deterministic Controls}
+\label{sec:feature}
 
-\subsubsection{Policy store}
-Policies are stored as versioned rows that hold the policy text and mark the active version. At the start of each run the active version is read and inserted into every agent prompt, and its version number is written to the result record.
+\subsection{Idea}
+Every check that can be decided by comparing fields is taken away from the LLM agents and executed as code, and that code takes all its thresholds from the organisation's policy document. The agents keep only the rules that need reading or judgement.
 
-\subsubsection{Specialist agents}
-Three LLM agents run in parallel, each with a narrow remit. The \textit{math and approvals} agent examines amounts, quantities and approval limits. The \textit{tax and identity} agent examines duplicate invoices and tax identifiers (GSTIN). The \textit{vendor intelligence} agent examines behavioral patterns in the vendor's history; in production it may also search external sources for adverse information. Each returns a JSON array of flags.
-
-\subsubsection{Challenger}
-An LLM challenger receives all flags and is instructed to remove any flag whose evidence does not support it or whose severity is not justified, and to return the kept and the removed flags with reasons.
-
-\subsubsection{Count-based risk score}
-A transaction is scored by the severities of its verified flags:
+\subsection{Definitions}
+A policy version is a tuple
 \begin{equation}
-R_0(x)=\min\Bigl(100,\ \sum_{f\in F(x)} w_{s(f)}\Bigr),
-\label{eq:r0}
+P_v=(K,\,s,\,\kappa,\,\theta),
+\label{eq:policy}
 \end{equation}
-with weights $w=(30,20,10,5)$ for critical, high, medium and low. A floor then raises $R_0$ to at least 70 if $F(x)$ contains a critical flag, and otherwise to at least 50 if it contains a high flag. The transaction is escalated to a human when $R_0(x)\ge\tau$, with $\tau=50$. Every flag counts fully, whether it was computed from database values or inferred by an LLM.
+where $K$ is the set of rule identifiers, $s(k)$ the severity of rule $k$, $\kappa(k)\in\{\text{control},\text{judgement}\}$ its kind, and $\theta_k$ its parameters. Stored as data, the tuple is the \emph{clause registry}. Our policy has 16 rules: 12 of kind control and 4 of kind judgement, with 14 parameter values in total.
 
-\subsubsection{Human review and audit pack}
-An escalated transaction pauses the pipeline. The reviewer sees the risk result, the verified flags and the extracted evidence, and approves, rejects or overrides with a written justification; an analysis can also be sent back for re-analysis. The final stage writes an audit pack (Section~\ref{sec:xai}).
-
-\subsection{Extra Features}
-\label{sec:extra}
-Five features extend the prototype.
-
-\subsubsection{E1: Controls-first stage}
-In the prototype the agents perform the rule checks themselves, with control functions attached as tools. E1 moves every check that is decidable from the extracted values into a separate stage that runs before the agents: matching of amounts and quantities across invoice, PO and GRN, duplicate invoice numbers, GSTIN checks, approval limits, missing documents, blacklist status, and the count, weekday and round-amount indicators (classes R1--R10 in Table~\ref{tab:taxonomy}). Each control is a pure function of the transaction and the policy parameters, and emits a flag with source $\sigma=\mathrm{D}$. The agents then receive the control flags and add only what code cannot decide: a short delivery explained in a GRN remark, invoices structured across days to stay under an approval limit, near-duplicate invoices whose numbers were re-keyed, and invoice descriptions that do not match the PO (classes J1--J4), each with $\sigma=\mathrm{L}$.
-
-\subsubsection{E2: Evidence-grounded confidence}
-Each flag receives a confidence
+A \emph{control} is a function $c_k(x;\theta_k)$ of a transaction and of the parameters of its rule. It returns nothing, or a \emph{finding}
 \begin{equation}
-c(f)=
-\begin{cases}
-1, & \sigma(f)=\mathrm{D},\\[2pt]
-\tfrac{1}{3}\bigl(g(f)+p(f)+a(f)\bigr), & \sigma(f)=\mathrm{L},
-\end{cases}
-\label{eq:conf}
+f=(k,\ s(k),\ E),
+\label{eq:finding}
 \end{equation}
-where
-\begin{itemize}
-\item $g(f)\in\{0,1\}$ is \textit{grounding}: 1 if every field in $E$ exists in the extracted transaction with the stated value;
-\item $p(f)\in\{0,1\}$ is \textit{clause validity}: 1 if $k\in K(P_v)$ for the active version;
-\item $a(f)\in[0,1]$ is \textit{agreement}: the fraction of $m$ independent re-runs of the originating agent that return a flag citing the same clause for the same transaction.
-\end{itemize}
-The first two terms are computed by code after the challenger. The third costs $m$ further agent calls and is computed only for transactions that carry at least one LLM flag. None of the terms relies on a confidence stated by the model, which is poorly calibrated~\cite{xiong2024}; agreement is used because it has been observed to predict correctness~\cite{toudas2026,wang2023sc}. Equal weights are an uninformed starting point, and the protocol includes a sensitivity analysis.
+where $E$ is the set of field values on which the finding rests. A control contains no constant of its own.
 
-\subsubsection{E3: Confidence-weighted score and sampled review}
-\label{sec:scoring}
-The weighted score is
-\begin{equation}
-R_c(x)=\min\Bigl(100,\ \sum_{f\in F(x)} w_{s(f)}\,c(f)\Bigr),
-\label{eq:rc}
-\end{equation}
-with the same floors applied only for flags with $c(f)\ge\theta$, where $\theta=2/3$. Routing uses both scores:
-\begin{equation}
-\mathrm{route}(x)=
-\begin{cases}
-\text{escalate}, & R_c(x)\ge\tau,\\
-\text{sample}, & R_c(x)<\tau\le R_0(x),\\
-\text{approve}, & R_0(x)<\tau.
-\end{cases}
-\label{eq:route}
-\end{equation}
-
-Because $c(f)\le 1$, and because the floors of $R_c$ are triggered by a subset of the flags that trigger the floors of $R_0$, we have $R_c(x)\le R_0(x)$ for every $x$. By~\eqref{eq:route}, a transaction is approved exactly when $R_0(x)<\tau$. The set of auto-approved transactions is therefore identical under both scores. Confidence weighting only divides the transactions that the count-based score escalates into two queues: those escalated on well-supported flags, and those escalated only because of weakly supported flags. The latter go to a sampled-review queue, of which a configurable fraction $\rho$ is reviewed by a human. With $\rho=1$ the scheme reduces to the count-based baseline.
-
-\textit{Illustration (constructed, not measured).} A transaction carries a round-amount indicator from a control (medium, $c=1$) and a near-duplicate flag from an agent (critical). The agent's flag cites a matching invoice number that is absent from the extracted data ($g=0$), cites a valid clause ($p=1$), and is reproduced by one of three re-runs ($a=1/3$), so $c=4/9$. The count-based score is $R_0=40$, raised to 70 by the critical floor, and the transaction is escalated. The weighted score is $R_c=10+30\cdot\tfrac{4}{9}\approx 23.3$ with no floor, since $4/9<\theta$. The transaction is routed to sampled review.
-
-\subsubsection{E4: Clause-level policy parameters and deterministic routing}
-The numeric thresholds of a policy version, such as the match tolerance, the daily invoice count and the approval limits, are held in a parameter table keyed by clause identifier. The controls read the parameters and the agents read the clause text of the same version, so a change of policy requires no change to the pipeline. The router, which the prototype implements with an LLM, becomes a deterministic condition on~\eqref{eq:route}.
-
-\subsubsection{E5: AuditIQ-Bench and evaluation harness}
-A seeded generator produces linked procurement records with labelled anomalies, and a harness runs every configuration against them (Section~\ref{sec:protocol}).
-
-\subsection{Overall System Workflow}
-With the extra features in place, a transaction is processed as follows.
-\begin{enumerate}
-\item An invoice or vendor identifier is submitted, singly or by the batch runner.
-\item Evidence extraction joins the linked records into one transaction, and the active policy version and its parameters are read.
-\item The deterministic controls run and emit flags with $c=1$.
-\item The three specialist agents run in parallel and emit judgement flags.
-\item The challenger removes unsupported flags; code computes grounding and clause validity for the rest.
-\item For a transaction with LLM flags, the originating agents are re-run $m$ times to obtain agreement, and both scores are computed.
-\item The router sends the transaction to automatic approval, sampled review or human review.
-\item The audit pack and the per-stage records are written, and any reviewer decision is stored with its justification.
-\end{enumerate}
+\subsection{Input and Output}
+Table~\ref{tab:io} gives the input and the output of each step of the feature.
 
 \begin{table}[t]
-\caption{Anomaly Classes of AuditIQ-Bench}
-\label{tab:taxonomy}
+\caption{Input and Output of Each Step}
+\label{tab:io}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{L{0.6cm}L{6.1cm}L{1.3cm}}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{L{1.5cm}L{2.7cm}L{3.6cm}}
 \toprule
-ID & Anomaly class & Severity \\
+Step & Input & Output \\
 \midrule
-\multicolumn{3}{l}{\textit{Rule-defined (decidable from field values)}} \\
-R1 & Invoice amount differs from PO amount beyond the tolerance & High \\
-R2 & Billed quantity exceeds received quantity & High \\
-R3 & Duplicate invoice number for the same vendor & Critical \\
-R4 & Malformed GSTIN or invalid state code & Medium \\
-R5 & Invoice GSTIN differs from the vendor master & High \\
-R6 & Same-day invoice splitting above the daily count & High \\
-R7 & Invoice amount exceeds the approver's limit & Critical \\
-R8 & Missing PO or GRN reference & High \\
-R9 & Vendor blacklisted or suspended & Critical \\
-R10 & Weekend-dated or round-amount invoice & Low/Med. \\
-\addlinespace
-\multicolumn{3}{l}{\textit{Judgement (free text or cross-record reasoning)}} \\
-J1 & Near-duplicate invoice: re-keyed number, same vendor and amount & Critical \\
-J2 & Cross-day structuring just below an approval limit & High \\
-J3 & Invoice description inconsistent with the PO description & Medium \\
-J4 & GRN remark contradicts the billed quantity & High \\
+Read PDF & Policy PDF & Text lines with font size, position and page \\
+Structure & Text lines & Passages: the 16 rules and the other paragraphs, each with section and page \\
+Extract & Passages; reference registry & Registry (16 rules, 14 values); list of changed parameters; list of problems \\
+Adopt & Registry; PDF & New policy version in the store; passages stored for citation \\
+Audit & Invoice identifier; active registry & Findings with rule, severity and evidence; score; route; audit trail \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section{System Implementation}
+\subsection{Logic}
+\label{sec:logic}
+The feature works in six steps.
+
+\textit{Step 1: read the document.} The PDF is opened and every text line is taken with its font size, its left edge and its page number.
+
+\textit{Step 2: find the rules.} The segmentation uses layout, not keywords. The most frequent font size is the body size; a line at least one point larger is a heading; a line that begins with ``Rule $\langle$number$\rangle$ ($\langle$severity$\rangle$),'' opens a rule, and indented lines continue it.
+
+\textit{Step 3: extract the thresholds.} For every parameter, one pattern is matched against the text of the rule that states it (Table~\ref{tab:params}). The approval limits are read from the table of roles and amounts. The severity is read from the rule itself. The result is $\hat{\theta}=E(D)$ for document $D$.
+
+\textit{Step 4: check, and refuse if necessary.} The extraction is by pattern and not by an LLM, so a value is either found in the expected sentence or reported as missing. The document is refused, and nothing is stored, when (a) a rule that the system executes is absent, (b) a threshold is not found in the wording of its rule, (c) the document contains a rule for which the system has no check, (d) a value is not meaningful, for example a word that is not a day of the week, or (e) the document states no version.
+
+\textit{Step 5: adopt.} An accepted document becomes a new policy version $\hat{P}=(K,\hat{s},\kappa,\hat{\theta})$. Its passages are stored with their page numbers. The set $K$ and the kinds $\kappa$ come from a reference version, which records what the system is able to execute.
+
+\textit{Step 6: audit.} For each invoice the controls run, and every finding cites its rule, the policy document and the page:
+\begin{equation}
+F_{\mathrm{D}}(x)=\bigl\{\,c_k(x;\hat{\theta}_k)\ :\ \kappa(k)=\text{control}\,\bigr\}.
+\label{eq:controls}
+\end{equation}
+The findings then enter the score~\eqref{eq:score} unchanged. Fig.~\ref{fig:example} follows one threshold through these steps.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[font=\footnotesize, node distance=4.5mm,
+  box/.style={draw, rounded corners=2pt, text width=78mm, align=left, inner sep=3pt},
+  arr/.style={-{Stealth[length=2mm]}, semithick}]
+\node[box] (a) {\textbf{Rule in the PDF (page 1).} ``Rule 2.1.1 (HIGH), amount match. The invoice amount must equal the PO amount. A difference of up to \textbf{0.5\%} of the PO amount is tolerated.''};
+\node[box, below=of a] (b) {\textbf{Pattern.} \texttt{difference of up to (N)\% of the PO amount}};
+\node[box, below=of b] (c) {\textbf{Registry.} rule 2.1.1, severity high, kind control, \texttt{amount\_tolerance\_pct = 0.5}};
+\node[box, below=of c] (d) {\textbf{Control.} Invoice 100{,}800.00, PO 100{,}000.00: difference 0.80\% $>$ 0.5\%};
+\node[box, below=of d] (e) {\textbf{Finding.} Rule 2.1.1, high; evidence \texttt{invoice.amount}, \texttt{po.amount}; cites the document, page 1. Score 50: escalate.};
+\draw[arr] (a) -- (b); \draw[arr] (b) -- (c); \draw[arr] (c) -- (d); \draw[arr] (d) -- (e);
+\end{tikzpicture}
+\caption{One threshold from the policy document to a finding (illustrative values). Under the original tolerance of 1\% the same invoice raises no finding.}
+\label{fig:example}
+\end{figure}
+
+\begin{table}[t]
+\caption{Parameters, the Wording They Are Read From, and the Control That Uses Them}
+\label{tab:params}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabular}{L{0.75cm}L{3.9cm}L{3.1cm}}
+\toprule
+Rule & Wording in the policy (value in bold) & Control \\
+\midrule
+2.1.1 & difference of up to \textbf{1\%} of the PO amount & amount match \\
+3.1.1 & exactly \textbf{15} alphanumeric characters & GSTIN format \\
+3.1.2 & a state code from \textbf{01} to \textbf{37} & GSTIN state code \\
+4.1.1 & at most \textbf{3} invoices dated on the same day & same-day splitting \\
+4.1.2 & as a guide, \textbf{7} days; within \textbf{15\%} of the limit & (judgement rule; read by an agent) \\
+4.2.1 & dated on a \textbf{Saturday or Sunday} & non-business day \\
+4.3.1 & an exact multiple of INR \textbf{10{,}000} & round amount \\
+4.4.1 & registration status is \textbf{Suspended} & blocked vendor \\
+5.1.1 & table of roles and limits (\textbf{4} values) & approval limit \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Twelve Controls}
+The controls are: amount match (2.1.1), quantity match (2.1.2), missing PO or GRN reference (2.1.3), exact duplicate invoice number (2.2.1), GSTIN format (3.1.1), GSTIN state code (3.1.2), GSTIN against the vendor master (3.1.3), same-day splitting (4.1.1), non-business day (4.2.1), round amount (4.3.1), blocked vendor (4.4.1) and approval limit (5.1.1). Four of them need no parameter. As an example, the amount match control is
+\begin{equation}
+c_{2.1.1}(x;\tau)=
+\begin{cases}
+\text{finding}, & 100\,|a_{\mathrm{inv}}-a_{\mathrm{po}}| > \tau\,a_{\mathrm{po}},\\
+\varnothing, & \text{otherwise},
+\end{cases}
+\label{eq:amount}
+\end{equation}
+where $a_{\mathrm{inv}}$ and $a_{\mathrm{po}}$ are the amounts in integer paise and $\tau$ is the tolerance in percent read from the document. Integer arithmetic means that rounding cannot move a decision at the boundary. The approval limit control takes the limit of the approver's role from the registry, not from the approval log, because the log records what the approval system believed at the time and not what the policy in force says.
+
+\subsection{What Remains With the Agents}
+Four rules need reading or judgement and stay with the LLM agents of the base system: a goods-receipt remark that contradicts the billed quantity (2.1.4), an invoice description that does not match the PO (2.1.5), a near-duplicate invoice with a re-keyed number (2.2.2), and purchases structured across days to stay below an approval limit (4.1.2). The agents receive the control findings and may add findings only under these rules.
+
+% ---------------------------------------------------------------------------
+\section{Implementation}
 \label{sec:impl}
 \subsection{Technology Stack}
-Table~\ref{tab:stack} gives, for every feature, the technology with which it is or will be built, the reason for the choice, and its status. Three decisions shape the stack.
-
-\textit{Orchestration.} The agent graph runs in Flowise~\cite{flowise}, an open-source visual framework whose Agentflow nodes provide agents, LLM calls, conditions, loops and a human-input step. Each flow is exposed as a REST endpoint, which is all the evaluation harness needs. Self-hosting it with Docker fixes the version used in the experiments.
-
-\textit{Model access.} The agents call the LLM through a LiteLLM gateway~\cite{litellm}, so the model can be replaced without editing the graph. The experiments use one open-weight LLM at temperature 0 and repeat the main comparison with a second model.
-
-\textit{Controls in the database.} The deterministic controls are written as SQL views over the relational store, extended by small JavaScript functions where a view is impractical. The pipeline and the controls-only baseline therefore execute one and the same definition.
-
-\subsection{Current Prototype}
-The prototype is an Agentflow graph with three agent nodes, LLM nodes for the challenger and the audit pack, a human-input node, and function nodes for extraction, policy retrieval, aggregation and scoring. Six control functions exist as JavaScript tools: three-way match, duplicate invoice, GSTIN check, approval limit, vendor policy and ledger pattern. The agent prompts repeat some thresholds from the policy; these will be removed so that the policy store is the only source. A batch runner submits pending invoices to the flow's endpoint with a concurrency of ten and writes the structured result to the results table. A second flow answers auditors' questions by generating, validating and executing SQL.
+Table~\ref{tab:stack} lists the technology of each part. The feature uses no LLM.
 
 \begin{table*}[t]
-\caption{Technology Stack and Implementation Status by Feature}
+\caption{Technology Stack}
 \label{tab:stack}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{3pt}
+\setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.12}
-\begin{tabular}{L{3.1cm}L{4.8cm}L{4.6cm}L{4.0cm}}
+\begin{tabular}{L{3.4cm}L{4.2cm}L{6.2cm}L{2.7cm}}
 \toprule
-Feature & Technology & Why it is used & Status \\
+Part & Technology & Role & Status \\
 \midrule
-Agent orchestration and human review & Flowise Agentflow, open source, self-hosted with Docker & Runs the agent graph, pauses for the reviewer, exposes each flow as a REST endpoint & Flows implemented; self-hosted deployment pending \\
-LLM access & LiteLLM gateway; open-weight LLM at temperature 0; second model for robustness & Model can be changed without editing the flows & Implemented; second model pending \\
-Data store & PostgreSQL; eleven tables, eight views & Holds linked invoice, PO, GRN, vendor, approval and result records & Implemented \\
-Deterministic controls (E1) & SQL views and JavaScript functions & Exact checks, shared by the pipeline and the controls-only baseline & Six functions implemented as agent tools; pre-agent stage pending \\
-Policy store and parameters (E4) & Versioned policy rows; parameter table keyed by clause & Policy change without a change to the pipeline & Policy rows implemented; parameter table pending \\
-Specialist agents and challenger & Agentflow agent and LLM nodes with JSON structured output & Judgement checks; removal of unsupported flags & Implemented \\
-Scoring and routing (E2--E4) & JavaScript function node; agent re-runs; deterministic condition node & Computes \eqref{eq:conf}--\eqref{eq:route}; routing must not depend on an LLM & Count-based scorer and LLM router implemented; E2--E4 pending \\
-Audit pack and audit trail & LLM node with seven-field structured output; activity-log table & Explanation, cited clauses and evidence chain & Audit pack implemented; per-stage logging pending \\
-Audit copilot & Text-to-SQL flow; read-only database role & Natural-language questions over the audit data & Flow implemented; read-only role pending \\
-Dashboard and review queue & Appsmith application, eight pages & Risk views, review queue, vendor intelligence, reports & Implemented \\
-Benchmark generator (E5) & Python, NumPy with fixed seeds, pandas, Faker & Synthetic transactions with labelled anomalies & Pending \\
-Evaluation harness (E5) & Python: httpx, scikit-learn, statsmodels & Calls the flow endpoint; metrics, classical detectors, significance tests & Pending \\
-Tracing and packaging & Langfuse through the Flowise analytics setting; Docker Compose; Git & Tokens and latency per stage; reproducible deployment & Pending \\
+\multicolumn{4}{l}{\textit{Extra feature}} \\
+Reading the policy PDF & PyMuPDF~\cite{pymupdf} & Text lines with font size, position and page; segmentation into rules & Implemented, measured \\
+Threshold extraction & Python regular expressions & One pattern per parameter; refusal with reasons & Implemented, measured \\
+Clause registry & JSON; Python & Rules, severities, kinds and parameters as data & Implemented, measured \\
+Deterministic controls & Python (no library) & Twelve functions of transaction and registry & Implemented, measured \\
+Policy documents of the experiment & ReportLab~\cite{reportlab} & Renders each policy variant as a PDF & Implemented \\
+Policy and audit store & SQLite or PostgreSQL & Policy versions, passages, findings, audit trail, review decisions & Implemented \\
+Policies in free prose (extension) & LLM; Python verification & The model proposes each value with a quote; code checks that the quote is in the document and the value in the quote; a named person confirms & Implemented, measured \\
+\addlinespace
+\multicolumn{4}{l}{\textit{Base system}} \\
+Pipeline orchestration & LangGraph~\cite{langgraph} & Graph of stages; parallel agents; pause for the reviewer & Implemented \\
+Specialist agents and challenger & LLM behind an OpenAI-compatible endpoint & Judgement rules; removal of unsupported findings & Implemented; 20-invoice pilot \\
+Risk score and route & Python & Equation~\eqref{eq:score} and the threshold of 50 & Implemented \\
+REST API & FastAPI~\cite{fastapi}, Uvicorn & Ledger, results, review, policy adoption and copilot over HTTP; background jobs; optional bearer token & Implemented, tested \\
+Web application & React, TypeScript, React Three Fiber~\cite{r3f}, three.js~\cite{threejs} & Review queue, audit packs, policy adoption, results; 3D views of vendor risk, of the pipeline and of the policy change & Implemented, tested \\
+Lightweight dashboard & Streamlit & The same review work in a simpler interface & Implemented \\
+\addlinespace
+\multicolumn{4}{l}{\textit{Evaluation}} \\
+Synthetic ledgers & Python, NumPy, pandas, Faker & Linked records with labelled anomalies, after~\cite{wang2025auditbench} & Implemented \\
+Independent ground truth & pandas & Recomputes the violated rules from the ledger tables & Implemented \\
+Classical baselines & scikit-learn~\cite{pedregosa2011} & Isolation forest and one-class SVM with cross-fitted thresholds & Implemented, measured \\
+Tests & pytest; Vitest, Testing Library & Python suite on SQLite and PostgreSQL; frontend suite including the 3D scenes; both in continuous integration & Implemented \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
+\subsection{Data Structures}
+\textit{Registry entry.} Each rule is stored as its title, severity, kind and parameters, for example rule 5.1.1 (approval limit; critical; control) with the limit of each of four roles.
+
+\textit{Passage.} Each rule or paragraph read from the PDF is stored with its kind, its rule number, the heading of its section, its page and its text.
+
+\textit{Finding.} A finding holds the rule, the severity, the name of the control, a sentence that states the exception, the evidence as pairs of field and value, and the citation (document and page).
+
+\subsection{Operation}
+Adopting a policy document is one command, or one upload in the web application; auditing the ledger is a second. No code and no prompt is edited when the policy changes. Every audit stores, for each invoice, the result, the findings and one audit-trail entry per stage, together with the policy version that was applied.
+
+\subsection{Web Application}
+\label{sec:web}
+Reviewers work in a browser application written in React and TypeScript that uses only the REST API. Its pages are an overview of the audit; the review queue; the audit pack of one invoice, with each finding, its evidence and citation, the audit trail and the decision form; the policy, where a new document is uploaded, the changes it makes are shown before it is adopted, and a document in free prose is read by the model and confirmed by the reviewer; a copilot that answers with citations; the pipeline; and the measured results. Three views are three-dimensional, drawn with React Three Fiber~\cite{r3f} on three.js~\cite{threejs}: a \emph{risk constellation} that places every vendor in the sector of its spending category, at a height given by the highest risk among its invoices and with a size that grows with its number of invoices, drawn as one instanced mesh so that the number of vendors does not change the number of draw calls; the pipeline as a graph whose stages light up for the chosen configuration; and the share of invoices that a frozen system decides against each policy. Every 3D view has a table with the same data beside it, and a fallback for browsers without WebGL. The API compares its bearer token in constant time, accepts only PDF uploads of up to 20~MB, and validates every request body.
+
+\subsection{Testing}
+The Python test suite (313 tests, each backend counted separately) runs on SQLite and on PostgreSQL. The 26 tests of the web application cover the API client, every page against a mocked API, and the three 3D scenes, which React Three Fiber's test renderer draws without a graphics processor. Continuous integration runs both suites, the linters, a production build and a check of the shipped packages for known vulnerabilities on every change. No test calls a model: where a stage needs one, a scripted stand-in replies, so the tests check what the pipeline asks and how it handles the reply, not how well a model audits.
+
+% ---------------------------------------------------------------------------
 \section{Experimental Setup}
-\label{sec:protocol}
-\subsection{Dataset: AuditIQ-Bench}
-\label{sec:bench}
-We know of no public dataset that links invoices, POs, GRNs and vendor records and labels policy violations. Following the construction used by AuditBench~\cite{wang2025auditbench}, we generate synthetic transactions and inject labelled anomalies.
+\label{sec:setup}
+\subsection{Question}
+When an organisation changes its policy and supplies only the new document, does the system decide every invoice as the new policy requires, and how wrong is a system that is not updated?
 
-A seeded generator produces 60 vendors and 1,200 invoices over twelve months, each with a PO, a GRN and approval entries. Amounts are drawn from log-normal distributions per spending category, so that leading digits approximately follow Benford's law~\cite{nigrini2017}. The set contains 420 anomalous invoices, 30 for each of the fourteen classes in Table~\ref{tab:taxonomy}; 120 hard negatives; and 660 ordinary clean invoices. For the two classes that are defined over groups of invoices (R6 and J2), every invoice of the group is labelled.
+\subsection{Data}
+We use five synthetic ledgers with 40{,}000 invoices in total: four ledgers of 5{,}000 invoices and one of 20{,}000, each with purchase orders, goods receipts, vendors and approval logs. As in AuditBench~\cite{wang2025auditbench}, anomalies are injected into synthesized transactions and labelled when they are injected.
 
-Hard negatives are clean invoices built to resemble anomalies: a variance just inside the tolerance, an invoice count exactly at the daily limit, an amount exactly at an approval limit, similar but distinct invoice numbers for separate deliveries, and identical recurring monthly amounts.
+\subsection{Policy Variants}
+Starting from the reference policy (version 2.5) we derive fourteen variants. Eleven change one threshold: the amount tolerance (1\% to 0.5\%, 2\% and 5\%), the daily invoice count per vendor (3 to 2 and 5), the Manager approval limit (100{,}000 to 50{,}000 and 150{,}000), the Senior Manager limit (500{,}000 to 250{,}000), the round-amount multiple (10{,}000 to 5{,}000 and 50{,}000), and the working week (Saturday becomes a business day). Three change several thresholds at once: a strict policy, a lenient policy, and version 2.6. Each variant is rendered as a three-page PDF, which is all the system receives.
 
-The generator records each label at the moment of injection, in a module that shares no code with the controls. One author writes the generator and the other implements the controls from the policy text alone. Three seeds give three independent datasets.
+\subsection{Systems Compared}
+\textit{Policy-driven:} the controls under the registry extracted from the variant's PDF. \textit{Frozen:} the same controls with the thresholds of version 2.5; it stands for a system whose thresholds are written into prompts and code, until someone edits it.
 
-\subsection{Baselines and Configurations}
-\begin{itemize}
-\item \textbf{C0, classical detectors.} An isolation forest~\cite{liu2008} and a one-class SVM~\cite{scholkopf2001}, the detector family of~\cite{long2026}, on tabular features (amount ratios, quantity differences, weekday, per-vendor counts), with thresholds set on a 20\% validation split. They decide only whether an invoice is anomalous.
-\item \textbf{C1, controls only.} The deterministic controls alone.
-\item \textbf{C2, single LLM.} One prompt that contains the policy and the transaction, with no tools and no verifier, which is the setting evaluated in~\cite{wang2025auditbench}.
-\item \textbf{C3, multi-agent without challenger.} Controls and agents, followed by count-based scoring.
-\item \textbf{C4, full pipeline, count-based score.}
-\item \textbf{C5, full pipeline, confidence-weighted score.}
-\end{itemize}
-All LLM configurations use the same model at temperature~0. The $m=3$ agreement re-runs of C5 use temperature~0.7. External search is disabled, since the vendors are synthetic. The model identifier and the run dates are recorded with the results.
+\subsection{Ground Truth}
+For each variant, the set $Y_P(x)$ of rules that an invoice violates is recomputed from the ledger tables by the validator of the data generator. It is a second implementation of the written rules and shares no code with the controls.
 
-\subsection{Evaluation Metrics}
-\textit{Detection.} Precision, recall and F1 per class, and macro-F1 computed separately over the rule-defined and the judgement classes. For the comparison with C0, which outputs no class, we also report invoice-level detection.
-
-\textit{False positives.} The false-positive rate (FPR) on clean invoices, reported separately for hard negatives.
-
-\textit{Prevalence-adjusted precision.} Anomalies are far rarer in practice than in the benchmark, and precision depends on prevalence. From the measured true-positive rate (TPR) and FPR we report
+\subsection{Measures}
+\textit{Extraction:} parameter values read correctly, and rules read word for word. \textit{Policy adherence:} the share of invoices for which the set of cited rules equals the ground truth of the policy in force,
 \begin{equation}
-\mathrm{Prec}(\pi)=\frac{\pi\,\mathrm{TPR}}{\pi\,\mathrm{TPR}+(1-\pi)\,\mathrm{FPR}}
-\label{eq:prec}
+A(P)=\frac{1}{N}\sum_{x}\mathbf{1}\bigl[\{k(f):f\in F_{\mathrm{D}}(x)\}=Y_P(x)\bigr].
+\label{eq:adherence}
 \end{equation}
-at a prevalence of $\pi=0.02$ alongside the benchmark value.
+\textit{For the frozen system:} the findings that the policy in force does not support, the exceptions it does not raise, and the invoices it approves although the policy in force requires review (missed escalations).
 
-\textit{Citation correctness.} Among flags raised on anomalous invoices, the share whose cited clause is in $Y(x)$.
+% ---------------------------------------------------------------------------
+\section{Results}
+\label{sec:results}
+Subsections A to G report measured results of the feature and of the platform; Subsection H reports a measured pilot of the LLM stages on 20 invoices; Subsection I gives expected values for what has not been measured.
 
-\textit{Routing.} Precision and recall of the escalation tier with respect to transactions that carry a high or critical ground-truth anomaly, the size of the sampled-review tier, and the number of true anomalies in it.
+\subsection{Reading the Policy Documents (Measured)}
+All fourteen documents were accepted. The system read 196 of 196 parameter values correctly and recovered 224 of 224 rules word for word. Reading one document took between 0.02 and 0.04 seconds.
 
-\textit{Consistency.} The mean Jaccard similarity between the flag sets of three repeated runs on a stratified subset of 300 invoices.
-
-\textit{Cost.} LLM calls, tokens and latency per invoice.
-
-\subsection{Statistical Analysis}
-Paired comparisons between configurations use McNemar's test on invoice-level correctness~\cite{mcnemar1947}. Every metric is reported with a 95\% bootstrap confidence interval from 1,000 resamples~\cite{efron1993}. The six hypotheses of Section~\ref{sec:expected} are tested at a family-wise level of 0.05 with Holm's correction~\cite{holm1979}. Non-inferiority margins are fixed at two percentage points. For C5 we report the routing metrics over a grid of the three confidence weights and of $\theta$.
-
-\subsection{Policy-Swap Experiment}
-To test E4, a second policy version changes three thresholds: the match tolerance from 1\% to 5\%, the daily invoice limit from three to five, and one approval limit. The generator labels a boundary set of 150 invoices under both versions; by construction their labels differ between the versions. C4 is run under each version without editing the flow. \textit{Policy adherence} is the share of boundary invoices whose flags match the ground truth of the active version.
-
-\section{Expected Results and Discussion}
-\label{sec:expected}
-No measurement has been taken. This section states what we expect to observe once the extra features are complete and the protocol has been run, and what would refute each expectation. Table~\ref{tab:hypotheses} lists the hypotheses.
-
-\subsection{Outcomes Fixed by Construction}
-Two outcomes follow from the design and serve as checks on the implementation. First, by the argument of Section~\ref{sec:scoring}, the transactions auto-approved under C5 are exactly those auto-approved under C4. Second, the controls implement the definitions with which the rule-defined anomalies are injected, so C1 should recover classes R1--R10 almost completely and none of J1--J4. A deviation from either points to a defect in the code or the labels, not to a research finding.
-
-\subsection{Hypothesized Outcomes}
-The remaining six expectations are empirical; Table~\ref{tab:hypotheses} gives the basis of each. In short, we expect code to match or exceed a single LLM where the task is arithmetic and lookup (H1); the specialist agents and the challenger to improve detection of the judgement classes and to reduce false positives (H2, H3); confidence weighting to make the escalation queue more precise (H4); and clause citation, the weakness reported by AuditBench~\cite{wang2025auditbench}, and policy adherence to benefit from reading the policy at run time (H5, H6).
-
-The measured value of every metric in Section~\ref{sec:protocol} will be reported for all six configurations, with confidence intervals, including for expectations that fail. If H4 fails, the count-based score remains the recommended configuration and the confidence terms are reported as a negative result.
+\subsection{Adherence to the Policy in Force (Measured)}
+Table~\ref{tab:results} gives the result for each policy, pooled over the five ledgers. The policy-driven controls decided every invoice as the policy in force requires: no wrong decision in 560{,}000 invoice audits. Under the reference version the controls and the independent ground truth agree on all 40{,}000 invoices. A separate ledger of 5{,}000 invoices contains 150 invoices at the boundary between version 2.5 and version 2.6; the controls flag all 150 under version 2.5 and none under version 2.6, and no other invoice under either.
 
 \begin{table*}[t]
-\caption{Expected Results, Fixed Before Measurement}
-\label{tab:hypotheses}
+\caption{Measured: Adherence to the Policy in Force on 40{,}000 Invoices per Policy}
+\label{tab:results}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{L{4.2cm}rrrrrr}
+\toprule
+Policy variant & Decisions moved & \multicolumn{1}{c}{Policy-driven} & \multicolumn{4}{c}{Frozen at version 2.5} \\
+\cmidrule(lr){3-3}\cmidrule(lr){4-7}
+ & & Adherence & Adherence & Unsupported findings & Missed exceptions & Missed escalations \\
+\midrule
+Tolerance 0.5\% & 62 & 1.000 & 0.998 & 0 & 62 & 62 \\
+Tolerance 2\% & 7 & 1.000 & 1.000 & 7 & 0 & 0 \\
+Tolerance 5\% & 63 & 1.000 & 0.998 & 63 & 0 & 0 \\
+Daily count 2 & 429 & 1.000 & 0.989 & 0 & 429 & 428 \\
+Daily count 5 & 170 & 1.000 & 0.996 & 170 & 0 & 0 \\
+Manager limit 50{,}000 & 7{,}677 & 1.000 & 0.808 & 0 & 7{,}677 & 7{,}514 \\
+Manager limit 150{,}000 & 69 & 1.000 & 0.998 & 69 & 0 & 0 \\
+Senior Manager limit 250{,}000 & 4{,}259 & 1.000 & 0.894 & 0 & 4{,}259 & 4{,}161 \\
+Round multiple 5{,}000 & 0 & 1.000 & 1.000 & 0 & 0 & 0 \\
+Round multiple 50{,}000 & 43 & 1.000 & 0.999 & 43 & 0 & 0 \\
+Six-day week & 35 & 1.000 & 0.999 & 35 & 0 & 0 \\
+Strict policy & 12{,}274 & 1.000 & 0.693 & 0 & 12{,}427 & 12{,}012 \\
+Lenient policy & 380 & 1.000 & 0.991 & 380 & 0 & 0 \\
+Version 2.6 & 302 & 1.000 & 0.992 & 302 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Cost of a Frozen System (Measured)}
+The number of invoices whose correct decision changes ranges from none to 12{,}274 of 40{,}000 (30.7\%) under the strict policy (Fig.~\ref{fig:frozen}). The direction of the change decides the kind of error. A tightening leaves a frozen system silent: with the Manager limit lowered to 50{,}000 it does not raise 7{,}677 exceptions and approves 7{,}514 invoices that the policy in force sends to review. A loosening costs reviewer time instead: under version 2.6 a frozen system raises 302 findings that the policy no longer supports.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  xbar, scale only axis, width=0.50\columnwidth, height=6.2cm, bar width=5pt,
+  xmin=0, xmax=42, enlarge y limits=0.05,
+  xlabel={Invoices decided against the policy in force (\%)},
+  xlabel style={font=\footnotesize}, tick label style={font=\scriptsize},
+  symbolic y coords={Round multiple 5k,Tolerance 2\%,Six-day week,Round multiple 50k,Tolerance 0.5\%,Tolerance 5\%,Manager limit 150k,Daily count 5,Version 2.6,Lenient policy,Daily count 2,Senior Manager limit 250k,Manager limit 50k,Strict policy},
+  ytick=data, axis x line*=bottom, axis y line*=left, xmajorgrids, grid style={black!15},
+  nodes near coords, point meta=explicit symbolic,
+  every node near coord/.append style={font=\scriptsize, anchor=west}]
+\addplot[fill=black!55, draw=black!70] coordinates {
+ (0.00,Round multiple 5k) [0]
+ (0.02,Tolerance 2\%) [7]
+ (0.09,Six-day week) [35]
+ (0.11,Round multiple 50k) [43]
+ (0.16,Tolerance 0.5\%) [62]
+ (0.16,Tolerance 5\%) [63]
+ (0.17,Manager limit 150k) [69]
+ (0.43,Daily count 5) [170]
+ (0.76,Version 2.6) [302]
+ (0.95,Lenient policy) [380]
+ (1.07,Daily count 2) [429]
+ (10.65,Senior Manager limit 250k) [4{,}259]
+ (19.19,Manager limit 50k) [7{,}677]
+ (30.69,Strict policy) [12{,}274]};
+\end{axis}
+\end{tikzpicture}
+\caption{Measured. Share of the 40{,}000 invoices that a system with thresholds frozen at version 2.5 decides against the policy in force; the number beside each bar is the count of invoices. The policy-driven controls decide none against it.}
+\label{fig:frozen}
+\end{figure}
+
+\subsection{In the Application (Measured)}
+We repeated one change through the deployed path on the ledger of 20{,}000 invoices (Table~\ref{tab:app}). Adopting the strict policy document took 7 seconds, and auditing the 20{,}000 invoices again, with every result, finding and trail entry stored, took one minute on a laptop. No file of the system was edited between the two runs.
+
+\begin{table}[t]
+\caption{Measured: The Application Before and After Adopting the Strict Policy Document (20{,}000 Invoices)}
+\label{tab:app}
+\centering
+\footnotesize
+\begin{tabular}{L{4.6cm}rr}
+\toprule
+ & Version 2.5 & Strict policy \\
+\midrule
+Findings stored & 300 & 6{,}546 \\
+Invoices waiting for review & 240 & 6{,}353 \\
+Invoices approved automatically & 19{,}760 & 13{,}647 \\
+Findings under rule 5.1.1 (approval limit) & 30 & 6{,}060 \\
+Findings under rule 4.1.1 (same-day splitting) & 30 & 216 \\
+Findings under rule 2.1.1 (amount match) & 30 & 60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Scalability (Measured)}
+\label{sec:scal}
+\textit{Ledger size.} One process audited ledgers of 5{,}000, 20{,}000 and 40{,}000 invoices under the reference policy in 0.089, 0.389 and 0.731 seconds: 17.8, 19.4 and 18.3 microseconds per invoice. The cost per invoice does not grow with the ledger, so the time is linear in the number of invoices.
+
+\textit{Worker processes.} Because one invoice is one independent unit of work, the control stage can be split across workers without coordination. Table~\ref{tab:scal} and Fig.~\ref{fig:scal} give the throughput for 300{,}000 invoice audits (20{,}000 invoices under 15 policy versions) on a laptop with 12 logical CPUs. Every configuration produced the same 16{,}840 findings. Throughput rose from 56{,}660 invoices per second with one process to 172{,}226 with eight, a speed-up of 3.04. The speed-up is below the number of processes because the processor has two performance cores and eight slower efficiency cores.
+
+\textit{With storage.} These figures are the control stage in memory. With every result, finding and audit-trail entry written to the data store, one process audited 20{,}000 invoices in about one minute, which stored 60{,}000 trail entries.
+
+\begin{table}[t]
+\caption{Measured: Throughput of the Control Stage for 300{,}000 Invoice Audits}
+\label{tab:scal}
+\centering
+\footnotesize
+\begin{tabular}{rrrr}
+\toprule
+Worker processes & Seconds & Invoices per second & Speed-up \\
+\midrule
+1 & 5.29 & 56{,}660 & 1.00 \\
+2 & 3.10 & 96{,}724 & 1.71 \\
+4 & 2.50 & 119{,}780 & 2.12 \\
+8 & 1.74 & 172{,}226 & 3.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.9\columnwidth, height=4.6cm,
+  xlabel={Worker processes}, ylabel={Invoices per second (thousands)},
+  xtick={1,2,4,8}, xmin=0.5, xmax=8.5, ymin=0, ymax=200,
+  label style={font=\footnotesize}, tick label style={font=\scriptsize},
+  ymajorgrids, grid style={black!15}, axis x line*=bottom, axis y line*=left,
+  nodes near coords, every node near coord/.append style={font=\scriptsize, anchor=south}]
+\addplot[mark=*, semithick, black!70] coordinates {(1,56.7) (2,96.7) (4,119.8) (8,172.2)};
+\end{axis}
+\end{tikzpicture}
+\caption{Measured. Throughput of the control stage against the number of worker processes on one laptop (median of three runs).}
+\label{fig:scal}
+\end{figure}
+
+\subsection{Detection Against Classical Detectors (Measured)}
+\label{sec:detect}
+The controls were compared with an isolation forest~\cite{liu2008} and a one-class SVM~\cite{scholkopf2001}, both from scikit-learn~\cite{pedregosa2011}, on three benchmark ledgers of 5{,}000 invoices and on the ledger of 20{,}000 invoices. Each benchmark ledger holds 420 anomalous invoices (8.4\%) in fourteen classes and 120 hard negatives, that is, clean invoices made to resemble an anomaly; the large ledger holds the same 420 anomalies among 20{,}000 invoices (2.1\%). The isolation forest is fitted without labels and the one-class SVM on clean invoices. Their decision thresholds are set by five-fold cross-fitting: each fifth of a ledger is decided with the threshold that maximises F1 on the other four fifths, so the detectors use labels that the controls never see, and no invoice is decided with a threshold tuned on its own label. Because a detector names no rule, an invoice counts as detected when a system reports it at all.
+
+Table~\ref{tab:detect} gives the result. On every ledger the controls have the highest recall and F1 and a precision of 1.000, and they raise no finding on any clean invoice, hard negatives included; on the benchmark ledgers the detectors flag 36 to 56\% of the hard negatives. McNemar's exact test on the per-invoice decisions, Holm-adjusted, favours the controls over each detector on every benchmark ledger ($p<10^{-50}$). At the realistic anomaly rate of the large ledger the isolation forest falls to an F1 of 0.211, while the controls keep 0.833: their decisions do not depend on how rare anomalies are.
+
+Table~\ref{tab:perclass} shows where the difference comes from. The controls report every invoice of the ten rule-defined classes, which is expected, since they implement the definitions by which these anomalies were injected; this part is a check of the implementation, not a discovery. The detectors find some classes well and others hardly at all: the one-class SVM misses almost every invoice with a malformed or mismatched GSTIN or a missing reference (R4, R5, R8), and both miss most invoices from suspended vendors (R9). Of the judgement classes J2 to J4, which need reading, the detectors report at most 22\% and the controls none, by design. Both detectors report every near-duplicate (J1), whose copied amount and vendor make it statistically unusual; the controls leave J1 to the agents.
+
+\begin{table*}[t]
+\caption{Measured: Invoice-Level Detection. Benchmark: Mean of Three Ledgers (Lowest and Highest Ledger in Parentheses). Large Ledger: Value [95\% Bootstrap Interval]}
+\label{tab:detect}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{L{2.6cm}cccccc}
+\toprule
+ & \multicolumn{3}{c}{Benchmark ledgers: 3 $\times$ 5{,}000 invoices, 8.4\% anomalous} & \multicolumn{3}{c}{Large ledger: 20{,}000 invoices, 2.1\% anomalous} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Measure & Isolation forest & One-class SVM & Controls & Isolation forest & One-class SVM & Controls \\
+\midrule
+Recall & 0.577 (0.562--0.598) & 0.464 (0.431--0.502) & \textbf{0.714} & 0.162 [0.129, 0.200] & 0.402 [0.359, 0.448] & \textbf{0.714} [0.672, 0.757] \\
+Precision & 0.501 (0.470--0.529) & 0.543 (0.499--0.588) & \textbf{1.000} & 0.301 [0.248, 0.362] & 0.460 [0.410, 0.510] & \textbf{1.000} [1.000, 1.000] \\
+F1 & 0.536 (0.526--0.549) & 0.498 (0.497--0.501) & \textbf{0.833} & 0.211 [0.170, 0.253] & 0.429 [0.389, 0.470] & \textbf{0.833} [0.804, 0.862] \\
+False positives, ordinary & 0.044 (0.038--0.052) & 0.025 (0.017--0.033) & \textbf{0.000} & 0.007 [0.006, 0.009] & 0.005 [0.004, 0.006] & \textbf{0.000} [0.000, 0.000] \\
+False positives, hard negatives & 0.403 (0.358--0.442) & 0.481 (0.417--0.558) & \textbf{0.000} & 0.054 [0.026, 0.085] & 0.412 [0.353, 0.481] & \textbf{0.000} [0.000, 0.000] \\
+Share of invoices flagged & 0.097 & 0.072 & 0.060 & 0.011 & 0.018 & 0.015 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\caption{Measured: Share of Each Anomaly Class Reported (Mean of the Three Benchmark Ledgers, 30 Invoices per Class and Ledger)}
+\label{tab:perclass}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{lcccccccccc|cccc}
+\toprule
+ & \multicolumn{10}{c|}{Rule-defined classes (decided by the controls)} & \multicolumn{4}{c}{Judgement (agents)} \\
+System & R1 & R2 & R3 & R4 & R5 & R6 & R7 & R8 & R9 & R10 & J1 & J2 & J3 & J4 \\
+\midrule
+Isolation forest & 0.37 & 0.62 & 1.00 & 0.96 & 0.93 & 0.89 & 0.40 & 0.77 & 0.20 & 0.68 & 1.00 & 0.22 & 0.02 & 0.02 \\
+One-class SVM & 1.00 & 0.83 & 0.98 & 0.03 & 0.03 & 0.98 & 0.84 & 0.03 & 0.10 & 0.59 & 1.00 & 0.07 & 0.01 & 0.00 \\
+Controls & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.00 & 0.00 & 0.00 & 0.00 \\
+\bottomrule
+\end{tabular}
+
+\vspace{3pt}
+\parbox{0.84\textwidth}{\scriptsize R1 amount, R2 quantity, R3 exact duplicate, R4 GSTIN format or state code, R5 GSTIN against the vendor master, R6 same-day splitting, R7 approval limit, R8 missing reference, R9 suspended vendor, R10 weekend or round amount; J1 near-duplicate, J2 structuring across days, J3 description against the PO, J4 goods-receipt remark.}
+\end{table*}
+
+\subsection{Policies in Their Own Wording (Measured)}
+\label{sec:freeform}
+Pattern extraction refuses a policy that is not in the wording of the template. For such a document the platform offers a model-assisted path with three safeguards. A model proposes each rule's passage and each threshold, together with the words of the document it was taken from; code then checks that every quoted passage occurs in the document word for word and that every value is written in the quote of its rule (as digits, in Indian digit grouping, or as a number word); a value that fails is held back, and a named person confirms the rest and supplies what is missing before anything is adopted.
+
+We wrote six policy documents in two styles that share no wording and no rule numbers with the template: three memoranda in prose and three handbooks with lettered clauses, number words and Indian digit grouping, each stating the reference, the strict or the lenient policy. A local model (Qwen2.5, 7B parameters, 12{,}288-token context, temperature 0) read each document in one call. Table~\ref{tab:freeform} gives the outcome against the policy each document was written from. The model proposed 80 of 84 values correctly and located 92 of 96 rules. The check accepted 56 right values and held back 24 right ones, all of them approval limits whose quote either did not contain the amount or was not found in the document; the reviewer supplies these. It caught two wrong values and let two pass: in both handbooks the model added the status ``Blacklisted'' to the blocked registration statuses, and the word occurs in the quoted passage, so only the confirming person can stop it. After confirmation, four of the six documents yield exactly the intended policy. The six documents are short and written by the authors of the system; this measures one model on them, not policies in general.
+
+\begin{table}[t]
+\caption{Measured: Thresholds Proposed by a Local 7B Model from Six Policies in Their Own Wording (14 Values and 16 Rules per Document)}
+\label{tab:freeform}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.12}
-\begin{tabular}{L{0.6cm}L{4.6cm}L{3.9cm}L{3.5cm}L{4.0cm}}
+\begin{tabular}{L{3.5cm}ccc}
 \toprule
-ID & Expected result & Comparison and metric & Basis & Refuted if \\
+ & Memoranda & Handbooks & All \\
 \midrule
-H1 & Code decides the rule-defined classes at least as well as a single LLM & C1 vs.\ C2; macro-F1 over R1--R10 & Arithmetic and lookup are exact in code & C2 is significantly higher \\
-H2 & Specialist agents detect the judgement classes better than one prompt & C3 vs.\ C2; macro-F1 over J1--J4 & Narrow remit per agent & The difference is not significant, or C2 is higher \\
-H3 & The challenger lowers false positives without losing recall & C4 vs.\ C3; FPR on clean and hard-negative invoices, macro-recall & The challenger is asked only to refute & FPR is not significantly lower, or recall falls by more than the margin \\
-H4 & Confidence weighting raises the precision of the escalation queue & C5 vs.\ C4; precision and recall of the escalation tier & Weakly supported flags weigh less, by~\eqref{eq:conf} & Precision is not higher, or recall on critical classes falls by more than the margin \\
-H5 & Clause citations are more often correct than those of a single LLM & C4 vs.\ C2; citation correctness & Clause text supplied; identifier validated & C4 is not significantly higher \\
-H6 & Decisions follow the active policy version & C4 under two versions; policy adherence on the boundary set & Policy is read, not coded into the flow & Adherence under the second version is lower by more than the margin \\
+Values & 42 & 42 & 84 \\
+Right, verified by the code check & 28 & 28 & 56 \\
+Right, held back for the reviewer & 12 & 12 & 24 \\
+Wrong, caught by the check & 2 & 0 & 2 \\
+Wrong, passed the check & 0 & 2 & 2 \\
+Rules located & 47/48 & 45/48 & 92/96 \\
+Seconds per document & 297--393 & 282--310 & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Pilot of the LLM Stages (Measured on 20 Invoices)}
+\label{sec:pilot}
+The LLM stages of the base system were run with the same local model on 20 invoices of a development ledger that is not used for any reported benchmark: one invoice of each of the fourteen anomaly classes, one of each of five hard-negative types, and one ordinary invoice. The configurations are C1, the controls alone; C2, a single prompt over the whole policy with no controls; C3, the controls and the three specialist agents; C4, C3 with the challenger; and C5, C4 with a confidence term that counts how many of three re-runs at temperature 0.7 repeat a finding and sends findings of low confidence to sampled review instead of escalation. Table~\ref{tab:pilot} gives the result. \emph{Twenty invoices are a pilot}: the intervals are wide, and no difference between configurations is significant (McNemar's exact test, Holm-adjusted; C3 against C2, $p=0.196$). The pilot shows that every stage runs against a real model and what an invoice costs; it does not estimate how well a model audits.
+
+\begin{table}[t]
+\caption{Measured Pilot: 20 Invoices, Local 7B Model on a Laptop CPU. Not a Benchmark Result}
+\label{tab:pilot}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{L{3.0cm}rrrrr}
+\toprule
+ & C1 & C2 & C3 & C4 & C5 \\
+\midrule
+Invoice-level recall & 0.714 & 0.929 & 0.929 & 0.857 & 0.857 \\
+Invoice-level precision & 1.000 & 0.722 & 0.812 & 0.800 & 0.800 \\
+Macro-F1, rule-defined classes & 1.000 & 0.095 & 1.000 & 1.000 & 1.000 \\
+Judgement classes found (of 4) & 0 & 1 & 2 & 1 & 1 \\
+Hard negatives flagged (of 5) & 0 & 4 & 3 & 3 & 3 \\
+Ordinary invoice flagged (of 1) & 0 & 1 & 0 & 0 & 0 \\
+Model findings naming a violated rule & -- & 0.067 & 0.111 & 0.111 & 0.111 \\
+Invoices sent to sampled review & 0 & 0 & 0 & 0 & 2 \\
+Model calls per invoice & 0 & 1.15 & 3.00 & 3.60 & 4.95 \\
+Tokens per invoice & 0 & 5{,}835 & 9{,}557 & 12{,}005 & 16{,}779 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textit{The single prompt.} C2, which reads the whole policy and has no controls, flagged 18 of the 20 invoices, raised five wrong findings on the ordinary invoice and wrong rule-defined findings on most others (macro-F1 0.095 on the rule-defined classes), and two of its stages failed. Only 5 of its 75 findings named a rule the invoice violates.
+
+\textit{The agents.} With the controls first (C3), every rule-defined class was decided right, and the agents could only add findings under the four judgement rules. They found the goods-receipt remark (J4, with the remark as evidence) and the near-duplicate (J1), missed the structuring across days (J2), and cited the wrong rule for the description mismatch (J3). They also raised a wrong near-duplicate finding on three of the five hard negatives. Of the findings the agents raised, 0.111 named a rule the invoice violates.
+
+\textit{The challenger} (C4) removed nine agent findings, most of them extra findings on invoices that the controls had already flagged, and one of them the right J1 finding; it kept the wrong near-duplicate findings on the three hard negatives.
+
+\textit{Confidence} (C5) sent two invoices to sampled review instead of escalation, both of them true anomalies, among them the J3 invoice whose wrong-rule finding was repeated by only one of three re-runs. The wrong findings on the hard negatives had confidence 0.67, 0.67 and 1.00 and stayed escalated. The confidence term measures how stable a finding is, not whether it is right.
+
+\textit{Cost.} The agents need three model calls per invoice, plus the challenger when an agent raises a finding (3.60 per invoice under C4), and C5 adds the re-runs (4.95). On the laptop's CPU one call took about five minutes, so the benchmark, about 1{,}200 invoices per ledger, needs a GPU or a hosted endpoint.
+
+\textit{Copilot.} Through the PostgreSQL store, the copilot was asked why an escalated invoice of the large ledger was flagged. Its first answer named the wrong rule: retrieval by the wording of the question had ranked the duplicate rules first, and the model followed the passages instead of the audit record it was also given. After the passages of the rules cited in the audit record were placed first and the record was declared authoritative, it named the right rule, with the goods-receipt remark and the page of the policy.
+
+\subsection{Expected Results for What Is Not Yet Measured}
+\label{sec:expected}
+The LLM stages of the base system have been run only in the pilot of Section~\ref{sec:pilot}, which is too small to measure them. Table~\ref{tab:expected} states what we expect on the benchmark ledgers, with the basis of each expectation and the observation that would refute it; the last column shows what the pilot observed, for orientation only. \emph{The expected values are fixed before measurement. They are not results.}
+
+\begin{table*}[t]
+\caption{Expected Values (Not Measured), Fixed Before Measurement, With the Observation of the 20-Invoice Pilot for Orientation}
+\label{tab:expected}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{L{0.45cm}L{3.5cm}L{2.0cm}L{4.6cm}L{3.0cm}L{2.4cm}}
+\toprule
+ID & Quantity & Expected value & Basis & Refuted if & Pilot, 20 invoices \\
+\midrule
+X1 & Policy adherence of the controls under a further policy variant in the same template & 1.000 & Measured 1.000 on all 14 variants; the mechanism is deterministic & Any invoice is decided against the policy in force & not applicable \\
+X2 & Recall of the LLM agents on the four judgement rules & at least 0.70 (target) & AuditBench: LLMs identify errors when given the transaction data~\cite{wang2025auditbench}; each agent sees only the records of its rule & Below 0.70 with the chosen model; the rule then stays with human reviewers & 2 of 4 classes (C3) \\
+X3 & Agent findings that name a rule the invoice violates & at least 0.90 (target) & An agent may cite only the rules of its remit, and the rule text is supplied; AuditBench reports weak citation without such limits~\cite{wang2025auditbench} & Below 0.90 & 0.111 (C3 to C5) \\
+X4 & LLM calls per invoice in the base system & 3, plus 1 when an agent raises a finding & One call per specialist agent; the challenger runs only when there is a finding to test & More calls are needed for valid output & 3.00 (C3), 3.60 (C4) \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\section{Explainability and Decision Transparency}
-\label{sec:xai}
-AuditIQ does not return only a risk level. For every transaction the audit pack records:
-\begin{enumerate}
-\item each flag with its cited policy clause and severity;
-\item the evidence fields and values on which the flag rests;
-\item the source of the flag, control or agent, and its confidence with the three terms of~\eqref{eq:conf};
-\item the flags that the challenger removed, with its reasons;
-\item both risk scores and the resulting route;
-\item the policy version applied and, where there is one, the reviewer's decision and justification.
-\end{enumerate}
-Together with the per-stage activity records, this gives the chain from rule to evidence, agent, verifier, reviewer and outcome that audit documentation requires~\cite{isa230}. A representative output for the illustration of Section~\ref{sec:scoring}, constructed by hand, is:
+The pilot cannot confirm or refute X2 and X3, but it shows that the 7B model used for development is far from both: on the benchmark, the agents need a larger model, and until one meets X2 and X3 the judgement rules stay with human reviewers. The pilot agrees with X4.
 
-\begin{quote}
-\textit{Route: sampled review (weighted risk 23.3; count-based risk 70).}
-\textit{Flag 1: round-amount invoice, medium, clause 4.3.1, control, confidence 1.00.}
-\textit{Flag 2: near-duplicate invoice, critical, clause 2.2.1, agent, confidence 0.44: the cited matching invoice was not found in the extracted records, and one of three re-runs reproduced the flag.}
-\textit{The transaction is not auto-approved.}
-\end{quote}
+\subsection{Discussion}
+The adherence of 1.000 must be read for what it is. The controls and the ground truth are two implementations of the same written rules by the same authors. That they agree on every invoice under every policy shows that each document was read correctly and that no control keeps a threshold of its own. It verifies the mechanism; it is not a detection result, and it says nothing about whether the rules are the right ones.
 
+The quantities that are not fixed by construction are those of the frozen system. They show that ordinary revisions of a procurement policy move between a handful and almost a third of the decisions on these ledgers, and that a tightening turns into missed escalations. A system that must be edited by hand to follow its policy carries this risk for as long as the edit is late or wrong.
+
+The comparison with the classical detectors (Section~\ref{sec:detect}) is not a contest between methods of one kind. A detector learns what is usual and knows no policy; the controls know the policy and nothing else. Where the policy defines the exception, the controls decide it exactly and explain it with a rule and its evidence, while a detector misses violations that look ordinary and flags legitimate invoices that look unusual, such as the hard negatives. Detectors remain useful for what no rule describes; the near-duplicates, which both detectors report and the controls leave to the agents, are an example.
+
+The pilot (Section~\ref{sec:pilot}) shows why the controls come first. Without them (C2), the model read the whole policy and raised wrong rule-defined findings on almost every invoice. With them, the rule-defined classes are decided exactly, and the model's errors are confined to the four judgement rules, where its findings go to a person. The challenger removed most unsupported findings but also a right one, and the confidence term demoted a finding that was rarely repeated, not one that was wrong. Neither replaces the reviewer.
+
+With respect to the base papers: AuditBench~\cite{wang2025auditbench} finds that LLMs cite the governing rule poorly, and in our pilot only 0.111 of the agents' findings named a rule that the invoice violates. For the twelve rules handled by controls the citation is no longer produced by a model at all; it is attached by the control that implements the rule. The regulatory traceability that the survey of Liu et al.~\cite{liu2026survey} names as a challenge is met for these rules by construction: each finding leads to a rule, a document, a page and the field values.
+
+% ---------------------------------------------------------------------------
 \section{Limitations}
-\textit{Synthetic data.} The rule-defined anomalies are injected using the same definitions that the controls implement. Those classes therefore measure how much an LLM loses relative to code, not how good the controls are. The informative comparisons are on the judgement classes, the hard negatives, citation and routing. Anomalies make up 35\% of the benchmark, far above realistic rates, which is why the adjusted precision of~\eqref{eq:prec} is reported. Results on synthetic data do not establish performance on an organization's real ledgers.
+\textit{Template wording.} Pattern extraction reads only the wording of one template and refuses other documents with reasons. The model-assisted path for policies in their own wording was measured on six short documents written by the authors, with one 7B model; two wrong values passed its code check, so the confirming person remains a required safeguard, not a formality.
 
-\textit{Model and prompt dependence.} LLM results depend on the model and the wording of the prompts. We fix both, report them, and repeat the main comparison with a second model.
+\textit{Coverage.} The system executes only rules for which it has a control. A new threshold needs only a new document; a rule with new semantics needs a new control.
 
-\textit{Confidence terms.} Grounding and clause validity are binary and can be satisfied by a flag that is still wrong. Agreement multiplies the number of agent calls. Equal weighting is a choice that the sensitivity analysis examines but does not justify.
+\textit{Synthetic data.} The ledgers are synthetic. The counts describe how these ledgers react to these changes, not the books of a particular organisation.
 
-\textit{Policy coverage.} A control must be written for each rule-defined clause. A new threshold needs only a parameter change, but a clause with new semantics needs new code.
+\textit{One machine.} All services and all worker processes ran on one laptop. The platform is built from separable services, but its behaviour on several machines, and the throughput of the LLM stages, have not been measured.
 
-\section{Future Work}
-First, the policy parameters of E4 are entered by hand; extracting them from the policy text with an LLM, subject to human approval, would shorten the path from a new policy to its enforcement. Second, stored reviewer decisions could be used to fit the weights of~\eqref{eq:conf} in place of equal weights. Third, vendors that share a bank account, director or network address form a graph whose analysis could expose collusion that per-transaction checks miss. Finally, the protocol measures which transactions reach a reviewer, not whether the audit pack helps the reviewer decide; a study with practicing auditors and an evaluation on real, anonymized procurement data are needed for that.
+\textit{Judgement rules.} The experiments cover the twelve rule-defined clauses. The four judgement rules are assigned to LLM agents that have been run only in a pilot of 20 invoices, with a 7B model on a laptop CPU; their accuracy on the benchmark has not been measured.
 
-\section{Conclusion}
-AuditIQ audits procurement transactions with specialist agents that read the policy at run time, a challenger that removes unsupported flags, and a risk score that routes each transaction to automatic approval or human review; these parts run in a working prototype. Building on three base papers, this paper adds five features, the central one being a confidence-weighted score that splits the escalation queue without changing which transactions are auto-approved. It fixes the technology stack for each feature and states the expected results as refutable hypotheses. The next step is to complete the pending components of Table~\ref{tab:stack}, generate AuditIQ-Bench, run the six configurations, and report the measured outcomes against Table~\ref{tab:hypotheses}.
+\textit{Circularity.} The controls and the ground truth implement the same written rules, so the perfect scores of the controls on the rule-defined classes verify the implementation; they are not evidence that the rules catch real fraud.
+
+\textit{Access control.} The web application has one shared token and no user accounts; the reviewer's name on a decision is typed, not authenticated.
+
+\textit{Base papers.} The two base papers are described from their published abstracts.
+
+% ---------------------------------------------------------------------------
+\section{Conclusion and Future Work}
+We presented a multi-agent platform for forensic audit and compliance in procurement, built from separate services around a shared data store. Its base is a multi-agent audit pipeline that follows AuditBench and the survey of LLM-based multi-agent systems in finance, to which we added one feature: deterministic controls that are configured by the organisation's policy document. The feature is implemented and measured. From fourteen policy documents the system read every threshold correctly and decided 40{,}000 invoices under each policy without a wrong decision, while a system with fixed thresholds decided up to 30.7\% of them against the policy in force. A change of policy takes effect in seconds and requires no change to code or prompts. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000 and raised no finding on a clean invoice, where an isolation forest and a one-class SVM reached 0.536 and 0.498 and flagged 36 to 56\% of the hard negatives. The control stage costs about 18 microseconds per invoice whatever the size of the ledger, and eight worker processes on one laptop audited 172{,}000 invoices per second. For policies in their own wording, a local 7B model proposed 80 of 84 thresholds correctly, and a check by code with a person's confirmation decides what is adopted. A pilot of 20 invoices ran every LLM stage end to end and showed that a single prompt without controls errs on almost every invoice, while with the controls first the model's errors stay within the judgement rules, where a person reviews them. Reviewers use the platform through a REST API and a web application with three-dimensional views of vendor risk, of the pipeline and of the effect of a policy change.
+
+Future work is the measurement of the LLM stages on the benchmark ledgers with a larger model, against the expectations of Table~\ref{tab:expected}; a deployment of the services on several machines; user accounts and roles in the web application; and an evaluation on real, anonymised procurement data.
 
 \section*{Data and Code Availability}
-The flow definitions, the database schema and the policy document of the prototype are kept in the authors' project repository. The benchmark generator, the labels and the evaluation scripts will be released together with the measured results.
+The platform, the synthetic ledgers, the fourteen policy documents and the scripts that produce every measured number of this paper are available at \url{https://github.com/Chandana909/major.project}.
 
 \section*{Acknowledgment}
 The authors thank the Department of Information Technology, Chaitanya Bharathi Institute of Technology, Hyderabad, for the academic environment and resources that supported this work.
 
 \begin{thebibliography}{00}
-\bibitem{elder2013} R. J. Elder, A. D. Akresh, S. M. Glover, J. L. Higgs, and J. Liljegren, ``Audit sampling research: A synthesis and implications for future research,'' \textit{Auditing: J. Pract. Theory}, vol. 32, suppl. 1, pp. 99--129, 2013.
-\bibitem{vasarhelyi1991} M. A. Vasarhelyi and F. B. Halper, ``The continuous audit of online systems,'' \textit{Auditing: J. Pract. Theory}, vol. 10, no. 1, pp. 110--125, 1991.
-\bibitem{long2026} L. Long, S. Xu, A. Li, L. Chen, and X. Gao, ``An English financial audit anomaly detection system for construction industry based on machine learning,'' \textit{Discover Artif. Intell.}, 2026, doi: 10.1007/s44163-026-01664-8.
-\bibitem{isa230} International Auditing and Assurance Standards Board, \textit{International Standard on Auditing 230: Audit Documentation}. New York, NY, USA: IFAC, 2009.
-\bibitem{wang2025auditbench} R. Wang, J. Liu, W. Zhao, S. Li, and D. Zhang, ``AuditBench: A benchmark for large language models in financial statement auditing,'' in \textit{AI for Research and Scalable, Efficient Systems} (Commun. Comput. Inf. Sci., vol. 2533). Singapore: Springer, 2025, doi: 10.1007/978-981-96-8912-5\_3.
-\bibitem{toudas2026} K. Toudas, K. I. Roumeliotis, D. K. Nasiopoulos, and G. Georgakopoulos, ``An explainable AI multi-agent recommender system for financial document access control,'' \textit{Inf. Syst. Front.}, 2026, doi: 10.1007/s10796-026-10742-2.
-\bibitem{bolton2002} R. J. Bolton and D. J. Hand, ``Statistical fraud detection: A review,'' \textit{Statist. Sci.}, vol. 17, no. 3, pp. 235--255, 2002.
-\bibitem{chandola2009} V. Chandola, A. Banerjee, and V. Kumar, ``Anomaly detection: A survey,'' \textit{ACM Comput. Surv.}, vol. 41, no. 3, Art. no. 15, 2009.
-\bibitem{nigrini2017} M. J. Nigrini, ``Audit sampling using Benford's law: A review of the literature with some new perspectives,'' \textit{J. Emerg. Technol. Account.}, vol. 14, no. 2, pp. 29--46, 2017.
-\bibitem{liu2008} F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation forest,'' in \textit{Proc. 8th IEEE Int. Conf. Data Mining (ICDM)}, 2008, pp. 413--422.
-\bibitem{scholkopf2001} B. Sch\"{o}lkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, and R. C. Williamson, ``Estimating the support of a high-dimensional distribution,'' \textit{Neural Comput.}, vol. 13, no. 7, pp. 1443--1471, 2001.
-\bibitem{schreyer2017} M. Schreyer, T. Sattarov, D. Borth, A. Dengel, and B. Reimer, ``Detection of anomalies in large scale accounting data using deep autoencoder networks,'' arXiv:1709.05254, 2017.
-\bibitem{hillebrand2023} L. Hillebrand \textit{et al.}, ``Improving zero-shot text matching for financial auditing with large language models,'' in \textit{Proc. ACM Symp. Document Eng.}, 2023, pp. 1--4.
-\bibitem{berger2023} A. Berger \textit{et al.}, ``Towards automated regulatory compliance verification in financial auditing with large language models,'' in \textit{Proc. IEEE Int. Conf. Big Data}, 2023, pp. 4626--4635.
-\bibitem{ji2023} Z. Ji \textit{et al.}, ``Survey of hallucination in natural language generation,'' \textit{ACM Comput. Surv.}, vol. 55, no. 12, Art. no. 248, 2023.
-\bibitem{lewis2020} P. Lewis \textit{et al.}, ``Retrieval-augmented generation for knowledge-intensive NLP tasks,'' in \textit{Adv. Neural Inf. Process. Syst.}, vol. 33, 2020, pp. 9459--9474.
-\bibitem{yao2023} S. Yao \textit{et al.}, ``ReAct: Synergizing reasoning and acting in language models,'' in \textit{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2023.
-\bibitem{du2024} Y. Du, S. Li, A. Torralba, J. B. Tenenbaum, and I. Mordatch, ``Improving factuality and reasoning in language models through multiagent debate,'' in \textit{Proc. Int. Conf. Mach. Learn. (ICML)}, 2024.
-\bibitem{wang2023sc} X. Wang \textit{et al.}, ``Self-consistency improves chain of thought reasoning in language models,'' in \textit{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2023.
-\bibitem{guo2017} C. Guo, G. Pleiss, Y. Sun, and K. Q. Weinberger, ``On calibration of modern neural networks,'' in \textit{Proc. Int. Conf. Mach. Learn. (ICML)}, 2017, pp. 1321--1330.
-\bibitem{xiong2024} M. Xiong \textit{et al.}, ``Can LLMs express their uncertainty? An empirical evaluation of confidence elicitation in LLMs,'' in \textit{Proc. Int. Conf. Learn. Represent. (ICLR)}, 2024.
-\bibitem{roumeliotis2026} K. I. Roumeliotis, R. Sapkota, M. Karkee, and N. D. Tselikas, ``Agentic AI with orchestrator-agent trust: A modular visual classification framework with trust-aware orchestration and RAG-based reasoning,'' \textit{IEEE Access}, vol. 14, pp. 26965--26982, 2026, doi: 10.1109/ACCESS.2026.3662282.
-\bibitem{mosqueira2023} E. Mosqueira-Rey, E. Hern\'{a}ndez-Pereira, D. Alonso-R\'{i}os, J. Bobes-Bascar\'{a}n, and \'{A}. Fern\'{a}ndez-Leal, ``Human-in-the-loop machine learning: A state of the art,'' \textit{Artif. Intell. Rev.}, vol. 56, no. 4, pp. 3005--3054, 2023.
-\bibitem{nistrmf} National Institute of Standards and Technology, ``Artificial intelligence risk management framework (AI RMF 1.0),'' NIST AI 100-1, Jan. 2023, doi: 10.6028/NIST.AI.100-1.
-\bibitem{flowise} FlowiseAI, ``Flowise,'' GitHub repository. [Online]. Available: \url{https://github.com/FlowiseAI/Flowise}
-\bibitem{litellm} BerriAI, ``LiteLLM,'' GitHub repository. [Online]. Available: \url{https://github.com/BerriAI/litellm}
-\bibitem{mcnemar1947} Q. McNemar, ``Note on the sampling error of the difference between correlated proportions or percentages,'' \textit{Psychometrika}, vol. 12, no. 2, pp. 153--157, 1947.
-\bibitem{efron1993} B. Efron and R. J. Tibshirani, \textit{An Introduction to the Bootstrap}. New York, NY, USA: Chapman \& Hall, 1993.
-\bibitem{holm1979} S. Holm, ``A simple sequentially rejective multiple test procedure,'' \textit{Scand. J. Statist.}, vol. 6, no. 2, pp. 65--70, 1979.
+\bibitem{vasarhelyi1991} M. A. Vasarhelyi and F. B. Halper, ``The continuous audit of online systems,'' \textit{Auditing: J. Pract. Theory}, vol. 10, no. 1, pp. 110--125, 1991. [Online]. Available: \url{https://doi.org/10.2308/ajpt-9703192366}
+\bibitem{wang2025auditbench} R. Wang, J. Liu, W. Zhao, S. Li, and D. Zhang, ``AuditBench: A benchmark for large language models in financial statement auditing,'' in \textit{AI for Research and Scalable, Efficient Systems} (Communications in Computer and Information Science). Singapore: Springer, 2025, pp. 59--81. [Online]. Available: \url{https://doi.org/10.1007/978-981-96-8912-5_3}
+\bibitem{liu2026survey} Q. Liu, L. Yao, Z. Wang, Y. Yang, Y. Tang, D. Cheng, and C. Jiang, ``Large language model-based multi-agent systems for financial markets simulation: A survey,'' \textit{Sci. China Inf. Sci.}, vol. 69, no. 7, Art. no. 171201, 2026. [Online]. Available: \url{https://doi.org/10.1007/s11432-026-4986-x}
+\bibitem{chandola2009} V. Chandola, A. Banerjee, and V. Kumar, ``Anomaly detection: A survey,'' \textit{ACM Comput. Surv.}, vol. 41, no. 3, pp. 1--58, 2009. [Online]. Available: \url{https://doi.org/10.1145/1541880.1541882}
+\bibitem{liu2008} F. T. Liu, K. M. Ting, and Z.-H. Zhou, ``Isolation forest,'' in \textit{Proc. 8th IEEE Int. Conf. Data Mining (ICDM)}, 2008, pp. 413--422. [Online]. Available: \url{https://doi.org/10.1109/ICDM.2008.17}
+\bibitem{scholkopf2001} B. Sch\"{o}lkopf, J. C. Platt, J. Shawe-Taylor, A. J. Smola, and R. C. Williamson, ``Estimating the support of a high-dimensional distribution,'' \textit{Neural Comput.}, vol. 13, no. 7, pp. 1443--1471, 2001. [Online]. Available: \url{https://doi.org/10.1162/089976601750264965}
+\bibitem{long2026} L. Long, S. Xu, A. Li, L. Chen, and X. Gao, ``An English financial audit anomaly detection system for construction industry based on machine learning,'' \textit{Discover Artif. Intell.}, 2026. [Online]. Available: \url{https://doi.org/10.1007/s44163-026-01664-8}
+\bibitem{hillebrand2023} L. Hillebrand \textit{et al.}, ``Improving zero-shot text matching for financial auditing with large language models,'' in \textit{Proc. ACM Symp. Document Eng.}, 2023, pp. 1--4. [Online]. Available: \url{https://doi.org/10.1145/3573128.3609344}
+\bibitem{berger2023} A. Berger \textit{et al.}, ``Towards automated regulatory compliance verification in financial auditing with large language models,'' in \textit{Proc. IEEE Int. Conf. Big Data}, 2023, pp. 4626--4635. [Online]. Available: \url{https://doi.org/10.1109/BigData59044.2023.10386518}
+\bibitem{ji2023} Z. Ji \textit{et al.}, ``Survey of hallucination in natural language generation,'' \textit{ACM Comput. Surv.}, vol. 55, no. 12, pp. 1--38, 2023. [Online]. Available: \url{https://doi.org/10.1145/3571730}
+\bibitem{guo2024} T. Guo, X. Chen, Y. Wang, R. Chang, S. Pei, N. V. Chawla, O. Wiest, and X. Zhang, ``Large language model based multi-agents: A survey of progress and challenges,'' in \textit{Proc. 33rd Int. Joint Conf. Artif. Intell. (IJCAI)}, 2024, pp. 8048--8057. [Online]. Available: \url{https://doi.org/10.24963/ijcai.2024/890}
+\bibitem{du2024} Y. Du, S. Li, A. Torralba, J. B. Tenenbaum, and I. Mordatch, ``Improving factuality and reasoning in language models through multiagent debate,'' in \textit{Proc. 41st Int. Conf. Mach. Learn. (ICML)}, PMLR vol. 235, 2024. [Online]. Available: \url{https://proceedings.mlr.press/v235/du24e.html}
+\bibitem{mosqueira2023} E. Mosqueira-Rey, E. Hern\'{a}ndez-Pereira, D. Alonso-R\'{i}os, J. Bobes-Bascar\'{a}n, and \'{A}. Fern\'{a}ndez-Leal, ``Human-in-the-loop machine learning: A state of the art,'' \textit{Artif. Intell. Rev.}, vol. 56, no. 4, pp. 3005--3054, 2023. [Online]. Available: \url{https://doi.org/10.1007/s10462-022-10246-w}
+\bibitem{pymupdf} Artifex Software, ``PyMuPDF,'' software. [Online]. Available: \url{https://github.com/pymupdf/PyMuPDF}
+\bibitem{reportlab} ReportLab, ``ReportLab open-source PDF toolkit,'' software. [Online]. Available: \url{https://pypi.org/project/reportlab/}
+\bibitem{langgraph} LangChain, ``LangGraph,'' software. [Online]. Available: \url{https://github.com/langchain-ai/langgraph}
+\bibitem{fastapi} S. Ram\'{i}rez, ``FastAPI,'' software. [Online]. Available: \url{https://github.com/fastapi/fastapi}
+\bibitem{r3f} Poimandres, ``React Three Fiber: A React renderer for three.js,'' software. [Online]. Available: \url{https://github.com/pmndrs/react-three-fiber}
+\bibitem{threejs} R. Cabello \textit{et al.}, ``three.js: JavaScript 3D library,'' software. [Online]. Available: \url{https://github.com/mrdoob/three.js}
+\bibitem{pedregosa2011} F. Pedregosa \textit{et al.}, ``Scikit-learn: Machine learning in Python,'' \textit{J. Mach. Learn. Res.}, vol. 12, pp. 2825--2830, 2011. [Online]. Available: \url{https://jmlr.org/papers/v12/pedregosa11a.html}
 \end{thebibliography}
 
 \end{document}

@@ -8,6 +8,7 @@ file named in AUDITIQ_DB). Run `python -m auditiq setup --dataset <folder>` and
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import sys
 from pathlib import Path
@@ -18,15 +19,19 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from auditiq import copilot, db, service  # noqa: E402
+from auditiq import copilot, db, policy_extract, policy_llm, service  # noqa: E402
 from auditiq.audit_pack import render_markdown  # noqa: E402
 from auditiq.config import configure_logging  # noqa: E402
 from auditiq.graph import PRESETS  # noqa: E402
 from auditiq.llm import LLMSettings, OpenAIChatClient, ResponseCache  # noqa: E402
+from auditiq.policy import POLICY_DIR, PROJECT_ROOT  # noqa: E402
 from auditiq.retrieval import EndpointEmbedder, PolicyIndex  # noqa: E402
 
 configure_logging()
 PAGES = ["Overview", "Review queue", "Invoice", "Policy", "Copilot"]
+# Policy documents offered for adoption besides an upload, and where uploads are kept.
+POLICY_FOLDERS = [POLICY_DIR / "pdf", POLICY_DIR / "variants", POLICY_DIR / "freeform" / "pdf"]
+UPLOADS = PROJECT_ROOT / ".auditiq" / "uploads"
 STATES = {
     db.AUTO_APPROVED: "Approved automatically",
     db.PENDING_REVIEW: "Waiting for review",
@@ -243,6 +248,139 @@ def show_hits(hits) -> None:
         st.write(hit.text)
 
 
+def adopt_policy_document(conn, active: str) -> None:
+    """A policy PDF becomes a policy version: its thresholds are read from its wording."""
+    st.subheader("Adopt a policy document")
+    st.caption("The thresholds are read from the wording of the document and compared with the active version. "
+               "Nothing is stored until you adopt it.")
+    known = {str(p.relative_to(PROJECT_ROOT)): p for folder in POLICY_FOLDERS if folder.exists()
+             for p in sorted(folder.glob("*.pdf"))}
+    upload = st.file_uploader("Policy PDF", type="pdf")
+    pick = st.selectbox("or a document in the policy folder", ["(none)", *known])
+    if upload is not None:
+        UPLOADS.mkdir(parents=True, exist_ok=True)
+        path = UPLOADS / Path(upload.name).name
+        path.write_bytes(upload.getvalue())
+    elif pick != "(none)":
+        path = known[pick]
+    else:
+        return
+
+    found = policy_extract.build(path, db.read_policy(conn).registry)
+    st.markdown(f"**{found.title}**: version {found.version or 'not stated'}, {found.pages} page(s).")
+    for problem in found.problems:
+        st.error(problem)
+    if not found.usable:
+        st.warning("This document cannot be adopted as it is: its rules are not in the wording the system reads by "
+                   "pattern.")
+        adopt_with_model(conn, path)
+        return
+    if found.changes:
+        rows = []
+        for c in found.changes:
+            if isinstance(c["to"], dict):                 # one row per role whose limit differs
+                rows += [{"rule": c["clause"], "parameter": f"{c['parameter']}: {role}",
+                          f"version {active}": json.dumps(c["from"].get(role)), "this document": json.dumps(limit)}
+                         for role, limit in c["to"].items() if c["from"].get(role) != limit]
+            else:
+                rows.append({"rule": c["clause"], "parameter": c["parameter"],
+                             f"version {active}": json.dumps(c["from"]), "this document": json.dumps(c["to"])})
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    else:
+        st.info(f"Every threshold of this document equals version {active}.")
+    activate = st.checkbox("Make it the active version", value=True)
+    replace = st.checkbox("Replace the stored version of the same number, if there is one")
+    if st.button(f"Adopt version {found.version}"):
+        report = policy_extract.adopt(conn, path, activate=activate, replace=replace)
+        if report["adopted"]:
+            st.session_state["notice"] = (f"Policy version {report['version']} adopted from {report['file']}"
+                                          + (" and made active." if activate else "."))
+            st.rerun()
+        for problem in report["problems"]:
+            st.error(problem)
+
+
+def adopt_with_model(conn, path: Path) -> None:
+    """A policy in its own wording: the model proposes, code verifies, the reviewer confirms."""
+    client = chat_client()
+    if client is None:
+        st.info("With a configured model the system can read a policy in its own wording and propose the thresholds "
+                "for your confirmation.")
+        return
+    key = f"proposal:{path.name}"
+    reference = db.read_policy(conn).registry
+    if st.button("Let the model read this document"):
+        reader = OpenAIChatClient(dataclasses.replace(client.settings, max_tokens=2500), ResponseCache())
+        with st.spinner("The model is reading the document. Without a GPU this takes several minutes."):
+            st.session_state[key] = policy_llm.propose(path, reference, reader)
+    proposal = st.session_state.get(key)
+    if proposal is None:
+        return
+    st.caption(f"Read by {proposal.model}. A value is verified when its quote is in the document word for word and "
+               "the value is written in that quote. Verified does not mean right: compare each value with its quote.")
+    for problem in proposal.problems:
+        st.error(problem)
+    st.dataframe(pd.DataFrame([{"rule": i["clause"], "parameter": i["parameter"], "proposed": json.dumps(i["value"]),
+                                f"version {reference['version']}": json.dumps(i["reference"]), "status": i["status"],
+                                "page": i["page"], "quote, or why it is held back": i["reason"] or i["quote"]}
+                               for i in proposal.items]), hide_index=True, width="stretch")
+    with st.form("confirm_policy"):
+        typed = {(i["clause"], i["parameter"]): st.text_input(
+            f"Rule {i['clause']} {i['parameter']}: your value (as JSON)", key=f"value:{path.name}:{i['clause']}:{i['parameter']}")
+            for i in proposal.items if i["status"] != policy_llm.VERIFIED}
+        passages = {clause: st.text_input(f"Rule {clause}: the passage of the document that states it",
+                                          key=f"passage:{path.name}:{clause}")
+                    for clause, rule in proposal.rules.items() if not rule["located"]}
+        accept = st.checkbox("I have compared every verified value with its quote and accept them")
+        reviewer = st.text_input("Your name")
+        version = st.text_input("Version", value=proposal.version or "")
+        activate = st.checkbox("Make it the active version", value=True)
+        if st.form_submit_button("Adopt the confirmed policy"):
+            for clause in policy_llm.add_passages(proposal, {c: text for c, text in passages.items() if text.strip()}):
+                st.error(f"The passage given for rule {clause} is not in the document.")
+            try:
+                overrides = {name: json.loads(raw) for name, raw in typed.items() if raw.strip()}
+                values, still_open = policy_llm.decide(proposal, accept_verified=accept, overrides=overrides)
+            except ValueError as error:
+                st.error(f"A typed value could not be used: {error}")
+                return
+            for line in still_open:
+                st.error(line)
+            if still_open:
+                return
+            report = policy_llm.adopt(conn, path, proposal, reference, values, reviewer, version=version.strip() or None,
+                                      activate=activate)
+            if report["adopted"]:
+                st.session_state.pop(key, None)
+                st.session_state["notice"] = (f"Policy version {report['version']} adopted from {report['file']}, "
+                                              f"confirmed by {reviewer.strip()}" + (" and made active." if activate else "."))
+                st.rerun()
+            for problem in report["problems"]:
+                st.error(problem)
+
+
+def apply_policy_to_ledger(conn, active: str) -> None:
+    """Audit every invoice again with the controls, so that the stored results follow the active policy."""
+    audited = scalar(conn, "SELECT COUNT(*) FROM v_latest_results")
+    stale = scalar(conn, "SELECT COUNT(*) FROM v_latest_results WHERE policy_version <> ?", (active,))
+    if not audited or not stale:
+        return
+    st.warning(f"{stale:,} of {audited:,} audited invoices were last audited under another policy version than "
+               f"{active}. Their results do not yet follow the active policy.")
+    if st.button(f"Audit the ledger under version {active} (controls only)"):
+        ids = db.invoice_ids(conn)
+        bar = st.progress(0.0, text="Auditing")
+        run_id = service.audit_invoices(
+            conn, PRESETS["C1"], db.read_policy(conn), None, ids, note=f"policy version {active} applied from the dashboard",
+            progress=lambda done, total: bar.progress(done / total, text=f"Auditing: {done:,} of {total:,}")
+            if done % 200 == 0 or done == total else None)
+        summary = service.run_summary(conn, run_id)
+        st.session_state["notice"] = (f"{summary['invoices']:,} invoices audited under version {active}: "
+                                      f"{summary['flags']:,} findings, "
+                                      f"{summary['states'].get(db.PENDING_REVIEW, 0):,} waiting for review.")
+        st.rerun()
+
+
 def page_policy(conn) -> None:
     st.title("Policy")
     versions = [r[0] for r in conn.execute("SELECT version FROM company_policies ORDER BY version")]
@@ -255,6 +393,16 @@ def page_policy(conn) -> None:
     if choice != active and st.button(f"Make version {choice} active"):
         db.set_active_policy(conn, choice)
         st.rerun()
+    adoption = db.read_policy(conn).registry.get("adoption")
+    if adoption:
+        # A version read from a document with a model's help says who answered for it.
+        supplied = adoption.get("values_supplied_by_the_person") or []
+        st.caption(f"Version {active} was read from a policy document by {adoption['model']} and confirmed by "
+                   f"{adoption['confirmed_by']} on {adoption['confirmed_at']}."
+                   + (f" Values typed by the reviewer: {', '.join(supplied)}." if supplied else ""))
+
+    adopt_policy_document(conn, active)
+    apply_policy_to_ledger(conn, active)
 
     st.subheader("Search the policy documents")
     index = policy_index(conn)

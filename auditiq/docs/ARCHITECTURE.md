@@ -73,7 +73,10 @@ flowchart LR
     AG <--> LLM
     CH <--> LLM
     PACK --> AUD
-    AUD --> DASH[Dashboard]
+    AUD --> API[REST API]
+    POL --> API
+    API --> WEB[Web application, React + React Three Fiber]
+    AUD --> DASH[Streamlit dashboard]
     AUD --> COP[Copilot]
     POL --> COP
     COP <--> LLM
@@ -97,7 +100,9 @@ flowchart LR
 | Policy search | `auditiq/retrieval.py` | optional |
 | Copilot | `auditiq/copilot.py` | yes |
 | Command line | `auditiq/cli.py` | |
-| Dashboard | `app/dashboard.py` | optional |
+| REST API and background jobs | `auditiq/api.py` | as configured |
+| Web application | `frontend/` (React, TypeScript, React Three Fiber) | through the API |
+| Streamlit dashboard | `app/dashboard.py` | optional |
 | Benchmark generator | `auditiq_bench/` | no |
 | Evaluation | `evaluation/` | as configured |
 
@@ -228,8 +233,15 @@ One interface (`Database` in `auditiq/db.py`) over two backends:
 
 SQL is written once with `?` placeholders. Loaders convert `NUMERIC` to float
 and dates to ISO strings on PostgreSQL, so every stage sees the same values on
-both backends; the test suite runs the database, policy, command-line and
-dashboard tests against both.
+both backends; the test suite runs the database, policy, command-line,
+dashboard and API tests against both.
+
+A new database gets the schema on its first connection, which records a stamp
+of the schema version in `meta`. Later connections read the stamp and change
+nothing, so a connection takes no exclusive lock; on PostgreSQL, creating the
+schema holds an advisory lock, so that two connections never create it at
+once. (Re-creating the views on every connection let two web requests that
+connected together deadlock.)
 
 A batch run is one row in `audit_runs`. Each audited invoice adds one row to
 `audit_results`, its findings to `audit_flags` and its steps to `audit_trail`,
@@ -270,6 +282,10 @@ Three kinds of question, each answered from retrieved material with citations:
    document and page.
 2. **Invoice questions** ("why was INV... flagged?") are answered from the
    stored audit pack of that invoice and the passages of the clauses it cites.
+   Those passages are put first whatever the wording of the question, and the
+   model is told that the audit record is the authority on what was found: a
+   question that names no rule otherwise retrieves the wrong rules, and a small
+   model then follows them (observed on a real model and fixed on 2026-10-14).
 3. **Data questions** are answered by one SQL `SELECT` that the model writes.
    The query is checked and confined in layers: it must be a single `SELECT`;
    it may not name any object outside the allowed tables and views
@@ -278,13 +294,36 @@ Three kinds of question, each answered from retrieved material with citations:
    authorizer refuses every other object, on PostgreSQL the query runs as the
    role `auditiq_reader`.
 
-## Dashboard
+## REST API and web application
 
-A Streamlit application (`app/dashboard.py`) with five pages: **Overview**
-(counts by status, findings by rule), **Review queue** (the waiting results and
-the decision form), **Invoice** (the audit pack and the trail of one invoice,
-with a button to audit it again), **Policy** (the clauses and parameters of each
-version, and policy search), **Copilot**.
+`auditiq/api.py` is a FastAPI application over the same modules the command
+line uses; it holds no state of its own between requests, and every request
+opens its own database connection, so it serves SQLite and PostgreSQL alike.
+Work that takes long (an audit with a model, re-auditing a ledger after a
+policy change, a copilot answer, reading a policy with a model) runs as a
+background job on a thread with its own connection: the request answers 202
+with a job id, and `GET /api/jobs/{id}` reports progress and the result. An
+optional bearer token protects every endpoint except the health check.
+
+`frontend/` is a single-page application in React and TypeScript that uses the
+API only. It shows the overview with a 3D map of every vendor's risk (React
+Three Fiber, one instanced mesh), the review queue and the decision form,
+single invoices with their audit pack and trail, policy adoption from a PDF
+(with the model's proposal and the reviewer's confirmation when the document is
+in its own wording), the copilot, the pipeline as a 3D graph that lights the
+stages of each configuration, and the measured results read from `results/`.
+Every 3D view has a table with the same data next to it and a fallback when
+the browser has no WebGL. [WEB.md](WEB.md) describes the endpoints, the
+security measures, the pages and the tests.
+
+## Streamlit dashboard
+
+A Streamlit application (`app/dashboard.py`), the lightweight alternative to
+the web application, with five pages: **Overview** (counts by status, findings
+by rule), **Review queue** (the waiting results and the decision form),
+**Invoice** (the audit pack and the trail of one invoice, with a button to
+audit it again), **Policy** (the clauses and parameters of each version,
+adoption of a policy document, and policy search), **Copilot**.
 
 ## Evaluation
 
@@ -297,6 +336,9 @@ version, and policy search), **Copilot**.
 | `python -m evaluation.report` | metrics with bootstrap intervals; McNemar's exact test with Holm correction |
 | `python -m evaluation.retrieval_eval` | policy retrieval on 48 fixed questions |
 | `python -m evaluation.history_cap` | checks the vendor-history cap against the labels |
+| `python -m evaluation.policy_change` | 14 policy documents read and applied to five ledgers, against frozen thresholds |
+| `python -m evaluation.scalability` | throughput of the control stage against worker processes and ledger size |
+| `python -m evaluation.policy_llm_eval` | a model reading policies in their own wording, and what the code check catches |
 
 Metrics are ratios of weighted sums, so that the evaluation subset of a ledger
 estimates the whole ledger (see DATASETS.md). The classical detectors choose
@@ -314,3 +356,5 @@ own label.
   from the registry is not checked.
 - The system audits; it does not block payments, post to an ERP or notify
   anyone. The review queue is where its output meets a person.
+- The API runs as one process; its background jobs live in that process's
+  memory, and it has one shared token, not user accounts.

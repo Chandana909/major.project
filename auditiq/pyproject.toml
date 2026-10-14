@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "auditiq"
-version = "0.3.0"
+version = "0.4.0"
 description = "Controls-first multi-agent audit of procure-to-pay transactions, with AuditIQ-Bench"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -22,6 +22,9 @@ dependencies = [
     "PyMuPDF>=1.24",
     "streamlit>=1.46",
     "altair>=5",
+    "fastapi>=0.115",
+    "uvicorn>=0.34",
+    "python-multipart>=0.0.18",
 ]
 
 [project.optional-dependencies]
@@ -54,3 +57,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["auditiq", "auditiq_bench", "evaluation"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI declares dependencies and uploads as default arguments.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.File", "fastapi.Query"]

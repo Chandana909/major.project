@@ -22,6 +22,7 @@ docs/DATA_DICTIONARY.md describes every table and column.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import os
@@ -290,6 +291,8 @@ VIEWS = ["v_latest_results", "v_review_queue"]
 BOOLEAN_COLUMNS = {"is_active", "blacklisted", "blacklist_status"}
 NULLABLE_REFERENCES = {"po_id", "grn_id"}
 READER_ROLE = "auditiq_reader"      # PostgreSQL role the copilot's queries run as, when it exists
+SCHEMA_ID = hashlib.sha256(SCHEMA.encode("utf-8")).hexdigest()[:16]    # changes whenever the schema does
+SCHEMA_LOCK = 4_702_315_001         # PostgreSQL advisory lock held while a connection creates the schema
 
 # Workflow states of an audit result.
 AUTO_APPROVED, PENDING_REVIEW, NOT_SAMPLED = "AUTO_APPROVED", "PENDING_REVIEW", "NOT_SAMPLED"
@@ -406,6 +409,23 @@ def is_postgres(target: str) -> bool:
     return str(target).startswith(("postgresql://", "postgres://"))
 
 
+def schema_stamp(db: Database) -> str:
+    """What a database whose schema is current records in meta: the schema id and, on PostgreSQL, whether
+    the copilot's read-only role exists and so has been given its grants."""
+    if db.backend == "postgres" and db.scalar("SELECT 1 FROM pg_roles WHERE rolname = ?", (READER_ROLE,)):
+        return f"{SCHEMA_ID}+{READER_ROLE}"
+    return SCHEMA_ID
+
+
+def recorded_stamp(db: Database) -> str | None:
+    """The schema stamp the database records, or None for a database without one."""
+    if db.backend == "sqlite":
+        exists = db.scalar("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'meta'")
+    else:
+        exists = db.scalar("SELECT to_regclass('meta') IS NOT NULL")
+    return db.scalar("SELECT value FROM meta WHERE key = 'schema'") if exists else None
+
+
 def create_schema(db: Database) -> None:
     for statement in SCHEMA.format(**TYPES[db.backend]).split(";\n"):
         if statement.strip():
@@ -415,6 +435,23 @@ def create_schema(db: Database) -> None:
         from .copilot import READABLE, UNDERLYING
         db.execute(f"GRANT USAGE ON SCHEMA {db.scalar('SELECT current_schema()')} TO {READER_ROLE}")
         db.execute(f"GRANT SELECT ON {', '.join(READABLE + UNDERLYING)} TO {READER_ROLE}")
+    db.execute("INSERT INTO meta (key, value) VALUES ('schema', ?) "
+               "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (schema_stamp(db),))
+    db.commit()
+
+
+def ensure_schema(db: Database) -> None:
+    """Create the schema unless the database already records this version of it.
+
+    Creating it takes exclusive locks (CREATE OR REPLACE VIEW, GRANT). When every connection did so, two web
+    requests that connected at the same moment could deadlock on PostgreSQL. A connection to an up-to-date
+    database now only reads its stamp, and on PostgreSQL one connection at a time creates the schema.
+    """
+    stamp = schema_stamp(db)
+    if recorded_stamp(db) != stamp and db.backend == "postgres":
+        db.execute("SELECT pg_advisory_xact_lock(?)", (SCHEMA_LOCK,))    # released when the transaction ends
+    if recorded_stamp(db) != stamp:                                      # read again: another may have made it
+        create_schema(db)
     db.commit()
 
 
@@ -448,17 +485,19 @@ def connect(target: Path | str | None = None, read_only: bool = False) -> Databa
         db = Database(raw, "postgres", target)
     else:
         path = Path(target)
+        # A connection is used by one caller at a time, but a web request may open it on one worker thread and
+        # use it on another; SQLite's same-thread check would refuse that.
         if read_only:
-            raw = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+            raw = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False)
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            raw = sqlite3.connect(path)
+            raw = sqlite3.connect(path, check_same_thread=False)
         raw.row_factory = sqlite3.Row
         raw.execute("PRAGMA foreign_keys = ON")
         log.debug("opened SQLite database %s%s", path, " (read-only)" if read_only else "")
         db = Database(raw, "sqlite", str(path))
     if not read_only:
-        create_schema(db)
+        ensure_schema(db)
     return db
 
 
@@ -543,6 +582,49 @@ def extract_one(db: Database, invoice_id: str) -> dict | None:
         "approvals": [_row(a, LOG_FIELDS) for a in approvals],
         "vendor_history": [_row(h, HISTORY_FIELDS + ["approver_role", "approver_name"]) for h in history],
     }
+
+
+def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
+    """Evidence extraction for a batch: the transactions `extract_one` returns, read with five queries.
+
+    `extract_one` asks the database six questions per invoice, which is right
+    for one invoice and slow for a ledger. Here the five ledger tables are read
+    once and joined in memory. The history records of a vendor are shared by
+    its transactions; the stages only read them.
+    """
+    invoices = {r["invoice_id"]: r for r in db.execute("SELECT * FROM invoices").fetchall()}
+    unknown = [i for i in invoice_ids if i not in invoices]
+    if unknown:
+        raise KeyError(f"invoice {unknown[0]} is not in the database")
+    po = {r["po_id"]: _row(r, PO_FIELDS) for r in db.execute("SELECT * FROM purchase_orders").fetchall()}
+    grn = {r["grn_id"]: _row(r, GRN_FIELDS) for r in db.execute("SELECT * FROM goods_receipts").fetchall()}
+    vendor = {r["vendor_id"]: _row(r, VENDOR_FIELDS) for r in db.execute("SELECT * FROM vendor_master").fetchall()}
+    logs: dict[str, list] = {}
+    for entry in db.execute("SELECT * FROM approval_logs ORDER BY timestamp, log_id").fetchall():
+        logs.setdefault(entry["transaction_id"], []).append(entry)
+
+    def approver(invoice_id: str) -> dict:
+        approved = [e for e in logs.get(invoice_id, []) if e["action_taken"] == "Approved"]
+        last = approved[-1] if approved else None
+        return {"approver_role": last["approver_role"] if last else None,
+                "approver_name": last["approver_name"] if last else None}
+
+    by_vendor: dict[str, list[dict]] = {}
+    for r in sorted(invoices.values(), key=lambda r: (r["date"], r["invoice_id"])):
+        by_vendor.setdefault(r["vendor_id"], []).append({**_row(r, HISTORY_FIELDS), **approver(r["invoice_id"])})
+
+    transactions = []
+    for invoice_id in invoice_ids:
+        r = invoices[invoice_id]
+        transactions.append({
+            "invoice": _row(r, INVOICE_FIELDS),
+            "po": po.get(r["po_id"]),
+            "grn": grn.get(r["grn_id"]),
+            "vendor": vendor.get(r["vendor_id"]),
+            "approvals": [_row(e, LOG_FIELDS) for e in logs.get(invoice_id, [])],
+            "vendor_history": [h for h in by_vendor[r["vendor_id"]] if h["invoice_id"] != invoice_id],
+        })
+    return transactions
 
 
 def invoice_ids(db: Database, only_unaudited: bool = False, limit: int | None = None) -> list[str]:

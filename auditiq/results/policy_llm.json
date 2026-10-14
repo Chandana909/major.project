@@ -1,0 +1,431 @@
+{
+ "produced": "2026-10-14 09:42",
+ "model": "qwen2.5:7b-ctx12k",
+ "documents": [
+  {
+   "style": "memo",
+   "policy": "reference",
+   "version": "5.1",
+   "file": "memo_reference_v5.1.pdf",
+   "usage": {
+    "prompt_tokens": 1570,
+    "completion_tokens": 954,
+    "seconds": 393.4,
+    "from_cache": true
+   },
+   "problems": [],
+   "counts": {
+    "values": 14,
+    "right_verified": 9,
+    "right_held_back": 4,
+    "wrong_caught": 1,
+    "wrong_passed": 0,
+    "missing": 0,
+    "rules": 16,
+    "located": 16,
+    "right_passage": 16,
+    "policy_correct_after_confirmation": true
+   },
+   "details": [
+    {
+     "rule": "4.4.1",
+     "parameter": "blocked_gstin_statuses",
+     "proposed": [
+      "Blacklisted",
+      "Suspended"
+     ],
+     "intended": [
+      "Suspended"
+     ],
+     "outcome": "wrong_caught",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 100000,
+     "intended": 100000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 500000,
+     "intended": 500000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    }
+   ]
+  },
+  {
+   "style": "memo",
+   "policy": "strict",
+   "version": "5.2",
+   "file": "memo_strict_v5.2.pdf",
+   "usage": {
+    "prompt_tokens": 1570,
+    "completion_tokens": 955,
+    "seconds": 301.0,
+    "from_cache": true
+   },
+   "problems": [],
+   "counts": {
+    "values": 14,
+    "right_verified": 9,
+    "right_held_back": 4,
+    "wrong_caught": 1,
+    "wrong_passed": 0,
+    "missing": 0,
+    "rules": 16,
+    "located": 16,
+    "right_passage": 16,
+    "policy_correct_after_confirmation": true
+   },
+   "details": [
+    {
+     "rule": "4.4.1",
+     "parameter": "blocked_gstin_statuses",
+     "proposed": [
+      "Blacklisted",
+      "Suspended"
+     ],
+     "intended": [
+      "Suspended"
+     ],
+     "outcome": "wrong_caught",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 50000,
+     "intended": 50000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 250000,
+     "intended": 250000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "the value is not written in the quoted text"
+    }
+   ]
+  },
+  {
+   "style": "memo",
+   "policy": "lenient",
+   "version": "5.3",
+   "file": "memo_lenient_v5.3.pdf",
+   "usage": {
+    "prompt_tokens": 1568,
+    "completion_tokens": 947,
+    "seconds": 297.3,
+    "from_cache": true
+   },
+   "problems": [
+    "Rule 5.1.1 (approval limit): no passage of the document was located for it"
+   ],
+   "counts": {
+    "values": 14,
+    "right_verified": 10,
+    "right_held_back": 4,
+    "wrong_caught": 0,
+    "wrong_passed": 0,
+    "missing": 0,
+    "rules": 16,
+    "located": 15,
+    "right_passage": 15,
+    "policy_correct_after_confirmation": true
+   },
+   "details": [
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 150000,
+     "intended": 150000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 500000,
+     "intended": 500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    }
+   ]
+  },
+  {
+   "style": "handbook",
+   "policy": "reference",
+   "version": "5.4",
+   "file": "handbook_reference_v5.4.pdf",
+   "usage": {
+    "prompt_tokens": 1517,
+    "completion_tokens": 921,
+    "seconds": 288.9,
+    "from_cache": true
+   },
+   "problems": [
+    "Rule 5.1.1 (approval limit): no passage of the document was located for it"
+   ],
+   "counts": {
+    "values": 14,
+    "right_verified": 9,
+    "right_held_back": 4,
+    "wrong_caught": 0,
+    "wrong_passed": 1,
+    "missing": 0,
+    "rules": 16,
+    "located": 15,
+    "right_passage": 15,
+    "policy_correct_after_confirmation": false
+   },
+   "details": [
+    {
+     "rule": "4.4.1",
+     "parameter": "blocked_gstin_statuses",
+     "proposed": [
+      "Blacklisted",
+      "Suspended"
+     ],
+     "intended": [
+      "Suspended"
+     ],
+     "outcome": "wrong_passed",
+     "reason": ""
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 100000,
+     "intended": 100000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 500000,
+     "intended": 500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    }
+   ]
+  },
+  {
+   "style": "handbook",
+   "policy": "strict",
+   "version": "5.5",
+   "file": "handbook_strict_v5.5.pdf",
+   "usage": {
+    "prompt_tokens": 1516,
+    "completion_tokens": 922,
+    "seconds": 281.6,
+    "from_cache": true
+   },
+   "problems": [
+    "Rule 5.1.1 (approval limit): no passage of the document was located for it"
+   ],
+   "counts": {
+    "values": 14,
+    "right_verified": 9,
+    "right_held_back": 4,
+    "wrong_caught": 0,
+    "wrong_passed": 1,
+    "missing": 0,
+    "rules": 16,
+    "located": 15,
+    "right_passage": 15,
+    "policy_correct_after_confirmation": false
+   },
+   "details": [
+    {
+     "rule": "4.4.1",
+     "parameter": "blocked_gstin_statuses",
+     "proposed": [
+      "Blacklisted",
+      "Suspended"
+     ],
+     "intended": [
+      "Suspended"
+     ],
+     "outcome": "wrong_passed",
+     "reason": ""
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 50000,
+     "intended": 50000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 250000,
+     "intended": 250000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    }
+   ]
+  },
+  {
+   "style": "handbook",
+   "policy": "lenient",
+   "version": "5.6",
+   "file": "handbook_lenient_v5.6.pdf",
+   "usage": {
+    "prompt_tokens": 1515,
+    "completion_tokens": 912,
+    "seconds": 309.7,
+    "from_cache": true
+   },
+   "problems": [
+    "Rule 5.1.1 (approval limit): no passage of the document was located for it"
+   ],
+   "counts": {
+    "values": 14,
+    "right_verified": 10,
+    "right_held_back": 4,
+    "wrong_caught": 0,
+    "wrong_passed": 0,
+    "missing": 0,
+    "rules": 16,
+    "located": 15,
+    "right_passage": 15,
+    "policy_correct_after_confirmation": true
+   },
+   "details": [
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Manager",
+     "proposed": 150000,
+     "intended": 150000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Senior Manager",
+     "proposed": 500000,
+     "intended": 500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: Director",
+     "proposed": 2500000,
+     "intended": 2500000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    },
+    {
+     "rule": "5.1.1",
+     "parameter": "approval_limits: CFO",
+     "proposed": 10000000,
+     "intended": 10000000,
+     "outcome": "right_held_back",
+     "reason": "no quote of the rule was found in the document"
+    }
+   ]
+  }
+ ],
+ "total": {
+  "values": 84,
+  "right_verified": 56,
+  "right_held_back": 24,
+  "wrong_caught": 2,
+  "wrong_passed": 2,
+  "missing": 0,
+  "rules": 96,
+  "located": 92,
+  "right_passage": 92
+ }
+}

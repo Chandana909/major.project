@@ -19,6 +19,7 @@ from .policy import Policy
 from .policy_ingest import clause_citations
 
 log = logging.getLogger(__name__)
+BULK = 200      # from this many invoices on, the ledger is read in bulk
 
 
 def workflow_status(route: str, invoice_id: str, sample_rate: float) -> str:
@@ -61,6 +62,9 @@ def audit_invoices(conn: db.Database, config: PipelineConfig, policy: Policy,
             progress(done, len(invoice_ids))
 
     def transactions():
+        if len(invoice_ids) >= BULK:
+            yield from db.extract_many(conn, invoice_ids)       # the ledger is read once, not once per invoice
+            return
         for invoice_id in invoice_ids:
             txn = db.extract_one(conn, invoice_id)
             if txn is None:

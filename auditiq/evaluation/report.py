@@ -29,6 +29,7 @@ ROWS = [
     ("FPR, hard negatives", "fpr_hard_negative"),
     ("Precision at 2% prevalence", "precision_at_2pct_prevalence"),
     ("Citation correctness", "citation_correctness"),
+    ("Model findings naming a violated rule", "model_rule_precision"),
     ("Exact match of cited clauses", "exact_match"),
     ("Escalation precision", "escalation_precision"),
     ("Escalation recall", "escalation_recall"),

@@ -1,0 +1,163 @@
+=== six-invoice run, all configurations: Wed Oct 14 08:49:41 IST 2026
+{
+ "invoices": 6,
+ "invoices_flagged": 0,
+ "agent_flags": 0,
+ "flags_removed_by_challenger": 0,
+ "routes": {
+  "approve": 6
+ },
+ "llm_calls": 0,
+ "cache_hits": 0,
+ "prompt_tokens": 0,
+ "completion_tokens": 0,
+ "model_time_s": 0.0,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C1-demo.jsonl
+C1: 6 s
+{
+ "invoices": 6,
+ "invoices_flagged": 4,
+ "agent_flags": 5,
+ "flags_removed_by_challenger": 0,
+ "routes": {
+  "approve": 2,
+  "escalate": 4
+ },
+ "llm_calls": 18,
+ "cache_hits": 17,
+ "prompt_tokens": 57767,
+ "completion_tokens": 694,
+ "model_time_s": 5933.8,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C3-demo.jsonl
+C3: 7 s
+{
+ "invoices": 6,
+ "invoices_flagged": 3,
+ "agent_flags": 3,
+ "flags_removed_by_challenger": 2,
+ "routes": {
+  "approve": 3,
+  "escalate": 3
+ },
+ "llm_calls": 22,
+ "cache_hits": 22,
+ "prompt_tokens": 73597,
+ "completion_tokens": 932,
+ "model_time_s": 6818.6,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C4-demo.jsonl
+C4: 7 s
+{
+ "invoices": 6,
+ "invoices_flagged": 3,
+ "agent_flags": 3,
+ "flags_removed_by_challenger": 2,
+ "routes": {
+  "approve": 3,
+  "sample": 1,
+  "escalate": 2
+ },
+ "llm_calls": 31,
+ "cache_hits": 31,
+ "prompt_tokens": 106948,
+ "completion_tokens": 1876,
+ "model_time_s": 8157.4,
+ "failed_stages": 0,
+ "repaired_replies": 0,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C5-demo.jsonl
+C5: 7 s
+  C2: 6/6 invoices, 1167 s
+{
+ "invoices": 6,
+ "invoices_flagged": 6,
+ "agent_flags": 21,
+ "flags_removed_by_challenger": 0,
+ "routes": {
+  "escalate": 6
+ },
+ "llm_calls": 7,
+ "cache_hits": 0,
+ "prompt_tokens": 33520,
+ "completion_tokens": 2351,
+ "model_time_s": 2641.5,
+ "failed_stages": 0,
+ "repaired_replies": 1,
+ "out_of_remit_flags": 0,
+ "malformed_flags": 0
+}
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\C2-demo.jsonl
+C2: 1174 s
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\pilot_seed_909\demo.md
+=== policies in their own wording, six documents: Wed Oct 14 09:09:51 IST 2026
+memo_reference_v5.1.pdf: 9/14 values right and verified, 0 wrong passed, 16/16 rules at the right passage, 393.4 s
+memo_strict_v5.2.pdf: 9/14 values right and verified, 0 wrong passed, 16/16 rules at the right passage, 301.0 s
+memo_lenient_v5.3.pdf: 10/14 values right and verified, 0 wrong passed, 15/16 rules at the right passage, 297.3 s
+handbook_reference_v5.4.pdf: 9/14 values right and verified, 1 wrong passed, 15/16 rules at the right passage, 288.9 s
+handbook_strict_v5.5.pdf: 9/14 values right and verified, 1 wrong passed, 15/16 rules at the right passage, 281.6 s
+handbook_lenient_v5.6.pdf: 10/14 values right and verified, 0 wrong passed, 15/16 rules at the right passage, 309.7 s
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\policy_llm.md
+=== C5 through the database (PostgreSQL), one invoice: Wed Oct 14 09:41:11 IST 2026
+09:41:24 INFO    auditiq.service: run 4: C5 under policy 2.5, 1 invoice(s), model qwen2.5:7b-ctx12k
+09:43:22 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2318 tokens in, 65 out, 117.8 s
+09:44:35 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2190 tokens in, 6 out, 190.3 s
+09:45:57 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2273 tokens in, 6 out, 272.6 s
+09:47:33 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2285 tokens in, 44 out, 95.6 s
+09:49:32 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2318 tokens in, 91 out, 119.4 s
+09:49:53 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2318 tokens in, 63 out, 140.7 s
+09:50:15 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 2318 tokens in, 63 out, 162.7 s
+auditing 1 invoice(s) with C5 under policy v2.5
+  1/1
+09:50:15 INFO    auditiq.service: run 4: finished, 1 result(s) stored
+{
+ "run_id": 4,
+ "invoices": 1,
+ "flags": 1,
+ "llm_calls": 7,
+ "prompt_tokens": 16020,
+ "completion_tokens": 338,
+ "failed_stages": 0,
+ "states": {
+  "PENDING_REVIEW": 1
+ }
+}
+=== copilot, invoice question: Wed Oct 14 09:50:16 IST 2026
+09:51:16 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 236 tokens in, 34 out, 31.1 s
+09:52:41 INFO    auditiq.llm: qwen2.5:7b-ctx12k: 670 tokens in, 70 out, 79.5 s
+INV51287 was flagged because the invoice number has already been used by an earlier invoice from the same vendor, which is an exception under Rule 2.2.1. The later invoice is considered a duplicate and is routed to the Fraud Investigation team.
+
+Sources: Rule 2.2.1 (Procurement_Audit_SOP_v2.5.pdf, page 1); 2.2 Duplicate Invoices (Procurement_Audit_SOP_v2.5.pdf, page 1)
+=== done: Wed Oct 14 09:52:42 IST 2026
+=== copilot, invoice question, after the fix: Wed Oct 14 09:54:18 IST 2026
+INV51287 was flagged because the accepted quantity is less than the billed quantity, which is an exception under Rule 2.1.4 (HIGH), receipt remarks. The remarks on the GRN indicate that 28 rolls were returned to the vendor due to wrong specification, and the accepted quantity is 70, less than the billed quantity.
+
+Sources: Rule 2.1.4 (Procurement_Audit_SOP_v2.5.pdf, page 1)
+=== copilot, data question: Wed Oct 14 09:55:55 IST 2026
+SQL: SELECT rq.vendor_id, vm.vendor_name, COUNT(*) AS num_invoices FROM v_review_queue rq JOIN vendor_master vm ON rq.vendor_id = vm.vendor_id GROUP BY rq.vendor_id, vm.vendor_name ORDER BY num_invoices DESC LIMIT 5
+
+vendor_id  vendor_name              num_invoices
+---------  -----------------------  ------------
+VEND1944   Talwar-Verma             5
+VEND1329   Choudhry-Khare           5
+VEND1259   Rattan, Ghosh and Atwal  5
+VEND1264   Rajan-Uppal              4
+VEND1294   Agate-Venkataraman       4
+
+The rows show the top five vendors by the number of invoices waiting for review.
+=== done: Wed Oct 14 09:58:00 IST 2026

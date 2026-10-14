@@ -198,6 +198,11 @@ class PolicyIndex:
                                                                    else [data.get(key)]) if isinstance(p, str)]
         return " ".join([query, *parts])
 
+    def passages_of(self, clause_id: str) -> list[Hit]:
+        """The passages that state one rule, as hits (for an audit pack that cites the rule)."""
+        return [Hit(c["chunk_id"], c["file_name"], c["version"], c["kind"], c["clause_id"], c["section"], c["page"],
+                    c["text"], 1.0, 0) for c in self.chunks if c["clause_id"] == clause_id]
+
     def search(self, query: str, k: int = 5, mode: str = "auto", client: ChatClient | None = None) -> list[Hit]:
         """The ``k`` chunks that best answer ``query``.
 

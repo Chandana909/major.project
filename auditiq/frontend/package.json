@@ -1,0 +1,48 @@
+{
+  "name": "auditiq-frontend",
+  "private": true,
+  "version": "0.4.0",
+  "description": "Web frontend of AuditIQ: overview, review queue, invoice audit packs, policy adoption, copilot and results, with 3D views in React Three Fiber.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@react-three/drei": "9.122.0",
+    "@react-three/fiber": "8.17.10",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "7.18.4",
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@react-three/test-renderer": "8.2.1",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.0.1",
+    "@testing-library/user-event": "14.5.2",
+    "@types/node": "22.9.0",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@types/three": "0.170.0",
+    "@vitejs/plugin-react": "4.7.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "5.0.0",
+    "eslint-plugin-react-refresh": "0.4.14",
+    "globals": "15.12.0",
+    "jsdom": "25.0.1",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.71.2",
+    "vite": "6.4.4",
+    "vitest": "4.1.11"
+  }
+}

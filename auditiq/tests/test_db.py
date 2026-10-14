@@ -5,6 +5,7 @@ Every test here runs on SQLite and on PostgreSQL (see conftest.py).
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from test_pipeline import scripted
@@ -27,6 +28,36 @@ def test_loading_a_dataset_fills_the_ledger_and_keeps_the_labels_apart(conn):
     assert (no_po, dangling) == (10, 10)
 
 
+def test_the_schema_is_created_once_per_version(backend, make_store, monkeypatch):
+    target = make_store(backend)
+    db.connect(target).close()                                   # creates the schema and records its stamp
+    made = []
+    create = db.create_schema
+    monkeypatch.setattr(db, "create_schema", lambda conn: (made.append(conn.backend), create(conn)))
+    for _ in range(3):
+        db.connect(target).close()
+    assert made == []                    # up to date: no DDL, so no exclusive lock for others to wait on
+    monkeypatch.setattr(db, "SCHEMA_ID", "0123456789abcdef")    # as after a change to the schema
+    conn = db.connect(target)
+    assert made == [backend] and db.recorded_stamp(conn) == db.schema_stamp(conn)
+    conn.close()
+
+
+def test_connections_opened_at_the_same_time_do_not_deadlock(ledger):
+    # The web application opens a connection per request, several at once. When each connection re-created
+    # the schema, two of them could deadlock on PostgreSQL (CREATE OR REPLACE VIEW against a SELECT on it).
+    def request(_):
+        conn = db.connect(ledger)
+        try:
+            return conn.scalar("SELECT COUNT(*) FROM v_review_queue"), conn.scalar("SELECT COUNT(*) FROM invoices")
+        finally:
+            conn.close()
+
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        answers = list(pool.map(request, range(32)))
+    assert set(answers) == {(0, 1200)}
+
+
 def test_extraction_from_the_database_equals_extraction_from_the_files(conn, small_dataset):
     """Same values and same types on both backends: floats for money, ISO text for dates."""
     from_files = {t["invoice"]["invoice_id"]: t for t in extract(small_dataset)}
@@ -37,6 +68,11 @@ def test_extraction_from_the_database_equals_extraction_from_the_files(conn, sma
     assert isinstance(sample["invoice"]["amount"], float) and isinstance(sample["invoice"]["date"], str)
     assert isinstance(sample["approvals"][0]["timestamp"], str) and isinstance(sample["vendor"]["blacklisted"], bool)
     assert db.extract_one(conn, "INV00000") is None
+    # The bulk extraction of a batch run returns the same transactions, in the order asked for.
+    ids = sorted(from_files, reverse=True)
+    assert db.extract_many(conn, ids) == [from_files[i] for i in ids]
+    with pytest.raises(KeyError, match="INV00000"):
+        db.extract_many(conn, ["INV00000"])
 
 
 def test_extraction_never_reads_the_labels(conn):

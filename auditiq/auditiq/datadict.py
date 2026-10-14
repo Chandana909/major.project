@@ -169,7 +169,8 @@ TABLES: dict[str, dict] = {
     },
     "company_policies": {
         "summary": "One row per version of the policy.",
-        "source": "`policy/policy_v<version>.json` and the SOP text rendered from it",
+        "source": "`setup` (from `policy/policy_v<version>.json` and the text rendered from it), and "
+                  "`python -m auditiq policy adopt <file.pdf>`, which reads a version from a policy document",
         "used": "The pipeline reads the active version when a run starts: the controls take their thresholds from "
                 "`registry`, the agents read `markdown_content`.",
         "columns": {
@@ -179,13 +180,15 @@ TABLES: dict[str, dict] = {
             "markdown_content": "The policy as text. This is what the agents read; it is rendered from the "
                                 "registry, so a threshold appears in the text exactly as the controls apply it.",
             "registry": "The clause registry as JSON: every clause with its title, severity, kind and "
-                        "parameters. The only place where thresholds are stored.",
+                        "parameters. The only place where thresholds are stored. A version that a model helped to "
+                        "read from a document also records, under `adoption`, the model, the reviewer who "
+                        "confirmed the values, the time, and which values the reviewer supplied.",
             "is_active": "1 for the version the audit applies, 0 for the others. Exactly one row has 1.",
         },
     },
     "policy_clauses": {
         "summary": "One row per clause of each policy version; the registry of `company_policies` in relational form.",
-        "source": "`policy/policy_v<version>.json`",
+        "source": "With the policy version: `setup` or `policy adopt`",
         "used": "The dashboard and the copilot. The pipeline reads the registry itself.",
         "columns": {
             "version": "Policy version.",
@@ -199,7 +202,7 @@ TABLES: dict[str, dict] = {
     },
     "policy_parameters": {
         "summary": "One row per parameter of a clause: the thresholds of the policy.",
-        "source": "`policy/policy_v<version>.json`",
+        "source": "With the policy version: `setup` or `policy adopt`",
         "used": "The dashboard shows them and compares versions. The controls read the same values from the registry.",
         "columns": {
             "version": "Policy version.",
@@ -210,7 +213,8 @@ TABLES: dict[str, dict] = {
     },
     "policy_documents": {
         "summary": "One row per ingested policy document (PDF).",
-        "source": "`python -m auditiq policy ingest <file.pdf>`; `setup` ingests the PDFs in `policy/pdf`",
+        "source": "`python -m auditiq policy ingest <file.pdf>` and `policy adopt <file.pdf>`; `setup` ingests the "
+                  "PDFs in `policy/pdf`",
         "used": "Citations name the document and the page of a passage.",
         "columns": {
             "doc_id": "Identifier of the document.",
@@ -224,7 +228,7 @@ TABLES: dict[str, dict] = {
     },
     "policy_chunks": {
         "summary": "One row per passage of a policy document: a clause, or a paragraph that is not a clause.",
-        "source": "Policy ingestion; `python -m auditiq policy embed` fills the embedding columns",
+        "source": "Policy ingestion and adoption; `python -m auditiq policy embed` fills the embedding columns",
         "used": "Policy search and the copilot retrieve passages; an audit pack cites the page of each clause it uses.",
         "columns": {
             "chunk_id": "Identifier of the passage.",
@@ -237,7 +241,8 @@ TABLES: dict[str, dict] = {
             "page": "Page of the PDF on which the passage begins, from 1.",
             "text": "Text of the passage as extracted from the PDF.",
             "verified": "For a clause: 1 when the text extracted from the PDF equals the text of that clause in "
-                        "the registry of the same version, 0 when it differs. NULL for other passages. A clause "
+                        "the registry of the same version, 0 when it differs. NULL for other passages, and for "
+                        "the passages a model located in a policy written in its own wording. A clause "
                         "that is not verified is reported at ingestion, because the PDF and the applied policy "
                         "then disagree.",
             "embedding": "Embedding of the passage: a vector of 32-bit floats of unit length, stored as bytes. "
@@ -369,7 +374,9 @@ TABLES: dict[str, dict] = {
         "source": "`setup`",
         "used": "`python -m auditiq status` and the dashboard.",
         "columns": {
-            "key": "Name of the fact. `dataset` is the name of the loaded ledger.",
+            "key": "Name of the fact. `dataset` is the name of the loaded ledger; `schema` identifies the version "
+                   "of the schema the database has (on PostgreSQL also whether the copilot's read-only role has "
+                   "its grants), so that a connection to an up-to-date database changes nothing.",
             "value": "Its value.",
         },
     },

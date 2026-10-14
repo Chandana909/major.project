@@ -205,6 +205,21 @@ def test_copilot_answers_from_the_passages_and_the_audit_pack_and_cites_them(lib
     assert unaudited["audit_pack"] is None
 
 
+def test_for_an_audited_invoice_the_rules_its_findings_cite_come_first(lib):
+    """A question that names no rule must still show the model the rule the invoice was flagged under."""
+    target = lib.scalar("SELECT invoice_id FROM benchmark_labels WHERE class_id = 'R7' ORDER BY invoice_id LIMIT 1")
+    service.audit_invoices(lib, PRESETS["C1"], db.read_policy(lib), None, [target])
+    index = PolicyIndex.from_db(lib)
+    question = f"Why was {target} flagged?"
+    assert "5.1.1" not in [h.clause_id for h in index.search(question, k=4)]          # wording alone misses it
+    client = ScriptedClient(lambda messages, temperature, sample: json.dumps({"answer": "x [1]", "passages_used": [1]}))
+    out = copilot.answer(question, lib, index, client)
+    assert out["passages"][0].clause_id == "5.1.1" and len(out["passages"]) == 4
+    assert [h.clause_id for h in out["passages"]].count("5.1.1") == 1
+    system, user = client.calls[-1]["messages"][0]["content"], client.calls[-1]["messages"][1]["content"]
+    assert "The AUDIT RECORD is the authority" in system and "[1] Rule 5.1.1" in user
+
+
 def test_copilot_reports_a_model_that_gives_no_usable_answer(lib):
     out = copilot.answer("weekend", lib, PolicyIndex.from_db(lib), ScriptedClient(lambda *_: "no idea"))
     assert "did not return a usable answer" in out["answer"] and out["sources"] == [] and len(out["calls"]) == 2

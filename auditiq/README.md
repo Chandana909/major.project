@@ -14,7 +14,9 @@ page, and a trail of every step.
 
 It is a standalone Python project. The pipeline is a LangGraph state graph,
 the store is SQLite or PostgreSQL, and the model is any OpenAI-compatible
-endpoint, local or hosted.
+endpoint, local or hosted. A REST API (FastAPI) and a web application (React,
+with 3D views in React Three Fiber) put the audit, the review queue, the policy
+and the measured results in the browser.
 
 ```
 ledger (database) -> extraction -> controls -> three specialist agents -> challenger
@@ -30,6 +32,7 @@ policy PDFs       -> ingestion  -> clause store -> citations, policy search, cop
 | [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | Every table and column, with types on both backends and who reads it (generated) |
 | [docs/DATASETS.md](docs/DATASETS.md) | The six datasets: sizes, how a ledger is built, how each anomaly is injected, limits (generated) |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Install, configure, run, reproduce the evaluation, troubleshoot |
+| [docs/WEB.md](docs/WEB.md) | The REST API and the web application: running, settings, security, every endpoint, the pages and 3D views, tests |
 | [docs/FEATURE_POLICY_AS_DATA.md](docs/FEATURE_POLICY_AS_DATA.md) | The measured feature, written up for the paper: thresholds read from the policy PDF, the policy-change experiment and its results |
 | `data/<name>/README.md` | The datasheet of each dataset (generated with the data) |
 | [PLAN.md](PLAN.md) | What is built, decisions taken while building, what is open |
@@ -56,14 +59,24 @@ python -m auditiq run --config C1
 ```
 
 ```bash
-python -m streamlit run app/dashboard.py
+cd frontend && npm ci && npm run build && cd ..
+```
+
+```bash
+python -m auditiq serve
 ```
 
 `setup` loads a ledger of 20,000 invoices (83,495 records in five tables), the
 two policy versions and the policy PDFs. `run --config C1` audits every invoice
-with the twelve controls and stores results, findings and the audit trail. The
-dashboard shows the overview, the review queue with its decision form, single
-invoices, the policy, and the copilot.
+with the twelve controls and stores results, findings and the audit trail.
+`serve` starts the web application at http://127.0.0.1:8000 (the API
+description is at `/api/docs`): the overview with a 3D map of every vendor's
+risk, the review queue and the decision form, single invoices with their audit
+pack and trail, policy adoption from a PDF, the copilot, the pipeline as a 3D
+graph, and the measured results. Building the frontend needs Node 20 or later;
+without it the API runs alone. The Streamlit dashboard
+(`python -m streamlit run app/dashboard.py`) offers the same work in a simpler
+form.
 
 For PostgreSQL, a chat model, and an embedding model, see
 [docs/OPERATIONS.md](docs/OPERATIONS.md). In short:
@@ -130,8 +143,16 @@ Measured, by scripts in this repository:
 - **Policy retrieval** on 48 fixed questions, lexical, dense and hybrid, with
   and without question rewriting: `results/retrieval.md`.
 - **The vendor-history cap** against the labels: `results/history_cap.md`.
-- **The pipeline against a real local model** on a handful of invoices, as a
-  check that it works end to end: `results/pilot_seed_909/`.
+- **Scalability of the control stage** against worker processes and ledger size:
+  `results/scalability.md`.
+- **The pipeline against a real local model** (`qwen2.5:7b`, on a laptop CPU):
+  a pilot of 20 invoices under all five configurations, and a six-invoice
+  demonstration, in `results/pilot_seed_909/` (`pilot20.md`, `demo.md`). A
+  pilot shows that every stage runs and what an invoice costs; 20 invoices are
+  far too few to compare configurations, and the report says so.
+- **Policies in their own wording** read by the local model, verified by code
+  and confirmed by a person: six documents, 84 values,
+  `results/policy_llm.md` (`python -m evaluation.policy_llm_eval`).
 
 Not measured:
 
@@ -146,17 +167,18 @@ Not measured:
 
 | Path | Content |
 |---|---|
-| `auditiq/` | The pipeline, the database, the policy documents, the copilot, the command line. Imports nothing from the benchmark. |
+| `auditiq/` | The pipeline, the database, the policy documents, the copilot, the command line, the REST API (`api.py`). Imports nothing from the benchmark. |
+| `frontend/` | The web application: React, TypeScript, React Three Fiber; built into `frontend/dist`, which the API serves. |
 | `auditiq_bench/` | The dataset generator and its validator. Imports nothing from the pipeline. |
 | `evaluation/` | Baselines, runners, metrics, statistics, reports. |
-| `app/` | The Streamlit dashboard. |
+| `app/` | The Streamlit dashboard, the lightweight alternative to the web application. |
 | `policy/` | The clause registry (`policy_v2.5.json`), the text templates, the generated SOP text and PDFs. The registry is the only place a threshold is written. |
 | `data/`, `results/` | Datasets; predictions, metrics and reports. |
 | `exports/` | A CSV snapshot of every table of the database (`python -m auditiq export`): the ledger, the policy store and the audit results of the 20,000-invoice ledger under C1. |
 | `docs/` | The documents listed above. |
 | `deploy/` | The Ollama Modelfile; a PostgreSQL compose file. |
 | `scripts/` | `pg_local.py`, a local PostgreSQL server without installation. |
-| `tests/` | The test suite. No test calls a model. |
+| `tests/` | The Python test suite. No test calls a model. The frontend's tests sit next to its code (`frontend/src/**/*.test.ts(x)`). |
 | `.auditiq/` | Local state, not versioned: the SQLite database and the model-reply cache. |
 
 ## Prediction format

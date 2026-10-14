@@ -1,0 +1,79 @@
+{
+ "produced": "2026-10-13 23:28",
+ "logical_cpus": 12,
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+ "repeats": 3,
+ "by_workers": [
+  {
+   "workers": 1,
+   "audits": 300000,
+   "seconds": 5.29,
+   "findings": 16840,
+   "invoices_per_second": 56660,
+   "runs": [
+    5.7,
+    5.29,
+    5.27
+   ]
+  },
+  {
+   "workers": 2,
+   "audits": 300000,
+   "seconds": 3.1,
+   "findings": 16840,
+   "invoices_per_second": 96724,
+   "runs": [
+    3.1,
+    3.01,
+    3.59
+   ]
+  },
+  {
+   "workers": 4,
+   "audits": 300000,
+   "seconds": 2.5,
+   "findings": 16840,
+   "invoices_per_second": 119780,
+   "runs": [
+    2.5,
+    2.44,
+    2.67
+   ]
+  },
+  {
+   "workers": 8,
+   "audits": 300000,
+   "seconds": 1.74,
+   "findings": 16840,
+   "invoices_per_second": 172226,
+   "runs": [
+    1.73,
+    1.74,
+    1.9
+   ]
+  }
+ ],
+ "by_size": [
+  {
+   "invoices": 5000,
+   "seconds": 0.089,
+   "findings": 300,
+   "invoices_per_second": 56117,
+   "microseconds_per_invoice": 17.8
+  },
+  {
+   "invoices": 20000,
+   "seconds": 0.389,
+   "findings": 300,
+   "invoices_per_second": 51433,
+   "microseconds_per_invoice": 19.4
+  },
+  {
+   "invoices": 40000,
+   "seconds": 0.731,
+   "findings": 1350,
+   "invoices_per_second": 54722,
+   "microseconds_per_invoice": 18.3
+  }
+ ]
+}

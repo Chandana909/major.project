@@ -80,7 +80,8 @@ def build_frame(labels: pd.DataFrame, predictions: dict[str, dict], ids: list[st
           "escalate", "sample", "approve"]}
     c.update({f"truth:{k}": np.zeros(n, dtype=bool) for k in CLASSES})
     c.update({f"pred:{k}": np.zeros(n, dtype=bool) for k in CLASSES})
-    for name in ["flags_on_anomalous", "flags_correct", "llm_calls", "tokens", "latency_ms"]:
+    for name in ["flags_on_anomalous", "flags_correct", "model_flags", "model_flags_correct", "llm_calls", "tokens",
+                 "latency_ms"]:
         c[name] = np.zeros(n, dtype=float)
     c["weight"] = np.ones(n) if subset is None else subset.loc[ids, "weight"].to_numpy(dtype=float)
     strata = None if subset is None else subset.loc[ids, "stratum"].to_numpy()
@@ -109,6 +110,9 @@ def build_frame(labels: pd.DataFrame, predictions: dict[str, dict], ids: list[st
         if truth_clauses:
             c["flags_on_anomalous"][row] = len(flags)
             c["flags_correct"][row] = sum(f["clause"] in truth_clauses for f in flags)
+        by_model = [f for f in flags if f.get("source") == "L"]
+        c["model_flags"][row] = len(by_model)
+        c["model_flags_correct"][row] = sum(f["clause"] in truth_clauses for f in by_model)
         route = pred.get("route")
         if route:
             c[route][row] = True
@@ -170,6 +174,9 @@ def compute(frame: Frame, idx: np.ndarray | None = None) -> dict[str, float]:
             m[f"macro_f1_{name}"] = float(np.mean(values)) if values else float("nan")
             m[f"macro_recall_{name}"] = float(np.mean(recalls)) if recalls else float("nan")
         m["citation_correctness"] = ratio(s(c["flags_correct"]), s(c["flags_on_anomalous"]))
+        # The findings a model raised (an agent, or the single prompt of C2) that name a rule the invoice
+        # violates, among all findings a model raised; one on an invoice without an anomaly counts as wrong.
+        m["model_rule_precision"] = ratio(s(c["model_flags_correct"]), s(c["model_flags"]))
         m["exact_match"] = ratio(s(c["exact"]), total)
 
     if frame.has_routes:

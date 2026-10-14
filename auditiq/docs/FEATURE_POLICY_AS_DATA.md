@@ -352,6 +352,103 @@ Adopting the document took 7 seconds and re-auditing 20,000 invoices with
 storage of every result, finding and trail entry took one minute. No file of
 the system was edited between the two runs.
 
+### 6.4 In the dashboard
+
+The Policy page of the dashboard does the same without the command line. A
+policy PDF is uploaded or chosen from the policy folder; the page shows the
+version, the pages and a table of every threshold that differs from the active
+version, and a document that cannot be executed is refused with the reasons.
+"Adopt version ..." stores it. If the stored results were produced under
+another version than the active one, the page says how many and offers to
+audit the ledger again under the active version.
+
+### 6.5 Throughput
+
+`python -m evaluation.scalability` (`results/scalability.md`), on the same
+laptop (12 logical CPUs), median of three runs:
+
+| Worker processes | Seconds for 300,000 invoice audits | Invoices per second | Speed-up |
+|---|---|---|---|
+| 1 | 5.29 | 56,660 | 1.00 |
+| 2 | 3.10 | 96,724 | 1.71 |
+| 4 | 2.50 | 119,780 | 2.12 |
+| 8 | 1.74 | 172,226 | 3.04 |
+
+One process needs 17.8, 19.4 and 18.3 microseconds per invoice on ledgers of
+5,000, 20,000 and 40,000 invoices: the cost per invoice does not grow with the
+ledger. Every number of workers produced the same findings. All processes ran
+on one machine.
+
+## 6A. Policies in their own wording
+
+The pattern reader of section 5.4 works only for documents in the wording of
+the SOP template. `auditiq/policy_llm.py` extends the feature to a policy
+written in any wording, with a language model, and keeps the model's output
+from being trusted blindly:
+
+1. **The model proposes.** It is given the sixteen rules as one-line
+   descriptions that contain no number, and the document page by page. For each
+   rule it returns one to three passages copied word for word and the values of
+   the rule's parameters.
+2. **Code verifies.** A quote must occur in the document (whitespace and
+   typographic quotes aside). A value must be written in a verified quote of
+   its rule: as digits, with Western or Indian digit grouping, in lakh or
+   crore, or as a number word from two to twenty. A value must be of the right
+   kind (a weekday name, a positive amount for every role, a percentage).
+   Anything else is marked "needs attention" with the reason.
+3. **A person confirms.** Nothing is stored until a named reviewer accepts the
+   verified values and types the others. The stored version records the model,
+   the reviewer, the time and which values the reviewer supplied.
+
+The passages the model located become the citations of the version, so a
+finding cites the organisation's own document and page. Severities and the
+split into control and judgement rules come from the reference version.
+
+What the check can and cannot do: it catches a value that the document does not
+state where the model says it does. It cannot catch a quote that is real but
+belongs to another rule; the confirming person is the safeguard for that.
+
+Commands: `python -m auditiq policy adopt <pdf> --llm` shows the proposal;
+adding `--accept-verified --reviewer "<name>"` (and `--set <rule>.<parameter>=<value>`
+for held-back values) adopts it. The dashboard offers the same when a document
+is not in the template's wording.
+
+If the model cannot quote a rule word for word, the reviewer can give the
+passage (`--quote <rule>=<passage>`, or a field in the dashboard); it must be
+in the document, and the model's values for that rule are then checked against
+it.
+
+**Measured** (`python -m evaluation.policy_llm_eval`, `results/policy_llm.md`):
+six documents in two styles that share no wording or rule numbers with the
+template (`policy/freeform/`), read by `qwen2.5:7b` on the laptop, one call of
+about five minutes per document.
+
+| Outcome, over 84 threshold values | Values |
+|---|---|
+| Right, and verified by the code check | 56 |
+| Right, but held back for the reviewer | 24 |
+| Wrong, and caught by the code check | 2 |
+| Wrong, and passed by the code check | 2 |
+| Missing | 0 |
+
+- The model proposed 80 of 84 values correctly. The 4 wrong values are all the
+  same mistake: "Blacklisted" added to the list of blocking registration
+  statuses, which the policy treats as a separate condition.
+- The check caught that mistake where the word "blacklisted" did not appear in
+  the quote (the memoranda) and let it through where it did (two handbooks):
+  a word-list value is only checked for the presence of its words.
+- All 24 held-back values are approval limits: the model quoted a sentence of
+  the rule without the numbers, or did not quote the limits word for word. They
+  were right; the reviewer has to confirm them.
+- 92 of 96 rules were located with a word-for-word quote, every one at the
+  passage that states it; the 4 others are the approval-limit rule.
+- A reviewer who accepts the verified values and supplies the rest ends with
+  exactly the intended policy for 4 of the 6 documents; for the other 2 only the
+  reviewer can catch the wrong status.
+
+These are six short documents written by the authors of the system, read by
+one model; they are not an estimate for policies in general.
+
 ## 7. What may be claimed, and what may not
 
 **May be claimed**
@@ -390,7 +487,9 @@ the system was edited between the two runs.
 python policy/build_policy.py
 python -m auditiq_bench
 python -m evaluation.policy_change
-python -m pytest tests/test_policy_change.py tests/test_controls.py tests/test_policy_docs.py
+python -m evaluation.scalability
+python -m evaluation.policy_llm_eval      # needs a configured model
+python -m pytest tests/test_policy_change.py tests/test_policy_llm.py tests/test_controls.py tests/test_policy_docs.py
 ```
 
 The experiment regenerates the 14 PDFs, re-reads them, re-audits the ledgers

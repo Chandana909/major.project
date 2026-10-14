@@ -1,5 +1,6 @@
-# Lint and tests on every push and pull request. The tests run on SQLite and,
-# through the service container, on PostgreSQL. No test calls a model.
+# Lint and tests on every push and pull request. The Python tests run on SQLite and,
+# through the service container, on PostgreSQL; no test calls a model. The frontend
+# job lints, type-checks, tests and builds the web application.
 name: ci
 on:
   push:
@@ -37,3 +38,23 @@ jobs:
       - name: Create the copilot's read-only role
         run: PGPASSWORD=ci-only psql -h localhost -U auditiq -d auditiq_test -c "CREATE ROLE auditiq_reader NOLOGIN"
       - run: python -m pytest
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: auditiq/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: auditiq/frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Known vulnerabilities in the packages shipped to the browser
+        run: npm audit --omit=dev --audit-level=high
