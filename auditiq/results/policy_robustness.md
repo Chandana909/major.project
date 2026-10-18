@@ -1,6 +1,6 @@
 # Robustness of the policy reader
 
-Produced by `python -m evaluation.policy_robustness` on 2026-10-18 09:45. The reference policy (version 2.5) is edited, written as a PDF and read by the system. Group A edits keep every rule and value and must be read correctly; group B edits make the document impossible to execute and must be refused; group C edits make it ambiguous, and refusal is the only safe outcome. No language model is used.
+Produced by `python -m evaluation.policy_robustness` on 2026-10-18 14:06. The reference policy (version 2.5) is edited, written as a PDF and read by the system. Group A edits keep every rule and value and must be read correctly; group B edits make the document impossible to execute and must be refused; group C edits make it ambiguous, and refusal is the only safe outcome. No language model is used.
 
 | Id | Group | Edit | Required | Outcome | Values read correctly | Reasons given by the system |
 |---|---|---|---|---|---|---|

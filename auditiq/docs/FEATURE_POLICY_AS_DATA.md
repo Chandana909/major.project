@@ -295,8 +295,8 @@ review).
 ### 6.1 Reading the documents
 
 All 14 documents were read without a reported problem: **196 of 196** parameter
-values and **224 of 224** rules (word for word). Reading a document took 0.02
-to 0.04 seconds.
+values and **224 of 224** rules (word for word). Reading a document took less
+than a tenth of a second (0.01 to 0.09 seconds, the first including start-up).
 
 ### 6.2 Adherence
 
@@ -322,8 +322,8 @@ Pooled over the five ledgers (N = 40,000 invoices per policy).
 - Policy-driven controls: **0 wrong decisions in 560,000 invoice audits**.
 - Under the reference version the controls agree with the independent
   recomputation on 40,000 of 40,000 invoices.
-- The 560,000 audits took 13 seconds in one process on a laptop (Intel
-  i5-1235U): about 44,000 invoices per second for the controls in memory.
+- The 560,000 audits took 14 seconds in one process on a laptop (Intel
+  i5-1235U): about 41,000 invoices per second for the controls in memory.
 - A tightening of policy is the dangerous direction for a frozen system: with
   the Manager limit lowered to 50,000 it would approve 7,514 invoices that the
   policy in force sends to review; under the strict policy, 12,012. A loosening
@@ -354,9 +354,9 @@ python -m auditiq run --config C1
 | Findings under Rule 4.1.1 (same-day splitting) | 30 | 216 |
 | Findings under Rule 2.1.1 (amount match) | 30 | 60 |
 
-Reading and storing the document takes about 0.1 s (7 s through the command
+Reading and storing the document took 0.03 s (7 s through the command
 line, which also starts Python); re-auditing 20,000 invoices with storage of
-every result, finding and trail entry takes a minute or two on the laptop. No
+every result, finding and trail entry took 43 to 50 s on the laptop (SQLite). No
 file of the system is edited between the two runs.
 
 ### 6.4 In the dashboard

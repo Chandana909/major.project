@@ -137,7 +137,7 @@ Every dependency is pinned to an exact version in `package.json`, and
 | `/policy` | Policy | Versions and activation; upload of a policy PDF with the changes it makes, adoption, reading by the model with the reviewer's confirmation; re-auditing the ledger under the active version with progress; the rules; policy search |
 | `/copilot` | Copilot | Questions about the policy and invoices, with citations; questions about the data, with the query that answered them |
 | `/pipeline` | Pipeline | The stages of the audit as a **3D graph**; choosing a configuration lights the stages it runs |
-| `/results` | Results | The measured results: detection on the benchmark ledgers with intervals, detection per anomaly class, the policy-change experiment with a **3D bar view** of the share of invoices a frozen system decides wrongly under each policy, scalability, policy reading, and the real-model pilots, marked as pilots |
+| `/results` | Results | The measured results: detection on the benchmark ledgers with intervals, detection per anomaly class, the policy-change experiment with a **3D bar view** of the share of invoices a frozen system decides wrongly under each policy, scalability, policy reading, and the real-model runs on small samples, marked as pilots (development ledger) or as the benchmark sample (34 invoices of ledger 101) |
 
 ### Structure
 

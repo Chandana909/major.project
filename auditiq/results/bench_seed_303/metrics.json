@@ -636,6 +636,11 @@
     "ci_low": 1.0,
     "ci_high": 1.0
    },
+   "model_rule_precision": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
    "exact_match": {
     "value": 0.976,
     "ci_low": 0.971595,
@@ -1328,6 +1333,11 @@
     "value": 1.0,
     "ci_low": 1.0,
     "ci_high": 1.0
+   },
+   "model_rule_precision": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
    },
    "exact_match": {
     "value": 0.9759903961584634,

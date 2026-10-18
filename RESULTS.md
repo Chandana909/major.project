@@ -13,9 +13,11 @@ number comes from, and the script that wrote that file. Paths are relative to
 | **Pilot** or **sample** | Measured, but on a small sample (20 or 34 invoices). | As a pilot: say the sample size; claim no difference between configurations. |
 | **Expected** | A target fixed before measurement. | Only in a table of expected values, never as a result. |
 
-Status: 18 October 2026. Ledgers are synthetic (Section 2). The language-model
-stages have been run only on samples, with a local 7B model on a laptop CPU
-(Section 7).
+Status: complete, 18 October 2026. Every result below was produced by the code
+in this repository, and every result that needs no model was reproduced end to
+end from regenerated datasets on that day (Section 13). Ledgers are synthetic
+(Section 2). The language-model stages have been run only on samples (20 and
+34 invoices), with a local 7B model on a laptop CPU (Section 7).
 
 ## Contents
 
@@ -46,7 +48,7 @@ stages have been run only on samples, with a local 7B model on a laptop CPU
 | 7 | And at a realistic anomaly rate (2.1%)? | F1 0.833 against 0.211 and 0.429. | Measured | 4 |
 | 8 | How fast is the control stage? | About 18 µs per invoice whatever the ledger size; 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
 | 9 | Can a model read a policy written in its own words? | 6 documents, 84 values: 80 proposed correctly; the code check verified 56, held back 24 right ones, caught 2 wrong ones and passed 2. | Measured (one 7B model) | 6 |
-| 10 | Do the language-model stages work, and what do they cost? | 20-invoice pilot: every stage runs; agents' findings naming a violated rule 0.111; 3 to 5 model calls per invoice. Benchmark sample of 34 invoices: see Section 7.2. | Pilot / sample | 7 |
+| 10 | How do the language-model stages do? | Benchmark sample of 34 invoices: the agents (C3) found 12 of 20 judgement anomalies (0.600); 0.375 of their findings name a violated rule (0.471 with the challenger); the single prompt (C2) found 4 of 20 and 4 of its 128 findings name a violated rule. 3 to 5 model calls per invoice. No difference is significant on 34 invoices. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 
 ## 2. Data
@@ -83,20 +85,20 @@ document has 3 pages, 16 rules and 14 values.
 
 | Version | Policy | What changes | Values read correctly | Rules read word for word | Seconds to read |
 |---|---|---|---|---|---|
-| 3.01 | Tolerance 0.5% | amount tolerance 1% to 0.5% | 14 of 14 | 16 of 16 | 0.02 |
-| 3.02 | Tolerance 2% | amount tolerance 1% to 2% | 14 of 14 | 16 of 16 | 0.03 |
-| 3.03 | Tolerance 5% | amount tolerance 1% to 5% | 14 of 14 | 16 of 16 | 0.02 |
-| 3.04 | Daily count 2 | invoices per vendor per day 3 to 2 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.05 | Daily count 5 | invoices per vendor per day 3 to 5 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.06 | Manager limit 50,000 | Manager approval limit 100,000 to 50,000 | 14 of 14 | 16 of 16 | 0.04 |
+| 3.01 | Tolerance 0.5% | amount tolerance 1% to 0.5% | 14 of 14 | 16 of 16 | 0.09 |
+| 3.02 | Tolerance 2% | amount tolerance 1% to 2% | 14 of 14 | 16 of 16 | 0.02 |
+| 3.03 | Tolerance 5% | amount tolerance 1% to 5% | 14 of 14 | 16 of 16 | 0.04 |
+| 3.04 | Daily count 2 | invoices per vendor per day 3 to 2 | 14 of 14 | 16 of 16 | 0.04 |
+| 3.05 | Daily count 5 | invoices per vendor per day 3 to 5 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.06 | Manager limit 50,000 | Manager approval limit 100,000 to 50,000 | 14 of 14 | 16 of 16 | 0.01 |
 | 3.07 | Manager limit 150,000 | Manager approval limit 100,000 to 150,000 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.08 | Senior Manager limit 250,000 | Senior Manager approval limit 500,000 to 250,000 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.09 | Round multiple 5,000 | round-amount multiple 10,000 to 5,000 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.10 | Round multiple 50,000 | round-amount multiple 10,000 to 50,000 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.11 | Six-day week | Saturday becomes a business day | 14 of 14 | 16 of 16 | 0.03 |
-| 3.12 | Strict policy | tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000 | 14 of 14 | 16 of 16 | 0.02 |
+| 3.08 | Senior Manager limit 250,000 | Senior Manager approval limit 500,000 to 250,000 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.09 | Round multiple 5,000 | round-amount multiple 10,000 to 5,000 | 14 of 14 | 16 of 16 | 0.01 |
+| 3.10 | Round multiple 50,000 | round-amount multiple 10,000 to 50,000 | 14 of 14 | 16 of 16 | 0.01 |
+| 3.11 | Six-day week | Saturday becomes a business day | 14 of 14 | 16 of 16 | 0.01 |
+| 3.12 | Strict policy | tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000 | 14 of 14 | 16 of 16 | 0.01 |
 | 3.13 | Lenient policy | tolerance 5%, daily count 5, Manager 150,000, six-day week, round multiple 50,000 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.14 | Version 2.6 | tolerance 5%, daily count 5, Manager 150,000 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.14 | Version 2.6 | tolerance 5%, daily count 5, Manager 150,000 | 14 of 14 | 16 of 16 | 0.02 |
 
 Total: 196 of 196 values and 224 of 224 rules; no problem reported.
 
@@ -127,7 +129,7 @@ controls and the ground truth agree on 40,000 of 40,000 invoices.
 | Lenient policy | 380 (0.9%) | 1.000 | 0.991 | 380 | 0 | 302 | 0 |
 | Version 2.6 | 302 (0.8%) | 1.000 | 0.992 | 302 | 0 | 302 | 0 |
 
-- Policy-driven controls: **0 wrong decisions in 560,000 invoice audits**, audited in 13 s on one process.
+- Policy-driven controls: **0 wrong decisions in 560,000 invoice audits**, audited in 14 s on one process.
 - A tightening makes a frozen system silent (missed escalations); a loosening costs reviewer time (needless escalations).
 - The policy swap check (`results/summary.md`, Section 6): on the 5,000-invoice swap ledger, the controls flag all 150 boundary invoices under version 2.5 and none under 2.6, and no other invoice under either; adherence 1.000 under both.
 - How to read the 1.000: the controls and the ground truth are two implementations of the same written rules, so full adherence shows that each document was read correctly and that no control keeps a threshold of its own. It is a check of the mechanism, not a detection result. The numbers not fixed by construction are those of the frozen system.
@@ -207,10 +209,12 @@ version and the ledger is audited again. No code is edited in between.
 | Findings under rule 4.1.1 (same-day splitting) | 30 | 216 |
 | Findings under rule 2.1.1 (amount match) | 30 | 60 |
 
-Reading and storing the policy document took about 0.1 s. Re-auditing all
-20,000 invoices with storage of every result, finding and trail entry took
-about one and a half minutes (timings are taken on the development laptop; use
-"about a minute or two", not a precise figure).
+Reading and storing the policy document took 0.03 s. Auditing all 20,000
+invoices with storage of every result, finding and trail entry (SQLite) took
+50 s before and 43 s after the change. Timings are taken on the
+development laptop and depend on its load: a run on the same day while the
+language model was busy took 169 s and 90 s. Write "under a minute", not a
+precise figure.
 
 ## 4. Controls against classical anomaly detectors
 
@@ -299,8 +303,15 @@ under 15 policy versions); every run produced the same 16,840 findings.
 The cost per invoice does not grow with the ledger, so time is linear in the
 number of invoices. The speed-up is below the number of processes because of
 the efficiency cores. With storage in the database, one process audits 20,000
-invoices in a minute or two (Section 3.5). A deployment on several machines has
+invoices in under a minute (Section 3.5). A deployment on several machines has
 not been measured.
+
+These figures were measured on 13 October on an otherwise idle laptop. A rerun
+on 18 October, while file synchronisation and a background download used about
+two cores, produced the same 16,840 findings in every row and the same
+shape, but 21 to 36% lower throughput (43,245 invoices per second with one
+process, 121,025 with eight). Throughput depends on the load of the machine;
+the table reports the idle run.
 
 ![Throughput of the control stage](auditiq/results/figures/scalability.png)
 
@@ -368,7 +379,7 @@ one ordinary invoice.
 - C3 found J4 (with the goods-receipt remark as evidence) and J1, missed J2, cited the wrong rule for J3, and raised a wrong near-duplicate finding on 3 of the 5 hard negatives.
 - C4's challenger removed 9 agent findings, one of them the right J1 finding, and kept the wrong ones on the hard negatives.
 - C5 sent 2 invoices to sampled review (both true anomalies). Wrong findings on hard negatives kept confidence 0.67, 0.67 and 1.00: confidence measures stability, not correctness.
-- On the laptop a new model call took about 3 minutes for an agent and about 7 for the single prompt of C2; a confidence re-run, which reuses the cached prompt, about 1 minute.
+- On the laptop's CPU a model call took about 4 to 5 minutes (median over invoices of the invoice's time divided by its calls: C3 4.7, C4 4.7, C5 4.4 minutes) and the longer single prompt of C2 about 7 (6.6).
 
 ### 7.2 Benchmark sample: 34 invoices of ledger 101 (Sample)
 
@@ -379,8 +390,45 @@ The sample (`evaluation/bench101_sample_ids.txt`, drawn by
 judgement class J1 to J4, 2 of each hard-negative type and 4 ordinary invoices,
 from a ledger on which no prompt was ever tried.
 
-**Running.** This run started on 18 October 2026 and takes most of a day on the
-laptop. Its results will be written here when it finishes.
+Run on 18 October 2026 (about 12 hours of model time on the laptop, including
+one restart after the laptop slept at critical battery; the run resumed after
+the last saved invoice, and no saved invoice had a failed call).
+
+| Measure | C1 | C2 | C3 | C4 | C5 |
+|---|---|---|---|---|---|
+| Judgement anomalies found (macro-recall, 20 invoices) | 0.000 | 0.200 | **0.600** [0.418, 0.781] | 0.400 [0.207, 0.613] | 0.400 [0.207, 0.613] |
+| J1 near-duplicate (of 5) | 0 | 0 | 5 | 1 | 1 |
+| J2 structuring across days (of 5) | 0 | 0 | 2 | 2 | 2 |
+| J3 description against the PO (of 5) | 0 | 0 | 1 | 1 | 1 |
+| J4 goods-receipt remark (of 5) | 0 | 4 | 4 | 4 | 4 |
+| Invoice-level recall | 0.000 | 0.900 | 0.700 | 0.550 | 0.550 |
+| Invoice-level precision | – | 0.621 | 0.560 | 0.647 | 0.647 |
+| Hard negatives flagged (of 10) | 0 | 7 | 8 | 4 | 4 |
+| Ordinary invoices flagged (of 4) | 0 | 4 | 3 | 2 | 2 |
+| Model findings naming a violated rule | – | 0.031 | 0.375 [0.235, 0.538] | 0.471 [0.235, 0.714] | 0.471 [0.235, 0.714] |
+| Citation correctness (findings on anomalous invoices) | – | 0.049 | 0.632 | 0.727 | 0.727 |
+| Escalation precision / recall | – / 0.000 | 0.448 / 0.867 | 0.480 / 0.800 | 0.625 / 0.667 | 0.583 / 0.467 |
+| Invoices sent to sampled review | 0 | 0 | 0 | 0 | 4 (3 true anomalies) |
+| High or critical anomalies auto-approved (of 15) | 15 | 2 | 3 | 5 | 5 |
+| Failed stages | 0 | 4 | 0 | 0 | 0 |
+| Model calls per invoice | 0 | 1.21 | 3.00 | 3.74 | 5.24 |
+| Tokens per invoice | 0 | 6,259 | 9,678 | 12,562 | 17,828 |
+
+McNemar's exact test on per-invoice correctness, Holm-adjusted: C3 against C2,
+10 invoices right only under C3 and 3 only under C2, p = 0.277; C4 against C3,
+8 and 2, p = 0.277; C5 against C4, no difference. **No difference between
+configurations is significant on 34 invoices.**
+
+What the sample shows (write these as observations on a sample, not as
+estimates for the benchmark):
+
+- **The agents (C3) found 12 of the 20 judgement anomalies** (0.600): every near-duplicate, 4 of 5 goods-receipt remarks, 2 of 5 structuring cases and 1 of 5 description mismatches. This is below the expected 0.70 (X2).
+- **Only 0.375 of the agents' findings name a rule the invoice violates** (12 of 32; after the challenger 0.471, 8 of 17), far below the expected 0.90 (X3). The agents also flagged 8 of 10 hard negatives and 3 of 4 ordinary invoices.
+- **The challenger (C4) halves the false alarms on hard negatives** (8 to 4 of 10) and raises the share of findings naming a violated rule (0.375 to 0.471), but it also removed 4 of the 5 correct near-duplicate findings, so judgement recall falls from 0.600 to 0.400.
+- **Confidence (C5) sent 4 invoices to sampled review, 3 of them true anomalies.** Escalation recall falls accordingly (0.667 to 0.467), because a sampled invoice is not escalated.
+- **The single prompt (C2) flags almost everything** (all 4 ordinary invoices, 7 of 10 hard negatives) and **only 4 of its 128 findings (0.031) name a violated rule**. It found only the goods-receipt remarks. Four of its 34 invoices failed because the reply ran past the 700-token limit twice. Its high invoice-level recall (0.900) comes from flagging nearly every invoice, not from finding the anomalies.
+- **Model calls per invoice agree with X4**: 3.00 for C3 and 3.74 for C4 (three agents, plus the challenger when an agent raised a finding).
+- The model time in the source file includes the hours the laptop slept; do not use its totals. Calls and tokens per invoice are unaffected. Without the invoices interrupted by the sleep, the median time per call was C2 4.8, C3 3.8, C4 3.6 and C5 3.2 minutes.
 
 ### 7.3 Copilot (one check, not an evaluation)
 
@@ -445,12 +493,14 @@ the paper only in a table labelled as expected.
 | Id | Quantity | Expected | What has been observed so far |
 |---|---|---|---|
 | X1 | Adherence of the controls under a new policy in the template's wording | 1.000 | **Now measured: 1.000 on 20 held-out documents (Section 3.3).** Move it out of the expected table. |
-| X2 | Recall of the agents on the four judgement rules | at least 0.70 | Pilot: 2 of 4 classes found (C3). Benchmark sample: Section 7.2. |
-| X3 | Agent findings that name a rule the invoice violates | at least 0.90 | Pilot: 0.111 (C3 to C5). Benchmark sample: Section 7.2. |
-| X4 | Model calls per invoice | 3, plus 1 when an agent raises a finding | Pilot: 3.00 (C3), 3.60 (C4): consistent. |
+| X2 | Recall of the agents on the four judgement rules | at least 0.70 | Benchmark sample: 0.600 (C3), 0.400 (C4, C5). Pilot: 2 of 4 classes (C3). Below the target. |
+| X3 | Agent findings that name a rule the invoice violates | at least 0.90 | Benchmark sample: 0.375 (C3), 0.471 (C4, C5). Pilot: 0.111. Far below the target. |
+| X4 | Model calls per invoice | 3, plus 1 when an agent raises a finding | Benchmark sample: 3.00 (C3), 3.74 (C4). Pilot: 3.00, 3.60. Consistent. |
 
-What the observations say: a 7B model on its own is far below X2 and X3. The
-full benchmark needs a larger model.
+What the observations say: with a 7B model the agents fall short of X2 and far
+short of X3, on the pilot and on the benchmark sample alike. X2 and X3 stay
+expected values for the full benchmark with a larger model; in the paper,
+report the sample values beside them as observations, not as their measurement.
 
 ## 11. Limitations to state in the paper
 
@@ -471,7 +521,7 @@ full benchmark needs a larger model.
 | `results/policy_change.png`, `.pdf` | The same, the 14 hand-written documents only | `policy_change.json` |
 | `results/figures/detection.png` | Recall, precision, F1 and false positives on hard negatives, controls against the two detectors | `bench_seed_*/metrics.json` |
 | `results/figures/scalability.png` | Throughput against worker processes | `scalability.json` |
-| `results/figures/model_stages.png` | Recall and precision of C1 to C5 on the pilot and on the benchmark sample | `pilot20.md`, `sample34.md` |
+| `results/figures/model_stages.png` | Invoice-level recall and precision of C1 to C5 on the pilot and on the benchmark sample (an invoice counts as found when any finding is raised, whatever rule it names; Section 7 gives the per-class recall) | `pilot20.md`, `sample34.md` |
 
 All figures are drawn by `python -m evaluation.figures` from the result files.
 The paper draws its own figures in TikZ and pgfplots from the same numbers
@@ -499,3 +549,16 @@ From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 need no model.
 Model replies are cached (`.auditiq/`), so re-running step 10 or 11 on the same
 machine reuses them; on another machine the model must be configured
 (`docs/OPERATIONS.md`).
+
+**End-to-end check, 18 October 2026.** All six datasets were regenerated from
+their seeds: 54 of 54 files are identical byte for byte to the committed ones,
+and every file matches the hash in its manifest. Steps 2 to 8 and 12 were run
+again with the final code: every count, value, decision and interval came out
+the same; only the "Produced on" dates and the timings differ (Section 5
+reports how much the timings moved). Steps 9 and 10 were run again with every
+chat reply taken from the cache and new model calls blocked (the embeddings of
+step 9 were computed afresh): both results are identical to the committed ones.
+Step 11, about 12 hours of model time, was not repeated; its reports are
+computed from the per-invoice records stored next to them (`*.jsonl`). The Python test
+suite (SQLite and PostgreSQL) and the frontend checks (lint, types, tests,
+build, dependency audit) passed.

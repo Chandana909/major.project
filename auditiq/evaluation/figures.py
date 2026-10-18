@@ -142,19 +142,22 @@ def model_stages() -> None:
         configs = [c for c in ("C1", "C2", "C3", "C4", "C5") if c in table["Invoice-level recall"]]
         width = 0.36
         for i, (measure, colour) in enumerate((("Invoice-level recall", BLUE), ("Invoice-level precision", ORANGE))):
-            values = [table[measure][c] for c in configs]
+            # A configuration that flags no invoice has no precision ("n/a" in the report): no bar, a label.
+            values = [table[measure].get(c) for c in configs]
             xs = [j + (i - 0.5) * width for j in range(len(configs))]
-            bars = ax.bar(xs, values, width, color=colour, edgecolor=SURFACE, linewidth=1.5,
+            bars = ax.bar(xs, [v or 0 for v in values], width, color=colour, edgecolor=SURFACE, linewidth=1.5,
                           label=measure.replace("Invoice-level ", "").capitalize())
             for bar, value in zip(bars, values):
-                ax.text(bar.get_x() + bar.get_width() / 2, value + 0.015, f"{value:.2f}", ha="center", va="bottom",
-                        fontsize=5.5, color=INK)
+                ax.text(bar.get_x() + bar.get_width() / 2, (value or 0) + 0.015,
+                        "n/a" if value is None else f"{value:.2f}", ha="center", va="bottom", fontsize=5.5, color=INK)
         ax.set_xticks(range(len(configs)), configs)
         ax.set_ylim(0, 1.15)
         ax.set_title(title, fontsize=7.5, color=INK)
         ax.yaxis.grid(True, color=GRID, linewidth=0.6)
         style(ax)
-    axes[0][0].legend(fontsize=6.5, frameon=False, loc="lower left")
+    # Above the panels: inside them the legend would cover the bars of C1.
+    fig.legend(*axes[0][0].get_legend_handles_labels(), fontsize=6.5, frameon=False, loc="lower center",
+               ncol=2, bbox_to_anchor=(0.5, 1.0))
     save(fig, "model_stages.png")
 
 

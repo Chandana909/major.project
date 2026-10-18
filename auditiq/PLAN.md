@@ -117,7 +117,7 @@ What phase A showed (`results/summary.md`, run of 2026-10-13):
 | B7 | Runner for any configuration over a dataset, resumable; comparison report | Done |
 | B8 | Smoke test on a real model | Done on one invoice, all stages; see section 6 |
 | B9 | Pilot on stratified invoices of the pilot ledger to fix the prompts and measure cost | Done with the local 7B model on 20 invoices (one of each of the 14 classes, the five hard-negative types, one ordinary invoice) under C1 to C5, and on six invoices before that; both are recorded in section 6. A pilot of 50 or more needs a faster endpoint (open decision 1) |
-| B12 | The configurations on a sample of a benchmark ledger, with frozen prompts | 34 invoices of `bench_seed_101` (5 of each judgement class, 2 of each hard-negative type, 4 ordinary; `evaluation/bench101_sample_ids.txt`, drawn by `evaluation.sample_ids`), C1 then C3, C4, C5 and C2, with the local 7B model; started 2026-10-18 (`results/bench_seed_101/sample34.*`) |
+| B12 | The configurations on a sample of a benchmark ledger, with frozen prompts | 34 invoices of `bench_seed_101` (5 of each judgement class, 2 of each hard-negative type, 4 ordinary; `evaluation/bench101_sample_ids.txt`, drawn by `evaluation.sample_ids`), C1 then C3, C4, C5 and C2, with the local 7B model. Done 2026-10-18: all five configurations on 34 of 34 invoices; the agents (C3) found 12 of 20 judgement anomalies and 0.375 of their findings named the violated rule, the single prompt (C2) 4 and 0.031; no difference is significant (`results/bench_seed_101/sample34.md`; shown on the Results page of the web application) |
 | B11 | Bounded prompts: at most 40 of a vendor's other invoices per selection rule | Done; no labelled case loses an invoice it depends on (`results/history_cap.md`) |
 | B10 | Full run: 3 seeds x C2 to C5; second model on the main comparison; consistency subset of 300; policy swap under v2.5 and v2.6 | Pending |
 
@@ -131,7 +131,7 @@ nothing about how well a model audits.
 |---|---|---|
 | C1 | Database (SQLite and PostgreSQL): ledger, policy store, audit runs, results, flags, per-stage audit trail, review decisions | Done; extraction from the database returns the same transactions as extraction from the files, on both backends |
 | C2 | Review queue that survives a restart; decisions with reviewer and justification | Done. Sending an analysis back for re-analysis is done by auditing the invoice again; the newer result takes its place in the queue |
-| C3 | Batch audit of the ledger, storing every result | Done; 20,000 invoices under C1 in about one minute on SQLite and three on PostgreSQL (the ledger is read in bulk for a batch run) |
+| C3 | Batch audit of the ledger, storing every result | Done; 20,000 invoices under C1 in under a minute on SQLite (43 to 50 s, `results/application_demo.md`) and about three on PostgreSQL (the ledger is read in bulk for a batch run) |
 | C4 | Policy PDFs: three sample documents, ingestion with page numbers, check against the registry, citations in audit packs | Done; all 16 clauses of each version come back from the PDF word for word |
 | C5 | Policy search: lexical, question rewriting, embeddings | Done and measured with `nomic-embed-text` (below) |
 | C6 | Copilot: policy and invoice questions with cited passages; data questions as one checked, read-only SELECT | Done; tested with a scripted model, and once with the local model (section 6) |

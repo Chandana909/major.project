@@ -1,5 +1,5 @@
 {
- "produced": "2026-10-18 09:53",
+ "produced": "2026-10-18 23:38",
  "ledger": "large_seed_505",
  "store": "SQLite",
  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
@@ -41,9 +41,9 @@
   }
  ],
  "seconds": {
-  "audit_before": 169.2,
-  "adopt": 0.1,
-  "audit_after": 89.9
+  "audit_before": 49.6,
+  "adopt": 0.032,
+  "audit_after": 43.0
  },
  "before": {
   "invoices": 20000,

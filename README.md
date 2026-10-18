@@ -10,7 +10,7 @@ result, with its table, figure, source file and the command that produced it.
 | Folder | Content |
 |---|---|
 | [`auditiq/`](auditiq/README.md) | The system, the web application (`auditiq/frontend/`), the AuditIQ-Bench datasets, the evaluation harness, results and documentation. Start with its README. |
-| [`paper/`](paper/) | The paper (`auditiq_paper.tex`, `auditiq_paper.pdf`) and the measured section on policy-driven controls (`policy_feature.tex`, `policy_feature.pdf`). |
+| [`paper/`](paper/) | The paper (`auditiq_paper.tex`, `auditiq_paper.pdf`), the measured section on policy-driven controls (`policy_feature.tex`, `policy_feature.pdf`), and a project overview for the team (`AuditIQ_Project_Overview.pdf`, source in `paper/overview/`). |
 
 Run every command from `auditiq/`. Quick start, with no model and no database
 server (Python 3.11 or later; Node 20 or later for the web application):

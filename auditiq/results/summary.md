@@ -1,6 +1,6 @@
 # AuditIQ-Bench: results of the configurations that need no LLM
 
-Produced by `python -m evaluation.run_all` on 2026-10-13 08:19. Policy v2.5. Benchmark ledgers: seeds 101, 202, 303, 5,000 invoices each, of which 420 are anomalous (8.4%) and 120 are hard negatives.
+Produced by `python -m evaluation.run_all` on 2026-10-18 13:57. Policy v2.5. Benchmark ledgers: seeds 101, 202, 303, 5,000 invoices each, of which 420 are anomalous (8.4%) and 120 are hard negatives.
 Intervals are 95% percentile bootstrap intervals over invoices, 1000 resamples.
 C0 is the pair of classical detectors (isolation forest, one-class SVM) with cross-fitted thresholds;
 C1 is the deterministic controls alone.

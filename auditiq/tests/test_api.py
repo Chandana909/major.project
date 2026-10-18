@@ -183,6 +183,9 @@ def test_the_measured_results_are_served(client):
         assert len(results["policy_change"]["variants"]) == 14
     for ledger in results["benchmark"].values():
         assert ledger["metrics"]["C1"]["detection_precision"]["value"] == 1.0
+    # The sample of benchmark ledger 101 is served with the pilots, marked by its ledger.
+    for meta in api.RESULTS.glob("bench_seed_101/*-sample34.meta.json"):
+        assert results["pilots"][meta.name.removesuffix(".meta.json")]["dataset"] == "bench_seed_101"
 
 
 def test_a_token_protects_everything_but_the_health_check(library, monkeypatch):

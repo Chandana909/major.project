@@ -1,6 +1,6 @@
 # Held-out policy documents
 
-Produced by `python -m evaluation.policy_heldout` on 2026-10-18 09:45. 20 policy variants drawn at random (seed 2026) from values that were not used to build or check the reader; each is applied to the 40,000 invoices of 5 ledgers. Reference policy: version 2.5. No language model is used.
+Produced by `python -m evaluation.policy_heldout` on 2026-10-18 14:06. 20 policy variants drawn at random (seed 2026) from values that were not used to build or check the reader; each is applied to the 40,000 invoices of 5 ledgers. Reference policy: version 2.5. No language model is used.
 
 | Version | What changes | Values read correctly | Rules read word for word | Adopted | Decisions the change moves | Policy-driven: adherence | Frozen: adherence |
 |---|---|---|---|---|---|---|---|

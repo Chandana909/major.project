@@ -1,6 +1,6 @@
 # Policy-change experiment
 
-Produced by `python -m evaluation.policy_change` on 2026-10-13 22:32. Reference policy: version 2.5. Ledgers: `bench_seed_101`, `bench_seed_202`, `bench_seed_303`, `swap_seed_404`, `large_seed_505`; 40,000 invoices in all. No language model is used anywhere in this experiment.
+Produced by `python -m evaluation.policy_change` on 2026-10-18 23:28. Reference policy: version 2.5. Ledgers: `bench_seed_101`, `bench_seed_202`, `bench_seed_303`, `swap_seed_404`, `large_seed_505`; 40,000 invoices in all. No language model is used anywhere in this experiment.
 
 For each policy variant the system is given only the policy PDF. It reads the thresholds from the wording of the rules, builds the registry it executes, and audits every invoice with the deterministic controls ("policy-driven"). "Frozen" is the same controls with the thresholds of the reference version, which is how a system behaves whose thresholds are written into prompts and tool code. The ground truth under each variant is recomputed from the ledger tables by the dataset generator's validator, which shares no code with the controls.
 
@@ -8,20 +8,20 @@ For each policy variant the system is given only the policy PDF. It reads the th
 
 | Version | Policy | What changes | Pages | Parameters read correctly | Rules read word for word | Seconds to read |
 |---|---|---|---|---|---|---|
-| 3.01 | Tolerance 0.5% | amount tolerance 1% to 0.5% | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.02 | Tolerance 2% | amount tolerance 1% to 2% | 3 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.03 | Tolerance 5% | amount tolerance 1% to 5% | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.04 | Daily count 2 | invoices per vendor per day 3 to 2 | 3 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.05 | Daily count 5 | invoices per vendor per day 3 to 5 | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.06 | Manager limit 50,000 | Manager approval limit 100,000 to 50,000 | 3 | 14 of 14 | 16 of 16 | 0.04 |
+| 3.01 | Tolerance 0.5% | amount tolerance 1% to 0.5% | 3 | 14 of 14 | 16 of 16 | 0.09 |
+| 3.02 | Tolerance 2% | amount tolerance 1% to 2% | 3 | 14 of 14 | 16 of 16 | 0.02 |
+| 3.03 | Tolerance 5% | amount tolerance 1% to 5% | 3 | 14 of 14 | 16 of 16 | 0.04 |
+| 3.04 | Daily count 2 | invoices per vendor per day 3 to 2 | 3 | 14 of 14 | 16 of 16 | 0.04 |
+| 3.05 | Daily count 5 | invoices per vendor per day 3 to 5 | 3 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.06 | Manager limit 50,000 | Manager approval limit 100,000 to 50,000 | 3 | 14 of 14 | 16 of 16 | 0.01 |
 | 3.07 | Manager limit 150,000 | Manager approval limit 100,000 to 150,000 | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.08 | Senior Manager limit 250,000 | Senior Manager approval limit 500,000 to 250,000 | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.09 | Round multiple 5,000 | round-amount multiple 10,000 to 5,000 | 3 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.10 | Round multiple 50,000 | round-amount multiple 10,000 to 50,000 | 3 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.11 | Six-day week | Saturday becomes a business day | 3 | 14 of 14 | 16 of 16 | 0.03 |
-| 3.12 | Strict policy | tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000 | 3 | 14 of 14 | 16 of 16 | 0.02 |
+| 3.08 | Senior Manager limit 250,000 | Senior Manager approval limit 500,000 to 250,000 | 3 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.09 | Round multiple 5,000 | round-amount multiple 10,000 to 5,000 | 3 | 14 of 14 | 16 of 16 | 0.01 |
+| 3.10 | Round multiple 50,000 | round-amount multiple 10,000 to 50,000 | 3 | 14 of 14 | 16 of 16 | 0.01 |
+| 3.11 | Six-day week | Saturday becomes a business day | 3 | 14 of 14 | 16 of 16 | 0.01 |
+| 3.12 | Strict policy | tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000 | 3 | 14 of 14 | 16 of 16 | 0.01 |
 | 3.13 | Lenient policy | tolerance 5%, daily count 5, Manager 150,000, six-day week, round multiple 50,000 | 3 | 14 of 14 | 16 of 16 | 0.02 |
-| 3.14 | Version 2.6 | tolerance 5%, daily count 5, Manager 150,000 (the policy-swap version) | 3 | 14 of 14 | 16 of 16 | 0.03 |
+| 3.14 | Version 2.6 | tolerance 5%, daily count 5, Manager 150,000 (the policy-swap version) | 3 | 14 of 14 | 16 of 16 | 0.02 |
 
 Over the 14 documents: 196 of 196 parameter values and 224 of 224 rules were read correctly; 0 problem(s) were reported.
 
@@ -48,7 +48,7 @@ Under the reference version itself the controls agree with the independent recom
 | Lenient policy | 380 (0.9%) | 1.000 (40,000 of 40,000) | 0.991 | 380 | 0 | 302 | 0 |
 | Version 2.6 | 302 (0.8%) | 1.000 (40,000 of 40,000) | 0.992 | 302 | 0 | 302 | 0 |
 
-Policy-driven controls: 0 wrong decision(s) in 560,000 invoice audits. Auditing took 13 s for 560,000 invoice audits (44,444 invoices per second, one process; Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3).
+Policy-driven controls: 0 wrong decision(s) in 560,000 invoice audits. Auditing took 14 s for 560,000 invoice audits (40,876 invoices per second, one process; Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3).
 
 A needless escalation is an invoice the frozen system sends to a reviewer although the policy in force would approve it; a missed escalation is one it approves although the policy in force requires review (count-based score, threshold 50).
 

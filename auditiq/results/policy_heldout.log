@@ -1,0 +1,27 @@
+v4.01: 14/14 values, 16/16 rules, adopted
+v4.02: 14/14 values, 16/16 rules, adopted
+v4.03: 14/14 values, 16/16 rules, adopted
+v4.04: 14/14 values, 16/16 rules, adopted
+v4.05: 14/14 values, 16/16 rules, adopted
+v4.06: 14/14 values, 16/16 rules, adopted
+v4.07: 14/14 values, 16/16 rules, adopted
+v4.08: 14/14 values, 16/16 rules, adopted
+v4.09: 14/14 values, 16/16 rules, adopted
+v4.10: 14/14 values, 16/16 rules, adopted
+v4.11: 14/14 values, 16/16 rules, adopted
+v4.12: 14/14 values, 16/16 rules, adopted
+v4.13: 14/14 values, 16/16 rules, adopted
+v4.14: 14/14 values, 16/16 rules, adopted
+v4.15: 14/14 values, 16/16 rules, adopted
+v4.16: 14/14 values, 16/16 rules, adopted
+v4.17: 14/14 values, 16/16 rules, adopted
+v4.18: 14/14 values, 16/16 rules, adopted
+v4.19: 14/14 values, 16/16 rules, adopted
+v4.20: 14/14 values, 16/16 rules, adopted
+bench_seed_101: 5,000 invoices audited under 20 policies
+bench_seed_202: 5,000 invoices audited under 20 policies
+bench_seed_303: 5,000 invoices audited under 20 policies
+swap_seed_404: 5,000 invoices audited under 20 policies
+large_seed_505: 20,000 invoices audited under 20 policies
+wrote C:\Users\Chandana\OneDrive\Desktop\pp1\auditiq\results\policy_heldout.md
+exit 0

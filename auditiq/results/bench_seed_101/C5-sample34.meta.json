@@ -1,0 +1,48 @@
+{
+ "dataset": "bench_seed_101",
+ "configuration": {
+  "name": "C5",
+  "controls": true,
+  "agents": "specialists",
+  "challenger": true,
+  "confidence": true,
+  "reruns": 3,
+  "temperature": 0.0,
+  "rerun_temperature": 0.7,
+  "review": false,
+  "sample_rate": 1.0
+ },
+ "policy_version": "2.5",
+ "model": "qwen2.5:7b-ctx12k",
+ "base_url": "http://localhost:11434/v1",
+ "prompt_hash": "e62576e1a37d3c4d",
+ "auditiq_version": "0.4.0",
+ "scope": "subset",
+ "subset": {
+  "stratified": null,
+  "seed": 0,
+  "ids_file": "C:\\Users\\Chandana\\OneDrive\\Desktop\\pp1\\auditiq\\evaluation\\bench101_sample_ids.txt"
+ },
+ "started": "2026-10-18 19:11:08",
+ "finished": "2026-10-18 20:12:13",
+ "summary": {
+  "invoices": 34,
+  "invoices_flagged": 17,
+  "agent_flags": 17,
+  "flags_removed_by_challenger": 15,
+  "routes": {
+   "approve": 18,
+   "escalate": 12,
+   "sample": 4
+  },
+  "llm_calls": 178,
+  "cache_hits": 127,
+  "prompt_tokens": 594219,
+  "completion_tokens": 11927,
+  "model_time_s": 62582.1,
+  "failed_stages": 0,
+  "repaired_replies": 0,
+  "out_of_remit_flags": 0,
+  "malformed_flags": 0
+ }
+}

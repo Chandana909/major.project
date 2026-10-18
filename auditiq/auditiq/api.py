@@ -589,11 +589,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
                 "per_class": {name: {k.split(":", 1)[1]: v for k, v in values.items() if k.startswith("detected:")}
                               for name, values in m["metrics"].items()},
                 "construction_checks": m["construction_checks"]}
+        # The pilots on the development ledger, then the sample of benchmark ledger 101.
         pilots = {}
-        for meta in sorted(RESULTS.glob("pilot_seed_909/*.meta.json")):
-            m = read_json(meta)
-            pilots[meta.name.removesuffix(".meta.json")] = {"model": m["model"], "summary": m["summary"],
-                                                             "started": m["started"], "finished": m["finished"]}
+        for pattern in ("pilot_seed_909/*.meta.json", "bench_seed_101/*-sample34.meta.json"):
+            for meta in sorted(RESULTS.glob(pattern)):
+                m = read_json(meta)
+                pilots[meta.name.removesuffix(".meta.json")] = {"model": m["model"], "dataset": m.get("dataset"),
+                                                                 "summary": m["summary"], "started": m["started"],
+                                                                 "finished": m["finished"]}
         return {"benchmark": benchmark, "policy_swap": policy_swap, "policy_change": read_json(RESULTS / "policy_change.json"),
                 "scalability": read_json(RESULTS / "scalability.json"),
                 "policy_reading": read_json(RESULTS / "policy_llm.json"), "pilots": pilots}

@@ -21,4 +21,4 @@ Produced by `python -m evaluation.scalability` on 2026-10-13 23:28. Machine: Int
 | 20,000 | 0.389 | 51,433 | 19.4 |
 | 40,000 | 0.731 | 54,722 | 18.3 |
 
-The time measured is the control stage in memory. Loading a ledger and storing results in the database are not included; with storage of every result, finding and trail entry, one process audits 20,000 invoices in about one minute (see `policy_change.md`).
+The time measured is the control stage in memory. Loading a ledger and storing results in the database are not included; with storage of every result, finding and trail entry, one process audits 20,000 invoices in SQLite in under a minute (see `application_demo.md`).

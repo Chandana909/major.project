@@ -344,5 +344,5 @@ export interface Results {
     total: Record<string, number>;
     documents: { file: string; style: string; policy: string; counts: Record<string, number | boolean>; usage: { seconds: number } }[];
   } | null;
-  pilots: Record<string, { model: string | null; summary: Record<string, unknown>; started: string; finished: string }>;
+  pilots: Record<string, { model: string | null; dataset?: string | null; summary: Record<string, unknown>; started: string; finished: string }>;
 }

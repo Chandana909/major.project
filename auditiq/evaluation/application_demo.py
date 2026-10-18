@@ -76,7 +76,7 @@ def main() -> None:
     result = {"produced": time.strftime("%Y-%m-%d %H:%M"), "ledger": LEDGER, "store": "SQLite",
               "machine": f"{platform.processor() or platform.machine()}, Python {platform.python_version()}",
               "adopted_version": report["version"], "changes": report["changes"],
-              "seconds": {"audit_before": round(audit_before, 1), "adopt": round(adopt_seconds, 1),
+              "seconds": {"audit_before": round(audit_before, 1), "adopt": round(adopt_seconds, 3),
                           "audit_after": round(audit_after, 1)},
               "before": snapshot(conn, before_run), "after": snapshot(conn, after_run)}
     conn.close()
@@ -106,7 +106,7 @@ def markdown(r: dict) -> str:
                      f"{a['findings_by_rule'].get(rule, 0):,} |")
     s = r["seconds"]
     lines += ["", f"Adopting the document (reading it, storing version {r['adopted_version']} and its passages) took "
-                  f"{s['adopt']:.1f} s. Auditing the ledger with storage of every result, finding and trail entry took "
+                  f"{s['adopt']:.2f} s. Auditing the ledger with storage of every result, finding and trail entry took "
                   f"{s['audit_before']:.0f} s before and {s['audit_after']:.0f} s after the change.", "",
               "Changes the document makes to the active version: "
               + "; ".join(f"{c['clause']} {c['parameter']}: {c['from']} to {c['to']}" for c in r["changes"]) + ".", ""]

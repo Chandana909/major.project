@@ -60,7 +60,7 @@ export function ResultsPage() {
         <div>
           <h1>Results</h1>
           <p className="muted">
-            Every number on this page was produced by a script of the repository and is read from <code>results/</code>. Pilots with a local model are marked as pilots: they show that the stages work, not how well a model audits.
+            Every number on this page was produced by a script of the repository and is read from <code>results/</code>. Runs with a local model on small samples are marked as such: they show that the stages work, not how well a model audits.
           </p>
         </div>
       </header>
@@ -251,7 +251,7 @@ export function ResultsPage() {
             )}
           </div>
 
-          <Panel title="Real-model pilots" subtitle="Small samples on the development ledger with a local 7B model on a laptop CPU. They show that every stage works and what an invoice costs; they are not a measurement of accuracy.">
+          <Panel title="Real-model pilots and sample" subtitle="Small samples with a local 7B model on a laptop CPU: pilots on the development ledger, and 34 invoices of benchmark ledger 101 that no prompt was tried on. They show that every stage works and what an invoice costs; they are too small to compare the configurations.">
             {Object.keys(r.pilots).length ? (
               <div className="scroll-x">
                 <table className="table compact">
@@ -273,7 +273,7 @@ export function ResultsPage() {
                       return (
                         <tr key={name}>
                           <td>
-                            {name} <Badge>pilot</Badge>
+                            {name} <Badge>{p.dataset?.startsWith("bench") ? "benchmark sample" : "pilot"}</Badge>
                           </td>
                           <td>{p.model ?? "none"}</td>
                           <td className="num">{String(s.invoices)}</td>

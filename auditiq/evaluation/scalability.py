@@ -132,7 +132,7 @@ def main() -> None:
               for r in by_size]
     lines += ["", "The time measured is the control stage in memory. Loading a ledger and storing results in the "
                   "database are not included; with storage of every result, finding and trail entry, one process "
-                  "audits 20,000 invoices in about one minute (see `policy_change.md`).", ""]
+                  "audits 20,000 invoices in SQLite in under a minute (see `application_demo.md`).", ""]
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "scalability.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8", newline="\n")
     (args.out / "scalability.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")

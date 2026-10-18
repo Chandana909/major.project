@@ -1,0 +1,9 @@
+2026-10-18 13:21:11 supervising run_pilot (process 10604)
+2026-10-18 14:03:37 progress: C1 34/34, C3 19/34; model server up
+2026-10-18 14:18:39 progress: C1 34/34, C3 21/34; model server up
+2026-10-18 16:40:50 watchdog: started
+2026-10-18 16:41:12 run_pilot 10604 has ended; C1 34/34, C3 21/34
+2026-10-18 16:41:14 incomplete; starting the run again (attempt 1), it resumes where it stopped
+2026-10-18 23:26:29 attempt 1 ended with exit code 0; C1 34/34, C3 34/34, C4 34/34, C5 34/34, C2 34/34
+2026-10-18 23:26:36 complete: all five configurations have 34 invoices; report written (exit code 0)
+2026-10-18 23:30:59 watchdog: the run is finished; watchdog ends
