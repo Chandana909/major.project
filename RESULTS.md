@@ -306,12 +306,12 @@ the efficiency cores. With storage in the database, one process audits 20,000
 invoices in under a minute (Section 3.5). A deployment on several machines has
 not been measured.
 
-These figures were measured on 13 October on an otherwise idle laptop. A rerun
-on 18 October, while file synchronisation and a background download used about
-two cores, produced the same 16,840 findings in every row and the same
-shape, but 21 to 36% lower throughput (43,245 invoices per second with one
-process, 121,025 with eight). Throughput depends on the load of the machine;
-the table reports the idle run.
+These figures were measured on 13 October. A rerun on 18 October, while file
+synchronisation and a background download used about two cores, produced the
+same 16,840 findings in every row and the same shape, but 21 to 36% lower
+throughput (43,245 invoices per second with one process, 121,025 with eight).
+Throughput depends on the load of the machine; the table reports the 13 October
+run.
 
 ![Throughput of the control stage](auditiq/results/figures/scalability.png)
 
