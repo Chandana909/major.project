@@ -1,0 +1,213 @@
+{
+ "produced": "2026-10-18 09:45",
+ "reference_version": "2.5",
+ "tag": "",
+ "documents": [
+  {
+   "id": "A1",
+   "group": "A",
+   "edit": "extra prose and a revision table before the rules",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A2",
+   "group": "A",
+   "edit": "rules and sections in another order",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A3",
+   "group": "A",
+   "edit": "every rule followed by a long explanation",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A4",
+   "group": "A",
+   "edit": "45 notes before section 4, which push the later rules onto later pages",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A5",
+   "group": "A",
+   "edit": "the approval table in another order",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A6",
+   "group": "A",
+   "edit": "the severity of rule 2.1.1 changed from high to low",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "A7",
+   "group": "A",
+   "edit": "approval limits in Indian digit grouping",
+   "expected": "read correctly",
+   "outcome": "read correctly",
+   "as_required": true,
+   "adopted": true,
+   "problems": [],
+   "values_read_correctly": 14,
+   "values": 14,
+   "severities_read_correctly": 16,
+   "rules": 16
+  },
+  {
+   "id": "B1",
+   "group": "B",
+   "edit": "the threshold sentence of rule 2.1.1 removed",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 2.1.1: the value of amount_tolerance_pct was not found in the wording of the rule"
+   ]
+  },
+  {
+   "id": "B2",
+   "group": "B",
+   "edit": "rule 4.3.1 removed",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 4.3.1 (round amount) is not in the document; the system needs every rule it executes to be stated"
+   ]
+  },
+  {
+   "id": "B3",
+   "group": "B",
+   "edit": "a rule added that the system has no control for",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 4.4.2 is in the document, and the system has no control or agent for it"
+   ]
+  },
+  {
+   "id": "B4",
+   "group": "B",
+   "edit": "no version stated",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "the document states no version (expected 'Version: <number>' before the first section)"
+   ]
+  },
+  {
+   "id": "B5",
+   "group": "B",
+   "edit": "a non-business 'day' that is not a day of the week",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 4.2.1: 'public holiday' is not a day of the week"
+   ]
+  },
+  {
+   "id": "B6",
+   "group": "B",
+   "edit": "the approval table removed",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 5.1.1: no table of approval limits by role was found"
+   ]
+  },
+  {
+   "id": "B7",
+   "group": "B",
+   "edit": "the tolerance written in words",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 2.1.1: the value of amount_tolerance_pct was not found in the wording of the rule"
+   ]
+  },
+  {
+   "id": "C1",
+   "group": "C",
+   "edit": "rule 2.1.1 stated twice, with 1% and with 2%",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 2.1.1 is stated 2 times; a document must state each rule once"
+   ]
+  },
+  {
+   "id": "C2",
+   "group": "C",
+   "edit": "the approval table without the CFO",
+   "expected": "refused",
+   "outcome": "refused",
+   "as_required": true,
+   "adopted": false,
+   "problems": [
+    "Rule 5.1.1: the table of approval limits has no limit for the role CFO"
+   ]
+  }
+ ]
+}

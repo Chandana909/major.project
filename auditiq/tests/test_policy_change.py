@@ -81,6 +81,12 @@ def test_a_document_that_changes_every_parameter_is_read_completely(tmp_path):
                          "| CFO | 10,000,000 |", "Limits are set by the finance committee."),
      "Rule 5.1.1: no table of approval limits by role was found"),
     (lambda t: t.replace("**Version:** 4.1", "**Edition:** fourth"), "the document states no version"),
+    # Ambiguous documents: a rule stated twice with two values, a role without a limit.
+    (lambda t: t.replace("### 2.2 Duplicate Invoices", "- **Rule 2.1.1 (HIGH), amount match.** A difference of up to "
+                                                       "2% of the PO amount is tolerated.\n\n### 2.2 Duplicate Invoices"),
+     "Rule 2.1.1 is stated 2 times; a document must state each rule once"),
+    (lambda t: t.replace("\n| CFO | 10,000,000 |", ""),
+     "Rule 5.1.1: the table of approval limits has no limit for the role CFO"),
 ])
 def test_a_document_the_system_cannot_execute_is_refused_with_the_reason(tmp_path, edit, reason):
     _, pdf = document(tmp_path, "4.1", {}, edit)

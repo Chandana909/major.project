@@ -93,6 +93,19 @@ def test_findings_of_a_model_are_scored_apart_from_the_controls():
     assert math.isnan(compute(build_frame(*tiny(), severity=SEVERITY))["model_rule_precision"])   # no model finding
 
 
+def test_a_sample_of_ids_is_reproducible_and_has_the_requested_mix(small_dataset):
+    from evaluation.sample_ids import sample_ids
+
+    labels, subset = read_labels(small_dataset), read_subset(small_dataset)
+    ids = sample_ids(labels, subset, ["J1", "J4"], per_class=3, per_hard_negative=1, ordinary=2, seed=0)
+    assert ids == sample_ids(labels, subset, ["J1", "J4"], per_class=3, per_hard_negative=1, ordinary=2, seed=0)
+    chosen = labels.loc[ids]
+    assert (chosen["class_id"] == "J1").sum() == 3 and (chosen["class_id"] == "J4").sum() == 3
+    hard = chosen[chosen["label"] == "hard_negative"]
+    assert len(hard) == hard["hard_negative_type"].nunique() == labels["hard_negative_type"].replace("", None).nunique()
+    assert (chosen["label"] == "clean").sum() == 2 and set(ids) <= set(subset.index)
+
+
 def test_detector_without_flags_has_only_detection_metrics():
     labels, predictions = tiny()
     c0 = {i: {"invoice_id": i, "config": "C0", "anomalous": p["anomalous"]} for i, p in predictions.items()}

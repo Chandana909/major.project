@@ -4,6 +4,9 @@ A controls-first, multi-agent audit of procure-to-pay transactions, with a REST
 API and a web application whose views of vendor risk, the audit pipeline and
 policy changes are drawn in 3D with React Three Fiber.
 
+**Writing the paper? Start with [`RESULTS.md`](RESULTS.md):** every measured
+result, with its table, figure, source file and the command that produced it.
+
 | Folder | Content |
 |---|---|
 | [`auditiq/`](auditiq/README.md) | The system, the web application (`auditiq/frontend/`), the AuditIQ-Bench datasets, the evaluation harness, results and documentation. Start with its README. |

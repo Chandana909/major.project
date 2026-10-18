@@ -117,6 +117,7 @@ What phase A showed (`results/summary.md`, run of 2026-10-13):
 | B7 | Runner for any configuration over a dataset, resumable; comparison report | Done |
 | B8 | Smoke test on a real model | Done on one invoice, all stages; see section 6 |
 | B9 | Pilot on stratified invoices of the pilot ledger to fix the prompts and measure cost | Done with the local 7B model on 20 invoices (one of each of the 14 classes, the five hard-negative types, one ordinary invoice) under C1 to C5, and on six invoices before that; both are recorded in section 6. A pilot of 50 or more needs a faster endpoint (open decision 1) |
+| B12 | The configurations on a sample of a benchmark ledger, with frozen prompts | 34 invoices of `bench_seed_101` (5 of each judgement class, 2 of each hard-negative type, 4 ordinary; `evaluation/bench101_sample_ids.txt`, drawn by `evaluation.sample_ids`), C1 then C3, C4, C5 and C2, with the local 7B model; started 2026-10-18 (`results/bench_seed_101/sample34.*`) |
 | B11 | Bounded prompts: at most 40 of a vendor's other invoices per selection rule | Done; no labelled case loses an invoice it depends on (`results/history_cap.md`) |
 | B10 | Full run: 3 seeds x C2 to C5; second model on the main comparison; consistency subset of 300; policy swap under v2.5 and v2.6 | Pending |
 
@@ -140,6 +141,10 @@ nothing about how well a model audits.
 | C9 | Packaging | `pip install -e .` with an `auditiq` command; `npm ci && npm run build` for the frontend. CI on GitHub runs ruff and the tests on SQLite and PostgreSQL, and lint, typecheck, tests, build and audit of the frontend, on every push. The PostgreSQL compose file has not been run (no Docker on the development machine) |
 | C11 | Policy adoption from a document: thresholds read from the PDF by pattern; command line and dashboard; re-audit of the ledger under the adopted version | Done and measured (`results/policy_change.md`, `docs/FEATURE_POLICY_AS_DATA.md`) |
 | C12 | Policies in their own wording: a model proposes rules and thresholds, code verifies them against the document, a named reviewer confirms | Done and measured on six free-form documents: 80 of 84 values proposed correctly; the code check verified 56, held back 24 correct ones for the reviewer, caught 2 wrong ones and passed 2 (`results/policy_llm.md`) |
+| C15 | Held-out policy documents: 20 variants drawn at random from values never used to build or check the reader | Measured (`results/policy_heldout.md`): 280 of 280 values, 320 of 320 rules, no wrong decision in 800,000 audits; this measures what the paper listed as expected value X1 |
+| C16 | Robustness of the reader: 16 edited documents that must be read correctly or refused | Measured (`results/policy_robustness.md`). The first run (2026-10-18, `policy_robustness-before-fix.md`) found that a rule stated twice and an approval table without a role were adopted; both are now refused, with tests; 16 of 16 as required |
+| C17 | The application run of a policy change as a script | Done (`evaluation/application_demo.py`, `results/application_demo.md`); the counts equal the ones recorded by hand on 2026-10-13 |
+| C18 | One results document for the paper | Done: `../RESULTS.md`, with figures from `python -m evaluation.figures` |
 | C13 | Throughput of the control stage against worker processes and ledger size | Measured (`results/scalability.md`) |
 | C10 | Logging and failure messages | Done: one log format for the command line and the dashboard; an unreachable database and a failing model endpoint end with a message, not a traceback |
 

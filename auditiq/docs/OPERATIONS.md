@@ -222,9 +222,14 @@ In this order. Steps 1 to 3 need no model.
 | 4. History cap check | `python -m evaluation.history_cap` | `results/history_cap.md` |
 | 5. Policy retrieval | `python -m evaluation.retrieval_eval --out results/retrieval.md` | `results/retrieval.md` |
 | 5a. Policy change | `python -m evaluation.policy_change` | `results/policy_change.md`, the table and the figure |
-| 5b. Scalability of the control stage | `python -m evaluation.scalability` | `results/scalability.md` |
-| 5c. Policies in their own wording (needs a model) | `python -m evaluation.policy_llm_eval` | `results/policy_llm.md` |
+| 5b. Held-out policy documents | `python -m evaluation.policy_heldout` | `results/policy_heldout.md` |
+| 5c. Robustness of the policy reader | `python -m evaluation.policy_robustness` | `results/policy_robustness.md` |
+| 5d. A policy change in the application | `python -m evaluation.application_demo` | `results/application_demo.md` |
+| 5e. Scalability of the control stage | `python -m evaluation.scalability` | `results/scalability.md` |
+| 5f. Policies in their own wording (needs a model) | `python -m evaluation.policy_llm_eval` | `results/policy_llm.md` |
 | 6. Pilot of the LLM configurations | `python -m evaluation.run_pilot --dataset data/pilot_seed_909 --ids-file evaluation/pilot_ids.txt --tag pilot20` | `results/pilot_seed_909/pilot20.md` |
+| 6a. The LLM configurations on a sample of a benchmark ledger | `python -m evaluation.sample_ids --dataset data/bench_seed_101 --out evaluation/bench101_sample_ids.txt`, then `python -m evaluation.run_pilot --dataset data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34 --configs C1 C3 C4 C5 C2` | `results/bench_seed_101/sample34.md` |
+| 6b. Figures of the results | `python -m evaluation.figures` | `results/figures/*.png` |
 | 7. One LLM configuration on a benchmark ledger | `python -m evaluation.run_config --dataset data/bench_seed_101 --config C5` | `results/bench_seed_101/C5.jsonl` |
 | 8. Comparison | `python -m evaluation.report --dataset data/bench_seed_101 results/bench_seed_101/C*.jsonl --compare C3:C2 C4:C3 C5:C4` | a table |
 

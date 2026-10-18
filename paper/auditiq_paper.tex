@@ -7,9 +7,14 @@
 % Compile:  tectonic auditiq_paper.tex      (or pdflatex, run twice)
 %
 % WHERE THE NUMBERS COME FROM
-%  * Section VIII-A to VIII-H report MEASURED results. Every number there was
+%  * The full list of results, with every source file, is RESULTS.md at the
+%    root of the repository.
+%  * Section VIII reports MEASURED results. Every number there was
 %    produced by the scripts of the project repository:
 %        python -m evaluation.policy_change   -> results/policy_change.md
+%        python -m evaluation.policy_heldout  -> results/policy_heldout.md
+%        python -m evaluation.policy_robustness -> results/policy_robustness.md
+%        python -m evaluation.application_demo -> results/application_demo.md
 %        python -m evaluation.run_all         -> results/summary.md
 %        python -m evaluation.scalability     -> results/scalability.md
 %        python -m evaluation.policy_llm_eval -> results/policy_llm.md
@@ -17,9 +22,9 @@
 %            --ids-file evaluation/pilot_ids.txt --tag pilot20
 %                                             -> results/pilot_seed_909/pilot20.md
 %    If an experiment is run again, update the numbers from those files.
-%  * Section VIII-H is a PILOT of 20 invoices with a local 7B model. It shows
+%  * Section VIII-J is a PILOT of 20 invoices with a local 7B model. It shows
 %    that the LLM stages run and what they cost; it is not a benchmark result.
-%  * Section VIII-I and Table XII give EXPECTED values for what has not been
+%  * Section VIII-K and its table give EXPECTED values for what has not been
 %    measured. They are targets fixed before measurement, not results.
 %  * Section III describes the two base papers from their published abstracts.
 %    Read the full papers and correct anything they contradict.
@@ -68,7 +73,7 @@ Hyderabad, Telangana, India}
 \maketitle
 
 \begin{abstract}
-Auditing procurement means checking every vendor invoice against its purchase order, goods receipt, vendor record and approval trail, and justifying each exception against a written policy. AuditBench shows that large language models (LLMs) find injected errors in financial data but explain them poorly and rarely cite the governing standard; a survey of LLM-based multi-agent systems in finance shows that systems of specialised agents suit interactive financial tasks. We present AuditIQ, a platform for the forensic audit of procurement transactions built as separate services: audit workers, a policy service, a data store, a model endpoint, and a REST API with a web application for reviewers. Its base is a multi-agent audit pipeline that follows these two works, and we add one feature: \emph{policy-driven deterministic controls}. The system reads the organisation's policy PDF, takes every threshold from the wording of the rule that states it, and twelve controls execute these thresholds before any LLM is called; no threshold is written in code or in a prompt. Given fourteen policy documents, the system read 196 of 196 thresholds correctly and decided all 40{,}000 invoices of five synthetic ledgers as each policy requires, whereas the same controls with frozen thresholds decided up to 30.7\% of them against the policy in force. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000, against 0.536 and 0.498 for an isolation forest and a one-class SVM, and the control stage audited 172{,}000 invoices per second with eight processes on one laptop. With a local 7B model, a model-assisted reader proposed 80 of 84 thresholds of six free-form policies correctly, and a 20-invoice pilot ran every LLM stage end to end. The LLM stages have not been measured at benchmark scale; for them we state expected values fixed before measurement.
+Auditing procurement means checking every vendor invoice against its purchase order, goods receipt, vendor record and approval trail, and justifying each exception against a written policy. AuditBench shows that large language models (LLMs) find injected errors in financial data but explain them poorly and rarely cite the governing standard; a survey of LLM-based multi-agent systems in finance shows that systems of specialised agents suit interactive financial tasks. We present AuditIQ, a platform for the forensic audit of procurement transactions built as separate services: audit workers, a policy service, a data store, a model endpoint, and a REST API with a web application for reviewers. Its base is a multi-agent audit pipeline that follows these two works, and we add one feature: \emph{policy-driven deterministic controls}. The system reads the organisation's policy PDF, takes every threshold from the wording of the rule that states it, and twelve controls execute these thresholds before any LLM is called; no threshold is written in code or in a prompt. Given fourteen policy documents, the system read 196 of 196 thresholds correctly and decided all 40{,}000 invoices of five synthetic ledgers as each policy requires, whereas the same controls with frozen thresholds decided up to 30.7\% of them against the policy in force; twenty further documents drawn at random were also read and followed without a wrong decision. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000, against 0.536 and 0.498 for an isolation forest and a one-class SVM, and the control stage audited 172{,}000 invoices per second with eight processes on one laptop. With a local 7B model, a model-assisted reader proposed 80 of 84 thresholds of six free-form policies correctly, and a 20-invoice pilot ran every LLM stage end to end. The LLM stages have not been measured at benchmark scale; for them we state expected values fixed before measurement.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -457,7 +462,7 @@ A(P)=\frac{1}{N}\sum_{x}\mathbf{1}\bigl[\{k(f):f\in F_{\mathrm{D}}(x)\}=Y_P(x)\b
 % ---------------------------------------------------------------------------
 \section{Results}
 \label{sec:results}
-Subsections A to G report measured results of the feature and of the platform; Subsection H reports a measured pilot of the LLM stages on 20 invoices; Subsection I gives expected values for what has not been measured.
+Subsections A to I report measured results of the feature and of the platform; Subsection J reports a measured pilot of the LLM stages on 20 invoices; Subsection K gives expected values for what has not been measured.
 
 \subsection{Reading the Policy Documents (Measured)}
 All fourteen documents were accepted. The system read 196 of 196 parameter values correctly and recovered 224 of 224 rules word for word. Reading one document took between 0.02 and 0.04 seconds.
@@ -531,8 +536,33 @@ The number of invoices whose correct decision changes ranges from none to 12{,}2
 \label{fig:frozen}
 \end{figure}
 
+\subsection{Held-Out Policy Documents (Measured)}
+\label{sec:heldout}
+The fourteen variants were written by hand. To test values that played no part in building or checking the reader, we drew twenty further variants at random with a fixed seed. Each changes between one and five values among the tolerance, the daily count, the round-amount multiple, the non-business days, the blocked registration statuses, the limit of any of the four approver roles and the two guide values of the judgement rule 4.1.2. Each was rendered as a PDF and applied to the same 40{,}000 invoices. The system read 280 of 280 values and 320 of 320 rules correctly, adopted all twenty documents, and the policy-driven controls made no wrong decision in 800{,}000 invoice audits. A frozen system decided between none and 7{,}953 of the invoices (19.9\%) against the policy in force, the largest error coming from a variant that makes Friday and Saturday the non-business days.
+
+\subsection{Robustness of the Reader (Measured)}
+\label{sec:robust}
+The reader must either read a document correctly or refuse it. We edited the reference policy in sixteen ways and read each edited PDF (Table~\ref{tab:robust}). Seven edits keep every value: extra prose and a revision table, rules and sections in another order, long rules that wrap over many lines, rules pushed onto later pages, a reordered approval table, a changed severity, and amounts in Indian digit grouping. All seven were read correctly. Seven edits make the document impossible to execute, and all seven were refused with the reason. Two edits make it ambiguous: a rule stated twice with two tolerances, and an approval table without one role. The first run of this test adopted both, because the reader kept the last statement of a repeated rule and accepted a table with a missing role. We added both checks to the reader, with regression tests; on the second run all sixteen documents were handled as required.
+
+\begin{table}[t]
+\caption{Measured: Sixteen Edited Policy Documents and the Reader's Outcome}
+\label{tab:robust}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{L{3.9cm}L{1.6cm}L{2.0cm}}
+\toprule
+Edit & Required & Outcome \\
+\midrule
+Seven edits that keep every value (prose, order, long rules, page breaks, table order, severity, digit grouping) & read correctly & 7 of 7 read correctly \\
+Threshold sentence removed; rule removed; unknown rule added; no version; a day that is not a weekday; no approval table; threshold in words & refused & 7 of 7 refused, with the reason \\
+A rule stated twice with two values; approval table without a role & refused & first run: both adopted; after the fix: both refused \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{In the Application (Measured)}
-We repeated one change through the deployed path on the ledger of 20{,}000 invoices (Table~\ref{tab:app}). Adopting the strict policy document took 7 seconds, and auditing the 20{,}000 invoices again, with every result, finding and trail entry stored, took one minute on a laptop. No file of the system was edited between the two runs.
+We repeated one change through the deployed path on the ledger of 20{,}000 invoices (Table~\ref{tab:app}). Reading and storing the strict policy document took about 0.1 seconds, and auditing the 20{,}000 invoices again, with every result, finding and trail entry stored, took about a minute and a half on a laptop. No file of the system was edited between the two runs.
 
 \begin{table}[t]
 \caption{Measured: The Application Before and After Adopting the Strict Policy Document (20{,}000 Invoices)}
@@ -715,7 +745,7 @@ Tokens per invoice & 0 & 5{,}835 & 9{,}557 & 12{,}005 & 16{,}779 \\
 
 \subsection{Expected Results for What Is Not Yet Measured}
 \label{sec:expected}
-The LLM stages of the base system have been run only in the pilot of Section~\ref{sec:pilot}, which is too small to measure them. Table~\ref{tab:expected} states what we expect on the benchmark ledgers, with the basis of each expectation and the observation that would refute it; the last column shows what the pilot observed, for orientation only. \emph{The expected values are fixed before measurement. They are not results.}
+An earlier version of this table expected an adherence of 1.000 for a further policy in the template's wording (X1); that has since been measured on twenty held-out documents (Section~\ref{sec:heldout}), and the value is 1.000. The LLM stages of the base system have been run only in the pilot of Section~\ref{sec:pilot}, which is too small to measure them. Table~\ref{tab:expected} states what we expect on the benchmark ledgers, with the basis of each expectation and the observation that would refute it; the last column shows what the pilot observed, for orientation only. \emph{The expected values are fixed before measurement. They are not results.}
 
 \begin{table*}[t]
 \caption{Expected Values (Not Measured), Fixed Before Measurement, With the Observation of the 20-Invoice Pilot for Orientation}
@@ -728,7 +758,6 @@ The LLM stages of the base system have been run only in the pilot of Section~\re
 \toprule
 ID & Quantity & Expected value & Basis & Refuted if & Pilot, 20 invoices \\
 \midrule
-X1 & Policy adherence of the controls under a further policy variant in the same template & 1.000 & Measured 1.000 on all 14 variants; the mechanism is deterministic & Any invoice is decided against the policy in force & not applicable \\
 X2 & Recall of the LLM agents on the four judgement rules & at least 0.70 (target) & AuditBench: LLMs identify errors when given the transaction data~\cite{wang2025auditbench}; each agent sees only the records of its rule & Below 0.70 with the chosen model; the rule then stays with human reviewers & 2 of 4 classes (C3) \\
 X3 & Agent findings that name a rule the invoice violates & at least 0.90 (target) & An agent may cite only the rules of its remit, and the rule text is supplied; AuditBench reports weak citation without such limits~\cite{wang2025auditbench} & Below 0.90 & 0.111 (C3 to C5) \\
 X4 & LLM calls per invoice in the base system & 3, plus 1 when an agent raises a finding & One call per specialist agent; the challenger runs only when there is a finding to test & More calls are needed for valid output & 3.00 (C3), 3.60 (C4) \\
@@ -769,7 +798,7 @@ With respect to the base papers: AuditBench~\cite{wang2025auditbench} finds that
 
 % ---------------------------------------------------------------------------
 \section{Conclusion and Future Work}
-We presented a multi-agent platform for forensic audit and compliance in procurement, built from separate services around a shared data store. Its base is a multi-agent audit pipeline that follows AuditBench and the survey of LLM-based multi-agent systems in finance, to which we added one feature: deterministic controls that are configured by the organisation's policy document. The feature is implemented and measured. From fourteen policy documents the system read every threshold correctly and decided 40{,}000 invoices under each policy without a wrong decision, while a system with fixed thresholds decided up to 30.7\% of them against the policy in force. A change of policy takes effect in seconds and requires no change to code or prompts. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000 and raised no finding on a clean invoice, where an isolation forest and a one-class SVM reached 0.536 and 0.498 and flagged 36 to 56\% of the hard negatives. The control stage costs about 18 microseconds per invoice whatever the size of the ledger, and eight worker processes on one laptop audited 172{,}000 invoices per second. For policies in their own wording, a local 7B model proposed 80 of 84 thresholds correctly, and a check by code with a person's confirmation decides what is adopted. A pilot of 20 invoices ran every LLM stage end to end and showed that a single prompt without controls errs on almost every invoice, while with the controls first the model's errors stay within the judgement rules, where a person reviews them. Reviewers use the platform through a REST API and a web application with three-dimensional views of vendor risk, of the pipeline and of the effect of a policy change.
+We presented a multi-agent platform for forensic audit and compliance in procurement, built from separate services around a shared data store. Its base is a multi-agent audit pipeline that follows AuditBench and the survey of LLM-based multi-agent systems in finance, to which we added one feature: deterministic controls that are configured by the organisation's policy document. The feature is implemented and measured. From fourteen policy documents the system read every threshold correctly and decided 40{,}000 invoices under each policy without a wrong decision, while a system with fixed thresholds decided up to 30.7\% of them against the policy in force. Twenty further documents drawn at random gave the same result, and the reader refuses, with the reason, a document that it cannot execute or that is ambiguous. A change of policy takes effect in seconds and requires no change to code or prompts. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000 and raised no finding on a clean invoice, where an isolation forest and a one-class SVM reached 0.536 and 0.498 and flagged 36 to 56\% of the hard negatives. The control stage costs about 18 microseconds per invoice whatever the size of the ledger, and eight worker processes on one laptop audited 172{,}000 invoices per second. For policies in their own wording, a local 7B model proposed 80 of 84 thresholds correctly, and a check by code with a person's confirmation decides what is adopted. A pilot of 20 invoices ran every LLM stage end to end and showed that a single prompt without controls errs on almost every invoice, while with the controls first the model's errors stay within the judgement rules, where a person reviews them. Reviewers use the platform through a REST API and a web application with three-dimensional views of vendor risk, of the pipeline and of the effect of a policy change.
 
 Future work is the measurement of the LLM stages on the benchmark ledgers with a larger model, against the expectations of Table~\ref{tab:expected}; a deployment of the services on several machines; user accounts and roles in the web application; and an evaluation on real, anonymised procurement data.
 

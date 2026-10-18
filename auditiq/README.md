@@ -133,6 +133,9 @@ and audit tables that a dataset folder does not have.
 
 ## What has been measured, and what has not
 
+Every result, with its table, its source file and the command that produced it, is collected in
+[`../RESULTS.md`](../RESULTS.md): the one document to read while writing the paper.
+
 Measured, by scripts in this repository:
 
 - **Controls (C1) and classical baselines (C0)** on every ledger, and the
@@ -140,6 +143,14 @@ Measured, by scripts in this repository:
 - **Policy change**: 14 policy documents read and applied to 40,000 invoices,
   against a system with frozen thresholds: `results/policy_change.md`
   (`python -m evaluation.policy_change`).
+- **Held-out policy documents**: 20 variants drawn at random, read and applied
+  to the same 40,000 invoices: `results/policy_heldout.md`
+  (`python -m evaluation.policy_heldout`).
+- **Robustness of the policy reader**: 16 edited documents that must be read
+  correctly or refused: `results/policy_robustness.md`
+  (`python -m evaluation.policy_robustness`).
+- **A policy change in the application**, with storage, on the 20,000-invoice
+  ledger: `results/application_demo.md` (`python -m evaluation.application_demo`).
 - **Policy retrieval** on 48 fixed questions, lexical, dense and hybrid, with
   and without question rewriting: `results/retrieval.md`.
 - **The vendor-history cap** against the labels: `results/history_cap.md`.
@@ -150,18 +161,21 @@ Measured, by scripts in this repository:
   demonstration, in `results/pilot_seed_909/` (`pilot20.md`, `demo.md`). A
   pilot shows that every stage runs and what an invoice costs; 20 invoices are
   far too few to compare configurations, and the report says so.
+- **The same configurations on a sample of a benchmark ledger**: 34 invoices of
+  `bench_seed_101` (5 of each judgement class, 2 of each hard-negative type, 4
+  ordinary), drawn by `python -m evaluation.sample_ids`:
+  `results/bench_seed_101/sample34.md`. A sample, not the benchmark.
 - **Policies in their own wording** read by the local model, verified by code
   and confirmed by a person: six documents, 84 values,
   `results/policy_llm.md` (`python -m evaluation.policy_llm_eval`).
 
 Not measured:
 
-- **The LLM configurations (C2 to C5) on the benchmark ledgers.** The
-  development laptop has no GPU and needs minutes per model call, so only small
-  pilots are possible on it. The harness is ready (`evaluation.run_config`,
-  `evaluation.report`); it needs a faster endpoint. No number for C2 to C5 on a
-  benchmark ledger exists yet, and none should be written into the paper until
-  a run produces it.
+- **The LLM configurations (C2 to C5) on whole benchmark ledgers.** The
+  development laptop has no GPU and needs minutes per model call, so only
+  samples are possible on it (20 and 34 invoices). The harness is ready
+  (`evaluation.run_config`, `evaluation.report`); a full ledger needs a faster
+  endpoint. Numbers from the samples must be written as sample results.
 
 ## Layout
 

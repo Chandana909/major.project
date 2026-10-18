@@ -187,9 +187,13 @@ A document is **refused** (nothing is stored) when:
 | A value is not meaningful | "Rule 4.2.1: 'Caturday' is not a day of the week" |
 | No table of limits | "Rule 5.1.1: no table of approval limits by role was found" |
 | No version | "the document states no version" |
+| A rule is stated more than once | "Rule 2.1.1 is stated 2 times; a document must state each rule once" |
+| An approver role has no limit | "Rule 5.1.1: the table of approval limits has no limit for the role CFO" |
 | The version exists with other values | "version 4.2 is already stored with other parameters" (unless `--replace`) |
 
-Each of these is a test in `tests/test_policy_change.py`.
+Each of these is a test in `tests/test_policy_change.py`. The last two were
+added on 18 October 2026, after the robustness test of section 6.7 found that
+the reader adopted such documents.
 
 ### 5.5 A control (code)
 
@@ -331,8 +335,10 @@ against the policy in force, one bar per policy). LaTeX table:
 
 ### 6.3 In the application
 
-The same change through the deployed path, on the 20,000-invoice ledger in the
-database (a copy of the SQLite store, `.auditiq/policy_demo.db`):
+The same change through the deployed path, on the 20,000-invoice ledger in a
+new SQLite store. `python -m evaluation.application_demo` loads the ledger,
+audits it under version 2.5, adopts the strict policy document as the active
+version and audits again, and writes `results/application_demo.md`. By hand:
 
 ```bash
 python -m auditiq policy adopt policy/variants/Company_Policy_v3.12.pdf --activate
@@ -348,9 +354,10 @@ python -m auditiq run --config C1
 | Findings under Rule 4.1.1 (same-day splitting) | 30 | 216 |
 | Findings under Rule 2.1.1 (amount match) | 30 | 60 |
 
-Adopting the document took 7 seconds and re-auditing 20,000 invoices with
-storage of every result, finding and trail entry took one minute. No file of
-the system was edited between the two runs.
+Reading and storing the document takes about 0.1 s (7 s through the command
+line, which also starts Python); re-auditing 20,000 invoices with storage of
+every result, finding and trail entry takes a minute or two on the laptop. No
+file of the system is edited between the two runs.
 
 ### 6.4 In the dashboard
 
@@ -378,6 +385,34 @@ One process needs 17.8, 19.4 and 18.3 microseconds per invoice on ledgers of
 5,000, 20,000 and 40,000 invoices: the cost per invoice does not grow with the
 ledger. Every number of workers produced the same findings. All processes ran
 on one machine.
+
+### 6.6 Held-out documents
+
+The fourteen variants above were written by hand. `python -m
+evaluation.policy_heldout` (`results/policy_heldout.md`) draws twenty more at
+random (seed 2026) from values that played no part in building or checking the
+reader: each changes one to five of the tolerance, the daily count, the round
+multiple, the non-business days, the blocked statuses, the limit of any approver
+role and the guide values of rule 4.1.2. Over the twenty documents: 280 of 280
+values and 320 of 320 rules read correctly, all twenty adopted, and **no wrong
+decision in 800,000 invoice audits**. A frozen system decides between 0 and
+7,953 invoices (19.9%) against the policy in force; the largest errors come from
+a change of the non-business days to Friday and Saturday.
+
+### 6.7 Robustness: documents that must be refused
+
+`python -m evaluation.policy_robustness` (`results/policy_robustness.md`)
+edits the reference policy in sixteen ways and reads each edited PDF:
+
+| Group | Edits | Required | Outcome |
+|---|---|---|---|
+| A | extra prose and a revision table; rules and sections reordered; long rules; rules pushed onto later pages; approval table reordered; a severity changed; limits in Indian digit grouping | read correctly | 7 of 7 read correctly |
+| B | threshold sentence removed; rule removed; unknown rule added; no version; a day that is not a weekday; approval table removed; threshold in words | refused | 7 of 7 refused, each with its reason |
+| C | a rule stated twice with two values; approval table without one role | refused | first run: both adopted; after the fix: both refused |
+
+The first run (`results/policy_robustness-before-fix.md`) showed that the
+reader kept the last statement of a repeated rule and accepted a table without
+a role. Both are now refused (section 5.4), with regression tests.
 
 ## 6A. Policies in their own wording
 
@@ -487,6 +522,9 @@ one model; they are not an estimate for policies in general.
 python policy/build_policy.py
 python -m auditiq_bench
 python -m evaluation.policy_change
+python -m evaluation.policy_heldout
+python -m evaluation.policy_robustness
+python -m evaluation.application_demo
 python -m evaluation.scalability
 python -m evaluation.policy_llm_eval      # needs a configured model
 python -m pytest tests/test_policy_change.py tests/test_policy_llm.py tests/test_controls.py tests/test_policy_docs.py

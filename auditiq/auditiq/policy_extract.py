@@ -150,8 +150,12 @@ def build(path: Path, reference: dict) -> Extraction:
     if out.version is None:
         out.problems.append("the document states no version (expected 'Version: <number>' before the first section)")
 
+    stated = [c["clause_id"] for c in chunks if c["kind"] == "clause"]
     rules = {c["clause_id"]: c for c in chunks if c["kind"] == "clause"}
     known = reference["clauses"]
+    # A rule stated twice may state two values; the system cannot know which one is meant.
+    out.problems += [f"Rule {k} is stated {stated.count(k)} times; a document must state each rule once"
+                     for k in sorted(set(stated)) if stated.count(k) > 1]
     out.problems += [f"Rule {k} ({known[k]['title'].lower()}) is not in the document; the system needs every rule it "
                      "executes to be stated" for k in known if k not in rules]
     out.problems += [f"Rule {k} is in the document, and the system has no control or agent for it" for k in rules
@@ -185,6 +189,11 @@ def build(path: Path, reference: dict) -> Extraction:
     off_days = clauses.get("4.2.1", {}).get("params", {}).get("non_business_days", [])
     out.problems += [f"Rule 4.2.1: '{d}' is not a day of the week" for d in off_days if d not in WEEK]
     limits = clauses.get("5.1.1", {}).get("params", {}).get("approval_limits")
+    if limits is not None:
+        # An invoice approved by a role without a limit could not be decided.
+        roles = known.get("5.1.1", {}).get("params", {}).get("approval_limits", {})
+        out.problems += [f"Rule 5.1.1: the table of approval limits has no limit for the role {role}"
+                         for role in roles if role not in limits]
     effective = EFFECTIVE.search(header)
     out.registry = {"policy_name": re.sub(r",?\s*version\s+[\d.]+$", "", out.title), "version": out.version,
                     "effective_date": effective.group(1) if effective else None, "clauses": clauses}
