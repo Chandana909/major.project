@@ -21,7 +21,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-import fitz  # PyMuPDF
+import pymupdf
 
 from . import db
 from .policy import clause_texts
@@ -39,7 +39,7 @@ def squeeze(text: str) -> str:
 def read_lines(path: Path) -> tuple[list[dict], int, str]:
     """Text lines of a PDF in reading order, each with page, font size and left edge."""
     lines = []
-    with fitz.open(path) as doc:
+    with pymupdf.open(path) as doc:
         pages, title = doc.page_count, (doc.metadata or {}).get("title") or ""
         for number, page in enumerate(doc, start=1):
             page_lines = []
