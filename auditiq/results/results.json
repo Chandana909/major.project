@@ -5,6 +5,11 @@
   "path": "RESULTS.md",
   "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md"
  },
+ "full_report": {
+  "path": "REPORT.md",
+  "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/REPORT.md",
+  "about": "methodology, every result in detail, per-invoice analysis, threats to validity"
+ },
  "paper": {
   "path": "paper/auditiq_paper.pdf",
   "url": "https://github.com/Chandana909/major.project/blob/main/paper/auditiq_paper.pdf"

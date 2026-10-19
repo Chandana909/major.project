@@ -235,6 +235,7 @@ In this order. Steps 1 to 3 need no model.
 | 6b. Figures of the results | `python -m evaluation.figures` | `results/figures/*.png` |
 | 6c. Every ledger through the deployed system | `python -m evaluation.ledger_runs` | `results/ledger_runs.md` |
 | 6d. Every result in one JSON file (after the others) | `python -m evaluation.collect_results` | `results/results.json` |
+| 6e. The full report: methodology, results and analysis (after the others) | `python -m evaluation.full_report` | `../REPORT.md` and `results/results.json` |
 | 7. One LLM configuration on a benchmark ledger | `python -m evaluation.run_config --dataset data/bench_seed_101 --config C5` | `results/bench_seed_101/C5.jsonl` |
 | 8. Comparison | `python -m evaluation.report --dataset data/bench_seed_101 results/bench_seed_101/C*.jsonl --compare C3:C2 C4:C3 C5:C4` | a table |
 

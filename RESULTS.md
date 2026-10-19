@@ -19,6 +19,11 @@ end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 (Section 2). The language-model stages have been run only on samples (20 and
 34 invoices), with a local 7B model on a laptop CPU (Section 7).
 
+**The full report** (methodology, every result in detail, per-invoice
+analysis of the model runs, threats to validity): [`REPORT.md`](REPORT.md),
+https://github.com/Chandana909/major.project/blob/main/REPORT.md. It is generated from the result files by
+`python -m evaluation.full_report`, and a test checks that it is current.
+
 **For programs and other language models:** every result in this document
 is also in one machine-readable file, `auditiq/results/results.json`
 (https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/results.json), built from the result files by

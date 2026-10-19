@@ -250,6 +250,8 @@ def build() -> dict:
         "title": "AuditIQ: every measured result, machine-readable",
         "repository": REPOSITORY,
         "for_people": {"path": "RESULTS.md", "raw_url": f"{RAW}RESULTS.md"},
+        "full_report": {"path": "REPORT.md", "raw_url": f"{RAW}REPORT.md",
+                        "about": "methodology, every result in detail, per-invoice analysis, threats to validity"},
         "paper": {"path": "paper/auditiq_paper.pdf", "url": f"{REPOSITORY}/blob/main/paper/auditiq_paper.pdf"},
         "labels": {"measured": "a script of the repository produced it on the data stated",
                    "pilot": "measured on 20 invoices of the development ledger; shows that the stages work",
