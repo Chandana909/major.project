@@ -541,7 +541,7 @@ experimental results.
 | REST API | FastAPI, 22 endpoints, background jobs, optional bearer token (constant-time comparison), checks on every upload |
 | Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
 | Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | 327 Python tests on SQLite and PostgreSQL (324 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; no test calls a model |
+| Tests | 330 Python tests on SQLite and PostgreSQL (327 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; no test calls a model |
 | Continuous integration | GitHub Actions: Python (ruff, tests on both backends) and frontend (lint, types, tests, build, dependency audit) |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 

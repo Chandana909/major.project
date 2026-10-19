@@ -105,7 +105,7 @@ Part & Content & Status \\
 \midrule
 A & Work that needs no model: datasets, controls, classical baselines, policy reading, policy change, scalability, policy search. & Done and measured (Section~\ref{sec:measured}). \\
 B & The language-model pipeline: specialist agents, challenger, agreement re-runs, configurations C1 to C5, batch runner. & Built and tested with a scripted model. Run with a local 7B model on a pilot of 20 invoices and on a sample of 34 invoices of benchmark ledger 101. Full benchmark ledgers wait for a faster model endpoint. \\
-C & The application: the database on SQLite and PostgreSQL, the review queue and decisions, policy adoption, the copilot, the Streamlit dashboard, the REST API, the web application with 3D views, and loading a ledger from Excel or a zip archive. & Built. 327 Python test cases and 28 frontend tests. Continuous integration passes. All seven pages were checked in a browser. \\
+C & The application: the database on SQLite and PostgreSQL, the review queue and decisions, policy adoption, the copilot, the Streamlit dashboard, the REST API, the web application with 3D views, and loading a ledger from Excel or a zip archive. & Built. 330 Python test cases and 28 frontend tests. Continuous integration passes. All seven pages were checked in a browser. \\
 D & The paper: measured results, expected values, references. & Updated to 13 pages, with the held-out, robustness and benchmark-sample results. It waits for the team's review and for the template of the target venue. \\
 \bottomrule
 \end{tabular}
@@ -682,7 +682,7 @@ Table~\ref{tab:quality} lists the checks run on the code and the results, and th
 \toprule
 Check & Result \\
 \midrule
-Python tests & 327 test cases collected. 324 pass and 3 are skipped on the development laptop. One of the skipped tests is skipped on PostgreSQL by design, so it is also skipped in continuous integration. \\
+Python tests & 330 test cases collected. 327 pass and 3 are skipped on the development laptop. One of the skipped tests is skipped on PostgreSQL by design, so it is also skipped in continuous integration. \\
 Frontend tests & 28 pass (Vitest, Testing Library, and the three 3D scenes). \\
 API tests & 10 test functions: nine run on SQLite and on PostgreSQL, and one checks the answer when the database is unreachable. \\
 Lint and types & ruff is clean for the Python code; ESLint and the TypeScript check are clean for the frontend. \\
