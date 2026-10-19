@@ -1,0 +1,493 @@
+{
+ "produced": "2026-10-19 09:17",
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+ "policy_version": "2.5",
+ "configuration": "C1",
+ "ledgers": [
+  {
+   "ledger": "bench_seed_101",
+   "workbook_kb": 1979,
+   "records": {
+    "vendor_master": 250,
+    "purchase_orders": 4920,
+    "goods_receipts": 4910,
+    "invoices": 5000,
+    "approval_logs": 5680,
+    "benchmark_labels": 5000
+   },
+   "seconds": {
+    "load": 16.4,
+    "audit": 24.6
+   },
+   "invoices": 5000,
+   "findings": 300,
+   "invoices_with_a_finding": 300,
+   "states": {
+    "AUTO_APPROVED": 4760,
+    "PENDING_REVIEW": 240
+   },
+   "findings_by_rule": {
+    "2.1.1": 30,
+    "2.1.2": 30,
+    "2.1.3": 30,
+    "2.2.1": 30,
+    "3.1.1": 15,
+    "3.1.2": 15,
+    "3.1.3": 30,
+    "4.1.1": 30,
+    "4.2.1": 15,
+    "4.3.1": 15,
+    "4.4.1": 30,
+    "5.1.1": 30
+   },
+   "review_queue": {
+    "invoices": 240,
+    "amount": 66974538.72,
+    "risk_levels": {
+     "CRITICAL": 90,
+     "HIGH": 150
+    },
+    "top_vendors": [
+     {
+      "vendor": "Koshy Inc",
+      "waiting": 7,
+      "amount": 330334.7
+     },
+     {
+      "vendor": "Goswami, Palla and Bhalla",
+      "waiting": 5,
+      "amount": 1705571.73
+     },
+     {
+      "vendor": "Mani, Wadhwa and Koshy",
+      "waiting": 5,
+      "amount": 1105894.44
+     }
+    ]
+   },
+   "answer_key": {
+    "hard negative": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "judgement anomaly": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "ordinary clean": {
+     "invoices": 4460,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 300,
+     "with_finding": 300,
+     "escalated": 240
+    }
+   }
+  },
+  {
+   "ledger": "bench_seed_202",
+   "workbook_kb": 1983,
+   "records": {
+    "vendor_master": 250,
+    "purchase_orders": 4920,
+    "goods_receipts": 4910,
+    "invoices": 5000,
+    "approval_logs": 5688,
+    "benchmark_labels": 5000
+   },
+   "seconds": {
+    "load": 16.9,
+    "audit": 23.7
+   },
+   "invoices": 5000,
+   "findings": 300,
+   "invoices_with_a_finding": 300,
+   "states": {
+    "AUTO_APPROVED": 4760,
+    "PENDING_REVIEW": 240
+   },
+   "findings_by_rule": {
+    "2.1.1": 30,
+    "2.1.2": 30,
+    "2.1.3": 30,
+    "2.2.1": 30,
+    "3.1.1": 15,
+    "3.1.2": 15,
+    "3.1.3": 30,
+    "4.1.1": 30,
+    "4.2.1": 15,
+    "4.3.1": 15,
+    "4.4.1": 30,
+    "5.1.1": 30
+   },
+   "review_queue": {
+    "invoices": 240,
+    "amount": 85968710.46,
+    "risk_levels": {
+     "CRITICAL": 90,
+     "HIGH": 150
+    },
+    "top_vendors": [
+     {
+      "vendor": "Bahl LLC",
+      "waiting": 8,
+      "amount": 5322022.94
+     },
+     {
+      "vendor": "Hans-Varkey",
+      "waiting": 8,
+      "amount": 4400646.58
+     },
+     {
+      "vendor": "Nayak, Chowdhury and Hora",
+      "waiting": 7,
+      "amount": 671911.55
+     }
+    ]
+   },
+   "answer_key": {
+    "hard negative": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "judgement anomaly": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "ordinary clean": {
+     "invoices": 4460,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 300,
+     "with_finding": 300,
+     "escalated": 240
+    }
+   }
+  },
+  {
+   "ledger": "bench_seed_303",
+   "workbook_kb": 1978,
+   "records": {
+    "vendor_master": 250,
+    "purchase_orders": 4920,
+    "goods_receipts": 4910,
+    "invoices": 5000,
+    "approval_logs": 5651,
+    "benchmark_labels": 5000
+   },
+   "seconds": {
+    "load": 12.8,
+    "audit": 20.2
+   },
+   "invoices": 5000,
+   "findings": 300,
+   "invoices_with_a_finding": 300,
+   "states": {
+    "AUTO_APPROVED": 4760,
+    "PENDING_REVIEW": 240
+   },
+   "findings_by_rule": {
+    "2.1.1": 30,
+    "2.1.2": 30,
+    "2.1.3": 30,
+    "2.2.1": 30,
+    "3.1.1": 15,
+    "3.1.2": 15,
+    "3.1.3": 30,
+    "4.1.1": 30,
+    "4.2.1": 15,
+    "4.3.1": 15,
+    "4.4.1": 30,
+    "5.1.1": 30
+   },
+   "review_queue": {
+    "invoices": 240,
+    "amount": 73574489.0,
+    "risk_levels": {
+     "CRITICAL": 90,
+     "HIGH": 150
+    },
+    "top_vendors": [
+     {
+      "vendor": "Roy-Doctor",
+      "waiting": 5,
+      "amount": 4565724.62
+     },
+     {
+      "vendor": "Bora, Sankar and Agate",
+      "waiting": 5,
+      "amount": 1584804.74
+     },
+     {
+      "vendor": "Sunder, Yogi and Chada",
+      "waiting": 5,
+      "amount": 669701.63
+     }
+    ]
+   },
+   "answer_key": {
+    "hard negative": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "judgement anomaly": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "ordinary clean": {
+     "invoices": 4460,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 300,
+     "with_finding": 300,
+     "escalated": 240
+    }
+   }
+  },
+  {
+   "ledger": "large_seed_505",
+   "workbook_kb": 8025,
+   "records": {
+    "vendor_master": 1000,
+    "purchase_orders": 19920,
+    "goods_receipts": 19910,
+    "invoices": 20000,
+    "approval_logs": 22665,
+    "benchmark_labels": 20000
+   },
+   "seconds": {
+    "load": 52.4,
+    "audit": 82.5
+   },
+   "invoices": 20000,
+   "findings": 300,
+   "invoices_with_a_finding": 300,
+   "states": {
+    "AUTO_APPROVED": 19760,
+    "PENDING_REVIEW": 240
+   },
+   "findings_by_rule": {
+    "2.1.1": 30,
+    "2.1.2": 30,
+    "2.1.3": 30,
+    "2.2.1": 30,
+    "3.1.1": 15,
+    "3.1.2": 15,
+    "3.1.3": 30,
+    "4.1.1": 30,
+    "4.2.1": 15,
+    "4.3.1": 15,
+    "4.4.1": 30,
+    "5.1.1": 30
+   },
+   "review_queue": {
+    "invoices": 240,
+    "amount": 68552886.0,
+    "risk_levels": {
+     "CRITICAL": 90,
+     "HIGH": 150
+    },
+    "top_vendors": [
+     {
+      "vendor": "Talwar-Verma",
+      "waiting": 5,
+      "amount": 1374396.15
+     },
+     {
+      "vendor": "Choudhry-Khare",
+      "waiting": 5,
+      "amount": 807035.55
+     },
+     {
+      "vendor": "Rattan, Ghosh and Atwal",
+      "waiting": 5,
+      "amount": 511467.48
+     }
+    ]
+   },
+   "answer_key": {
+    "hard negative": {
+     "invoices": 240,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "judgement anomaly": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "ordinary clean": {
+     "invoices": 19340,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 300,
+     "with_finding": 300,
+     "escalated": 240
+    }
+   }
+  },
+  {
+   "ledger": "pilot_seed_909",
+   "workbook_kb": 1977,
+   "records": {
+    "vendor_master": 250,
+    "purchase_orders": 4920,
+    "goods_receipts": 4910,
+    "invoices": 5000,
+    "approval_logs": 5675,
+    "benchmark_labels": 5000
+   },
+   "seconds": {
+    "load": 12.6,
+    "audit": 20.9
+   },
+   "invoices": 5000,
+   "findings": 300,
+   "invoices_with_a_finding": 300,
+   "states": {
+    "AUTO_APPROVED": 4760,
+    "PENDING_REVIEW": 240
+   },
+   "findings_by_rule": {
+    "2.1.1": 30,
+    "2.1.2": 30,
+    "2.1.3": 30,
+    "2.2.1": 30,
+    "3.1.1": 15,
+    "3.1.2": 15,
+    "3.1.3": 30,
+    "4.1.1": 30,
+    "4.2.1": 15,
+    "4.3.1": 15,
+    "4.4.1": 30,
+    "5.1.1": 30
+   },
+   "review_queue": {
+    "invoices": 240,
+    "amount": 62387249.14,
+    "risk_levels": {
+     "CRITICAL": 90,
+     "HIGH": 150
+    },
+    "top_vendors": [
+     {
+      "vendor": "Majumdar Inc",
+      "waiting": 7,
+      "amount": 1088969.4
+     },
+     {
+      "vendor": "Balasubramanian, Oza and Mannan",
+      "waiting": 6,
+      "amount": 1754818.92
+     },
+     {
+      "vendor": "Pandey PLC",
+      "waiting": 6,
+      "amount": 1126447.24
+     }
+    ]
+   },
+   "answer_key": {
+    "hard negative": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "judgement anomaly": {
+     "invoices": 120,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "ordinary clean": {
+     "invoices": 4460,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 300,
+     "with_finding": 300,
+     "escalated": 240
+    }
+   }
+  },
+  {
+   "ledger": "swap_seed_404",
+   "workbook_kb": 2013,
+   "records": {
+    "vendor_master": 250,
+    "purchase_orders": 5000,
+    "goods_receipts": 5000,
+    "invoices": 5000,
+    "approval_logs": 5654,
+    "benchmark_labels": 5000
+   },
+   "seconds": {
+    "load": 12.7,
+    "audit": 20.5
+   },
+   "invoices": 5000,
+   "findings": 150,
+   "invoices_with_a_finding": 150,
+   "states": {
+    "AUTO_APPROVED": 4850,
+    "PENDING_REVIEW": 150
+   },
+   "findings_by_rule": {
+    "2.1.1": 50,
+    "4.1.1": 50,
+    "5.1.1": 50
+   },
+   "review_queue": {
+    "invoices": 150,
+    "amount": 21920589.03,
+    "risk_levels": {
+     "CRITICAL": 50,
+     "HIGH": 100
+    },
+    "top_vendors": [
+     {
+      "vendor": "Devan-Sehgal",
+      "waiting": 6,
+      "amount": 1472674.29
+     },
+     {
+      "vendor": "Comar Inc",
+      "waiting": 5,
+      "amount": 616394.09
+     },
+     {
+      "vendor": "Munshi PLC",
+      "waiting": 5,
+      "amount": 567993.68
+     }
+    ]
+   },
+   "answer_key": {
+    "ordinary clean": {
+     "invoices": 4850,
+     "with_finding": 0,
+     "escalated": 0
+    },
+    "rule-defined anomaly": {
+     "invoices": 150,
+     "with_finding": 150,
+     "escalated": 150
+    }
+   }
+  }
+ ]
+}

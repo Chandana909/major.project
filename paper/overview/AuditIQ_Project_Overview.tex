@@ -498,7 +498,7 @@ The base system is the multi-agent pipeline. The features below are what this pr
 
 \section{Measured results}
 \label{sec:measured}
-Each table below is read from the files that the scripts write under \texttt{results/}, named in its caption. Intervals are 95\% bootstrap intervals over invoices, with 1,000 resamples, where they are shown.
+Each table below is read from the files that the scripts write under \texttt{results/}, named in its caption. Intervals are 95\% bootstrap intervals over invoices, with 1,000 resamples, where they are shown. Every result is also in \texttt{RESULTS.md} and, machine-readable for programs and other language models, in \texttt{auditiq/\allowbreak results/\allowbreak results.json}.
 
 \subsection{Detection against classical detectors}
 \begin{table}[htbp]
@@ -541,6 +541,30 @@ Version 2.6 & 302 & 0.992 & 0 & 302 \\
 \end{table}
 
 A tightening leaves a frozen system silent: it approves invoices that the policy in force sends to review. A loosening costs reviewer time: it raises findings that the policy no longer supports. The policy-driven controls read each document in less than a tenth of a second, and they audited the 560,000 invoice decisions in 14 seconds.
+
+\subsection{Every ledger through the deployed system}
+Each of the six ledgers was written as an Excel workbook, loaded from it through the checked import, and audited with the controls through the data store; the outcome was read back from the store. Source: \texttt{results/\allowbreak ledger\_runs.md}.
+
+\begin{table}[htbp]
+\caption{Measured. Every ledger loaded from a workbook and audited with the controls (C1) under version 2.5, through the store.}
+\label{tab:ledgerruns}
+\centering
+\small
+\begin{tabular}{L{4.0cm}rrrr}
+\toprule
+Ledger & Invoices & Findings & Escalated & Approved \\
+\midrule
+bench\_seed\_101 & 5,000 & 300 & 240 & 4,760 \\
+bench\_seed\_202 & 5,000 & 300 & 240 & 4,760 \\
+bench\_seed\_303 & 5,000 & 300 & 240 & 4,760 \\
+large\_seed\_505 & 20,000 & 300 & 240 & 19,760 \\
+pilot\_seed\_909 & 5,000 & 300 & 240 & 4,760 \\
+swap\_seed\_404 & 5,000 & 150 & 150 & 4,850 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On each benchmark ledger every one of the 300 rule-defined anomalies got a finding; 240 were escalated (90 critical, 150 high), and the other 60, with only low or medium findings, were approved with the finding recorded. No hard negative and no ordinary invoice got a finding; the judgement anomalies are left to the agents.
 
 \subsection{Held-out policy documents}
 Twenty further policy documents were drawn at random (seed 2026) from values that played no part in building or checking the reader; each changes one to five values. Source: \texttt{results/\allowbreak policy\_heldout.md}. The system read 280 of 280 values and 320 of 320 rules correctly, adopted all twenty documents, and the policy-driven controls made no wrong decision in 800,000 invoice audits. A frozen system decided up to 7,953 invoices (19.9\%) against the policy in force. This measures what the paper had listed as the expected value X1.

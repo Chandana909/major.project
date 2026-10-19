@@ -145,6 +145,7 @@ nothing about how well a model audits.
 | C16 | Robustness of the reader: 16 edited documents that must be read correctly or refused | Measured (`results/policy_robustness.md`). The first run (2026-10-18, `policy_robustness-before-fix.md`) found that a rule stated twice and an approval table without a role were adopted; both are now refused, with tests; 16 of 16 as required |
 | C17 | The application run of a policy change as a script | Done (`evaluation/application_demo.py`, `results/application_demo.md`); the counts equal the ones recorded by hand on 2026-10-13 |
 | C18 | One results document for the paper | Done: `../RESULTS.md`, with figures from `python -m evaluation.figures` |
+| C19 | Every result machine-readable; every ledger through the deployed system | Done: `results/results.json` (`python -m evaluation.collect_results`, checked by a test; public raw URL in the README) and `results/ledger_runs.md` (each ledger loaded from a workbook and audited through the store) |
 | C13 | Throughput of the control stage against worker processes and ledger size | Measured (`results/scalability.md`) |
 | C10 | Logging and failure messages | Done: one log format for the command line and the dashboard; an unreachable database and a failing model endpoint end with a message, not a traceback |
 

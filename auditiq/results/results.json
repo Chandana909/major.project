@@ -1,0 +1,3522 @@
+{
+ "title": "AuditIQ: every measured result, machine-readable",
+ "repository": "https://github.com/Chandana909/major.project",
+ "for_people": {
+  "path": "RESULTS.md",
+  "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md"
+ },
+ "paper": {
+  "path": "paper/auditiq_paper.pdf",
+  "url": "https://github.com/Chandana909/major.project/blob/main/paper/auditiq_paper.pdf"
+ },
+ "labels": {
+  "measured": "a script of the repository produced it on the data stated",
+  "pilot": "measured on 20 invoices of the development ledger; shows that the stages work",
+  "sample": "measured on 34 invoices of benchmark ledger 101; too small to compare configurations",
+  "expected": "targets fixed before measurement; not results (RESULTS.md, Section 10)"
+ },
+ "data": "Synthetic ledgers of AuditIQ-Bench (auditiq/data/): three benchmark ledgers of 5,000 invoices (8.4% anomalous), a policy-swap ledger, a development ledger and a large ledger of 20,000 invoices.",
+ "results": {
+  "controls_against_classical_detectors": {
+   "label": "measured",
+   "question": "How do the deterministic controls (C1) compare with an isolation forest and a one-class SVM (C0, thresholds cross-fitted on other folds) at finding anomalous invoices?",
+   "systems": {
+    "C1": "policy-driven deterministic controls",
+    "C0-IF": "isolation forest",
+    "C0-SVM": "one-class SVM"
+   },
+   "note": "95% bootstrap intervals over invoices, 1,000 resamples. The controls' perfect scores on the rule-defined classes R1-R10 are by construction: they implement the rules by which these anomalies were injected. J1-J4 are left to the language-model agents.",
+   "mean_of_the_three_benchmark_ledgers": {
+    "C0-IF": {
+     "detection_recall": 0.577,
+     "detection_precision": 0.5013,
+     "detection_f1": 0.5358,
+     "flagged_share": 0.097,
+     "fpr_ordinary": 0.0436,
+     "fpr_hard_negative": 0.4028
+    },
+    "C0-SVM": {
+     "detection_recall": 0.4643,
+     "detection_precision": 0.5429,
+     "detection_f1": 0.4984,
+     "flagged_share": 0.0725,
+     "fpr_ordinary": 0.0246,
+     "fpr_hard_negative": 0.4806
+    },
+    "C1": {
+     "detection_recall": 0.7143,
+     "detection_precision": 1.0,
+     "detection_f1": 0.8333,
+     "flagged_share": 0.06,
+     "fpr_ordinary": 0.0,
+     "fpr_hard_negative": 0.0
+    }
+   },
+   "ledgers": {
+    "bench_seed_101": {
+     "invoices": 5000,
+     "systems": {
+      "C0-IF": {
+       "detection_recall": {
+        "value": 0.5976,
+        "ci_low": 0.5487,
+        "ci_high": 0.6465
+       },
+       "detection_precision": {
+        "value": 0.47,
+        "ci_low": 0.427,
+        "ci_high": 0.5094
+       },
+       "detection_f1": {
+        "value": 0.5262,
+        "ci_low": 0.485,
+        "ci_high": 0.564
+       },
+       "flagged_share": {
+        "value": 0.1068,
+        "ci_low": 0.0986,
+        "ci_high": 0.1156
+       },
+       "fpr_ordinary": {
+        "value": 0.0525,
+        "ci_low": 0.0464,
+        "ci_high": 0.059
+       },
+       "fpr_hard_negative": {
+        "value": 0.4083,
+        "ci_low": 0.3238,
+        "ci_high": 0.5
+       }
+      },
+      "C0-SVM": {
+       "detection_recall": {
+        "value": 0.4595,
+        "ci_low": 0.4123,
+        "ci_high": 0.5073
+       },
+       "detection_precision": {
+        "value": 0.5421,
+        "ci_low": 0.4933,
+        "ci_high": 0.5943
+       },
+       "detection_f1": {
+        "value": 0.4974,
+        "ci_low": 0.4542,
+        "ci_high": 0.5398
+       },
+       "flagged_share": {
+        "value": 0.0712,
+        "ci_low": 0.0644,
+        "ci_high": 0.0782
+       },
+       "fpr_ordinary": {
+        "value": 0.024,
+        "ci_low": 0.0198,
+        "ci_high": 0.0286
+       },
+       "fpr_hard_negative": {
+        "value": 0.4667,
+        "ci_low": 0.3826,
+        "ci_high": 0.5565
+       }
+      },
+      "C1": {
+       "detection_recall": {
+        "value": 0.7143,
+        "ci_low": 0.6727,
+        "ci_high": 0.7549
+       },
+       "detection_precision": {
+        "value": 1.0,
+        "ci_low": 1.0,
+        "ci_high": 1.0
+       },
+       "detection_f1": {
+        "value": 0.8333,
+        "ci_low": 0.8043,
+        "ci_high": 0.8603
+       },
+       "flagged_share": {
+        "value": 0.06,
+        "ci_low": 0.0536,
+        "ci_high": 0.0668
+       },
+       "fpr_ordinary": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       },
+       "fpr_hard_negative": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       }
+      }
+     },
+     "share_of_each_class_detected": {
+      "C0-IF": {
+       "R1": 0.3333,
+       "R2": 0.6333,
+       "R3": 1.0,
+       "R4": 1.0,
+       "R5": 0.9667,
+       "R6": 0.8667,
+       "R7": 0.5,
+       "R8": 0.7333,
+       "R9": 0.2,
+       "R10": 0.7667,
+       "J1": 1.0,
+       "J2": 0.2667,
+       "J3": 0.0333,
+       "J4": 0.0667
+      },
+      "C0-SVM": {
+       "R1": 1.0,
+       "R2": 0.7333,
+       "R3": 1.0,
+       "R4": 0.0,
+       "R5": 0.0667,
+       "R6": 1.0,
+       "R7": 0.9,
+       "R8": 0.0,
+       "R9": 0.1333,
+       "R10": 0.5667,
+       "J1": 1.0,
+       "J2": 0.0333,
+       "J3": 0.0,
+       "J4": 0.0
+      },
+      "C1": {
+       "R1": 1.0,
+       "R2": 1.0,
+       "R3": 1.0,
+       "R4": 1.0,
+       "R5": 1.0,
+       "R6": 1.0,
+       "R7": 1.0,
+       "R8": 1.0,
+       "R9": 1.0,
+       "R10": 1.0,
+       "J1": 0.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0
+      }
+     },
+     "mcnemar_holm": {
+      "C1 vs C0-IF": {
+       "only_C1_correct": 373,
+       "only_detector_correct": 41,
+       "p_holm": 0.0
+      },
+      "C1 vs C0-SVM": {
+       "only_C1_correct": 301,
+       "only_detector_correct": 31,
+       "p_holm": 0.0
+      }
+     },
+     "construction_checks_passed": true
+    },
+    "bench_seed_202": {
+     "invoices": 5000,
+     "systems": {
+      "C0-IF": {
+       "detection_recall": {
+        "value": 0.5619,
+        "ci_low": 0.514,
+        "ci_high": 0.6082
+       },
+       "detection_precision": {
+        "value": 0.5054,
+        "ci_low": 0.4623,
+        "ci_high": 0.5511
+       },
+       "detection_f1": {
+        "value": 0.5321,
+        "ci_low": 0.4943,
+        "ci_high": 0.569
+       },
+       "flagged_share": {
+        "value": 0.0934,
+        "ci_low": 0.0854,
+        "ci_high": 0.101
+       },
+       "fpr_ordinary": {
+        "value": 0.0399,
+        "ci_low": 0.0343,
+        "ci_high": 0.0455
+       },
+       "fpr_hard_negative": {
+        "value": 0.4417,
+        "ci_low": 0.3519,
+        "ci_high": 0.5285
+       }
+      },
+      "C0-SVM": {
+       "detection_recall": {
+        "value": 0.431,
+        "ci_low": 0.3793,
+        "ci_high": 0.477
+       },
+       "detection_precision": {
+        "value": 0.5877,
+        "ci_low": 0.5256,
+        "ci_high": 0.6471
+       },
+       "detection_f1": {
+        "value": 0.4973,
+        "ci_low": 0.4457,
+        "ci_high": 0.5415
+       },
+       "flagged_share": {
+        "value": 0.0616,
+        "ci_low": 0.055,
+        "ci_high": 0.0678
+       },
+       "fpr_ordinary": {
+        "value": 0.0173,
+        "ci_low": 0.0133,
+        "ci_high": 0.0213
+       },
+       "fpr_hard_negative": {
+        "value": 0.4167,
+        "ci_low": 0.3308,
+        "ci_high": 0.5043
+       }
+      },
+      "C1": {
+       "detection_recall": {
+        "value": 0.7143,
+        "ci_low": 0.669,
+        "ci_high": 0.7537
+       },
+       "detection_precision": {
+        "value": 1.0,
+        "ci_low": 1.0,
+        "ci_high": 1.0
+       },
+       "detection_f1": {
+        "value": 0.8333,
+        "ci_low": 0.8017,
+        "ci_high": 0.8595
+       },
+       "flagged_share": {
+        "value": 0.06,
+        "ci_low": 0.0534,
+        "ci_high": 0.0664
+       },
+       "fpr_ordinary": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       },
+       "fpr_hard_negative": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       }
+      }
+     },
+     "share_of_each_class_detected": {
+      "C0-IF": {
+       "R1": 0.3333,
+       "R2": 0.6,
+       "R3": 1.0,
+       "R4": 0.9333,
+       "R5": 0.9,
+       "R6": 0.9333,
+       "R7": 0.3667,
+       "R8": 0.7667,
+       "R9": 0.1667,
+       "R10": 0.6,
+       "J1": 1.0,
+       "J2": 0.2667,
+       "J3": 0.0,
+       "J4": 0.0
+      },
+      "C0-SVM": {
+       "R1": 1.0,
+       "R2": 0.8333,
+       "R3": 0.9333,
+       "R4": 0.0,
+       "R5": 0.0,
+       "R6": 0.9333,
+       "R7": 0.7667,
+       "R8": 0.0,
+       "R9": 0.0333,
+       "R10": 0.5333,
+       "J1": 1.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0
+      },
+      "C1": {
+       "R1": 1.0,
+       "R2": 1.0,
+       "R3": 1.0,
+       "R4": 1.0,
+       "R5": 1.0,
+       "R6": 1.0,
+       "R7": 1.0,
+       "R8": 1.0,
+       "R9": 1.0,
+       "R10": 1.0,
+       "J1": 0.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0
+      }
+     },
+     "mcnemar_holm": {
+      "C1 vs C0-IF": {
+       "only_C1_correct": 333,
+       "only_detector_correct": 38,
+       "p_holm": 0.0
+      },
+      "C1 vs C0-SVM": {
+       "only_C1_correct": 276,
+       "only_detector_correct": 30,
+       "p_holm": 0.0
+      }
+     },
+     "construction_checks_passed": true
+    },
+    "bench_seed_303": {
+     "invoices": 5000,
+     "systems": {
+      "C0-IF": {
+       "detection_recall": {
+        "value": 0.5714,
+        "ci_low": 0.5224,
+        "ci_high": 0.6244
+       },
+       "detection_precision": {
+        "value": 0.5286,
+        "ci_low": 0.4831,
+        "ci_high": 0.5769
+       },
+       "detection_f1": {
+        "value": 0.5492,
+        "ci_low": 0.508,
+        "ci_high": 0.5909
+       },
+       "flagged_share": {
+        "value": 0.0908,
+        "ci_low": 0.0834,
+        "ci_high": 0.0992
+       },
+       "fpr_ordinary": {
+        "value": 0.0383,
+        "ci_low": 0.0326,
+        "ci_high": 0.0442
+       },
+       "fpr_hard_negative": {
+        "value": 0.3583,
+        "ci_low": 0.2762,
+        "ci_high": 0.4445
+       }
+      },
+      "C0-SVM": {
+       "detection_recall": {
+        "value": 0.5024,
+        "ci_low": 0.4518,
+        "ci_high": 0.5493
+       },
+       "detection_precision": {
+        "value": 0.4988,
+        "ci_low": 0.4518,
+        "ci_high": 0.5462
+       },
+       "detection_f1": {
+        "value": 0.5006,
+        "ci_low": 0.4578,
+        "ci_high": 0.5416
+       },
+       "flagged_share": {
+        "value": 0.0846,
+        "ci_low": 0.077,
+        "ci_high": 0.0924
+       },
+       "fpr_ordinary": {
+        "value": 0.0325,
+        "ci_low": 0.0273,
+        "ci_high": 0.0381
+       },
+       "fpr_hard_negative": {
+        "value": 0.5583,
+        "ci_low": 0.4716,
+        "ci_high": 0.6514
+       }
+      },
+      "C1": {
+       "detection_recall": {
+        "value": 0.7143,
+        "ci_low": 0.6728,
+        "ci_high": 0.7586
+       },
+       "detection_precision": {
+        "value": 1.0,
+        "ci_low": 1.0,
+        "ci_high": 1.0
+       },
+       "detection_f1": {
+        "value": 0.8333,
+        "ci_low": 0.8044,
+        "ci_high": 0.8627
+       },
+       "flagged_share": {
+        "value": 0.06,
+        "ci_low": 0.054,
+        "ci_high": 0.0668
+       },
+       "fpr_ordinary": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       },
+       "fpr_hard_negative": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       }
+      }
+     },
+     "share_of_each_class_detected": {
+      "C0-IF": {
+       "R1": 0.4333,
+       "R2": 0.6333,
+       "R3": 1.0,
+       "R4": 0.9333,
+       "R5": 0.9333,
+       "R6": 0.8667,
+       "R7": 0.3333,
+       "R8": 0.8,
+       "R9": 0.2333,
+       "R10": 0.6667,
+       "J1": 1.0,
+       "J2": 0.1333,
+       "J3": 0.0333,
+       "J4": 0.0
+      },
+      "C0-SVM": {
+       "R1": 1.0,
+       "R2": 0.9333,
+       "R3": 1.0,
+       "R4": 0.1,
+       "R5": 0.0333,
+       "R6": 1.0,
+       "R7": 0.8667,
+       "R8": 0.1,
+       "R9": 0.1333,
+       "R10": 0.6667,
+       "J1": 1.0,
+       "J2": 0.1667,
+       "J3": 0.0333,
+       "J4": 0.0
+      },
+      "C1": {
+       "R1": 1.0,
+       "R2": 1.0,
+       "R3": 1.0,
+       "R4": 1.0,
+       "R5": 1.0,
+       "R6": 1.0,
+       "R7": 1.0,
+       "R8": 1.0,
+       "R9": 1.0,
+       "R10": 1.0,
+       "J1": 0.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0
+      }
+     },
+     "mcnemar_holm": {
+      "C1 vs C0-IF": {
+       "only_C1_correct": 309,
+       "only_detector_correct": 35,
+       "p_holm": 0.0
+      },
+      "C1 vs C0-SVM": {
+       "only_C1_correct": 337,
+       "only_detector_correct": 36,
+       "p_holm": 0.0
+      }
+     },
+     "construction_checks_passed": true
+    },
+    "large_seed_505": {
+     "invoices": 20000,
+     "systems": {
+      "C0-IF": {
+       "detection_recall": {
+        "value": 0.1619,
+        "ci_low": 0.1292,
+        "ci_high": 0.1995
+       },
+       "detection_precision": {
+        "value": 0.3009,
+        "ci_low": 0.2475,
+        "ci_high": 0.3624
+       },
+       "detection_f1": {
+        "value": 0.2105,
+        "ci_low": 0.1698,
+        "ci_high": 0.2531
+       },
+       "flagged_share": {
+        "value": 0.0113,
+        "ci_low": 0.0099,
+        "ci_high": 0.0127
+       },
+       "fpr_ordinary": {
+        "value": 0.0075,
+        "ci_low": 0.0063,
+        "ci_high": 0.0087
+       },
+       "fpr_hard_negative": {
+        "value": 0.0542,
+        "ci_low": 0.0259,
+        "ci_high": 0.0848
+       }
+      },
+      "C0-SVM": {
+       "detection_recall": {
+        "value": 0.4024,
+        "ci_low": 0.3591,
+        "ci_high": 0.4479
+       },
+       "detection_precision": {
+        "value": 0.4605,
+        "ci_low": 0.41,
+        "ci_high": 0.5102
+       },
+       "detection_f1": {
+        "value": 0.4295,
+        "ci_low": 0.3885,
+        "ci_high": 0.4704
+       },
+       "flagged_share": {
+        "value": 0.0184,
+        "ci_low": 0.0165,
+        "ci_high": 0.0203
+       },
+       "fpr_ordinary": {
+        "value": 0.0051,
+        "ci_low": 0.0041,
+        "ci_high": 0.0061
+       },
+       "fpr_hard_negative": {
+        "value": 0.4125,
+        "ci_low": 0.3531,
+        "ci_high": 0.481
+       }
+      },
+      "C1": {
+       "detection_recall": {
+        "value": 0.7143,
+        "ci_low": 0.6724,
+        "ci_high": 0.7569
+       },
+       "detection_precision": {
+        "value": 1.0,
+        "ci_low": 1.0,
+        "ci_high": 1.0
+       },
+       "detection_f1": {
+        "value": 0.8333,
+        "ci_low": 0.8041,
+        "ci_high": 0.8616
+       },
+       "flagged_share": {
+        "value": 0.015,
+        "ci_low": 0.0133,
+        "ci_high": 0.0168
+       },
+       "fpr_ordinary": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       },
+       "fpr_hard_negative": {
+        "value": 0.0,
+        "ci_low": 0.0,
+        "ci_high": 0.0
+       }
+      }
+     },
+     "share_of_each_class_detected": {
+      "C0-IF": {
+       "R1": 0.0333,
+       "R2": 0.0,
+       "R3": 1.0,
+       "R4": 0.0,
+       "R5": 0.0333,
+       "R6": 0.3,
+       "R7": 0.1333,
+       "R8": 0.0,
+       "R9": 0.0,
+       "R10": 0.2,
+       "J1": 0.4667,
+       "J2": 0.0667,
+       "J3": 0.0,
+       "J4": 0.0333
+      },
+      "C0-SVM": {
+       "R1": 1.0,
+       "R2": 0.6,
+       "R3": 1.0,
+       "R4": 0.0,
+       "R5": 0.0,
+       "R6": 1.0,
+       "R7": 0.5,
+       "R8": 0.0,
+       "R9": 0.0,
+       "R10": 0.5,
+       "J1": 1.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0333
+      },
+      "C1": {
+       "R1": 1.0,
+       "R2": 1.0,
+       "R3": 1.0,
+       "R4": 1.0,
+       "R5": 1.0,
+       "R6": 1.0,
+       "R7": 1.0,
+       "R8": 1.0,
+       "R9": 1.0,
+       "R10": 1.0,
+       "J1": 0.0,
+       "J2": 0.0,
+       "J3": 0.0,
+       "J4": 0.0
+      }
+     },
+     "mcnemar_holm": {
+      "C1 vs C0-IF": {
+       "only_C1_correct": 407,
+       "only_detector_correct": 17,
+       "p_holm": 0.0
+      },
+      "C1 vs C0-SVM": {
+       "only_C1_correct": 360,
+       "only_detector_correct": 31,
+       "p_holm": 0.0
+      }
+     },
+     "construction_checks_passed": true
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/bench_seed_101/metrics.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_101/metrics.json"
+    },
+    {
+     "path": "auditiq/results/bench_seed_202/metrics.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/metrics.json"
+    },
+    {
+     "path": "auditiq/results/bench_seed_303/metrics.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_303/metrics.json"
+    },
+    {
+     "path": "auditiq/results/large_seed_505/metrics.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/large_seed_505/metrics.json"
+    },
+    {
+     "path": "auditiq/results/summary.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/summary.md"
+    }
+   ],
+   "command": "python -m evaluation.run_all"
+  },
+  "policy_change": {
+   "label": "measured",
+   "question": "When the organisation changes its policy and supplies only the new PDF, does the system decide every invoice as the new policy requires, and how wrong is a system whose thresholds are frozen at version 2.5?",
+   "documents": 14,
+   "invoices_per_document": 40000,
+   "invoice_audits": 560000,
+   "values_read_correctly": "196/196",
+   "rules_read_word_for_word": "224/224",
+   "policy_driven_wrong_decisions": 0,
+   "frozen_worst_case": {
+    "policy": "Strict policy",
+    "wrong_decisions": 12274,
+    "share": 0.3069
+   },
+   "audit_seconds_one_process": 13.7,
+   "variants": [
+    {
+     "version": "3.01",
+     "policy": "Tolerance 0.5%",
+     "change": "amount tolerance 1% to 0.5%",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.094,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 62,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 62,
+      "missed_escalations": 62,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.02",
+     "policy": "Tolerance 2%",
+     "change": "amount tolerance 1% to 2%",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.018,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 7,
+     "frozen": {
+      "stale_findings": 7,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 7
+     }
+    },
+    {
+     "version": "3.03",
+     "policy": "Tolerance 5%",
+     "change": "amount tolerance 1% to 5%",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.035,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 63,
+     "frozen": {
+      "stale_findings": 63,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 63
+     }
+    },
+    {
+     "version": "3.04",
+     "policy": "Daily count 2",
+     "change": "invoices per vendor per day 3 to 2",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.038,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 429,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 429,
+      "missed_escalations": 428,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.05",
+     "policy": "Daily count 5",
+     "change": "invoices per vendor per day 3 to 5",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.034,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 170,
+     "frozen": {
+      "stale_findings": 170,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 170
+     }
+    },
+    {
+     "version": "3.06",
+     "policy": "Manager limit 50,000",
+     "change": "Manager approval limit 100,000 to 50,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.014,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 7677,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 7677,
+      "missed_escalations": 7514,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.07",
+     "policy": "Manager limit 150,000",
+     "change": "Manager approval limit 100,000 to 150,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.016,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 69,
+     "frozen": {
+      "stale_findings": 69,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 69
+     }
+    },
+    {
+     "version": "3.08",
+     "policy": "Senior Manager limit 250,000",
+     "change": "Senior Manager approval limit 500,000 to 250,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.026,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 4259,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 4259,
+      "missed_escalations": 4161,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.09",
+     "policy": "Round multiple 5,000",
+     "change": "round-amount multiple 10,000 to 5,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.015,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 0,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.10",
+     "policy": "Round multiple 50,000",
+     "change": "round-amount multiple 10,000 to 50,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.014,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 43,
+     "frozen": {
+      "stale_findings": 43,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.11",
+     "policy": "Six-day week",
+     "change": "Saturday becomes a business day",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.014,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 35,
+     "frozen": {
+      "stale_findings": 35,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.12",
+     "policy": "Strict policy",
+     "change": "tolerance 0.5%, daily count 2, Manager 50,000, Senior Manager 250,000, round multiple 5,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.015,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 12274,
+     "frozen": {
+      "stale_findings": 0,
+      "missed_exceptions": 12427,
+      "missed_escalations": 12012,
+      "needless_escalations": 0
+     }
+    },
+    {
+     "version": "3.13",
+     "policy": "Lenient policy",
+     "change": "tolerance 5%, daily count 5, Manager 150,000, six-day week, round multiple 50,000",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.023,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 380,
+     "frozen": {
+      "stale_findings": 380,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 302
+     }
+    },
+    {
+     "version": "3.14",
+     "policy": "Version 2.6",
+     "change": "tolerance 5%, daily count 5, Manager 150,000 (the policy-swap version)",
+     "values_read_correctly": "14/14",
+     "rules_read_word_for_word": "16/16",
+     "read_seconds": 0.02,
+     "policy_driven_wrong_decisions": 0,
+     "frozen_wrong_decisions": 302,
+     "frozen": {
+      "stale_findings": 302,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "needless_escalations": 302
+     }
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/policy_change.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_change.json"
+    },
+    {
+     "path": "auditiq/results/policy_change.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_change.md"
+    }
+   ],
+   "command": "python -m evaluation.policy_change"
+  },
+  "held_out_policy_documents": {
+   "label": "measured",
+   "question": "Does the reader work on policy values that played no part in building or checking it? Twenty documents drawn at random (seed 2026), each changing one to five values.",
+   "documents": 20,
+   "adopted": 20,
+   "values_read_correctly": "280/280",
+   "rules_read_word_for_word": "320/320",
+   "invoice_audits": 800000,
+   "policy_driven_wrong_decisions": 0,
+   "frozen_worst_case": {
+    "version": "4.10",
+    "change": "max_invoices_per_vendor_per_day 4; blocked_gstin_statuses ['Suspended', 'Cancelled']; non_business_days ['Friday', 'Saturday']; CFO limit 20,000,000",
+    "wrong_decisions": 7953,
+    "share": 0.1988
+   },
+   "variants": [
+    {
+     "version": "4.01",
+     "change": "guide_window_days 14; CFO limit 20,000,000; non_business_days ['Sunday']; amount_tolerance_pct 4.0; max_invoices_per_vendor_per_day 6",
+     "adopted": true,
+     "frozen_wrong_decisions": 252
+    },
+    {
+     "version": "4.02",
+     "change": "Director limit 2,000,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 139
+    },
+    {
+     "version": "4.03",
+     "change": "non_business_days ['Saturday']",
+     "adopted": true,
+     "frozen_wrong_decisions": 25
+    },
+    {
+     "version": "4.04",
+     "change": "CFO limit 20,000,000; round_amount_multiple 25000; Manager limit 125,000; guide_window_days 10; guide_band_pct 20",
+     "adopted": true,
+     "frozen_wrong_decisions": 74
+    },
+    {
+     "version": "4.05",
+     "change": "non_business_days ['Saturday']",
+     "adopted": true,
+     "frozen_wrong_decisions": 25
+    },
+    {
+     "version": "4.06",
+     "change": "guide_window_days 10; Senior Manager limit 300,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 3046
+    },
+    {
+     "version": "4.07",
+     "change": "blocked_gstin_statuses ['Suspended', 'Cancelled']; guide_band_pct 10; amount_tolerance_pct 1.5; CFO limit 20,000,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 1
+    },
+    {
+     "version": "4.08",
+     "change": "Manager limit 200,000; blocked_gstin_statuses ['Suspended', 'Cancelled']",
+     "adopted": true,
+     "frozen_wrong_decisions": 85
+    },
+    {
+     "version": "4.09",
+     "change": "Director limit 5,000,000; CFO limit 20,000,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 22
+    },
+    {
+     "version": "4.10",
+     "change": "max_invoices_per_vendor_per_day 4; blocked_gstin_statuses ['Suspended', 'Cancelled']; non_business_days ['Friday', 'Saturday']; CFO limit 20,000,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 7953
+    },
+    {
+     "version": "4.11",
+     "change": "non_business_days ['Friday', 'Saturday']",
+     "adopted": true,
+     "frozen_wrong_decisions": 7861
+    },
+    {
+     "version": "4.12",
+     "change": "round_amount_multiple 1000; CFO limit 20,000,000; amount_tolerance_pct 1.5; non_business_days ['Friday', 'Saturday']",
+     "adopted": true,
+     "frozen_wrong_decisions": 7867
+    },
+    {
+     "version": "4.13",
+     "change": "guide_window_days 10; max_invoices_per_vendor_per_day 4; CFO limit 20,000,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 120
+    },
+    {
+     "version": "4.14",
+     "change": "blocked_gstin_statuses ['Suspended', 'Cancelled']",
+     "adopted": true,
+     "frozen_wrong_decisions": 0
+    },
+    {
+     "version": "4.15",
+     "change": "Senior Manager limit 750,000; blocked_gstin_statuses ['Suspended', 'Cancelled']",
+     "adopted": true,
+     "frozen_wrong_decisions": 9
+    },
+    {
+     "version": "4.16",
+     "change": "amount_tolerance_pct 1.5; Senior Manager limit 750,000; guide_band_pct 10",
+     "adopted": true,
+     "frozen_wrong_decisions": 10
+    },
+    {
+     "version": "4.17",
+     "change": "Senior Manager limit 750,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 9
+    },
+    {
+     "version": "4.18",
+     "change": "Manager limit 75,000; guide_band_pct 10; non_business_days ['Sunday']",
+     "adopted": true,
+     "frozen_wrong_decisions": 3408
+    },
+    {
+     "version": "4.19",
+     "change": "non_business_days ['Sunday']; amount_tolerance_pct 3.0; Senior Manager limit 750,000",
+     "adopted": true,
+     "frozen_wrong_decisions": 71
+    },
+    {
+     "version": "4.20",
+     "change": "non_business_days ['Friday', 'Saturday']; guide_band_pct 10",
+     "adopted": true,
+     "frozen_wrong_decisions": 7861
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/policy_heldout.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_heldout.json"
+    },
+    {
+     "path": "auditiq/results/policy_heldout.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_heldout.md"
+    }
+   ],
+   "command": "python -m evaluation.policy_heldout"
+  },
+  "robustness_of_the_reader": {
+   "label": "measured",
+   "question": "Does the reader either read an edited policy document correctly or refuse it?",
+   "documents": 16,
+   "handled_as_required": 16,
+   "handled_as_required_before_the_fix": 14,
+   "edits": [
+    {
+     "id": "A1",
+     "edit": "extra prose and a revision table before the rules",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A2",
+     "edit": "rules and sections in another order",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A3",
+     "edit": "every rule followed by a long explanation",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A4",
+     "edit": "45 notes before section 4, which push the later rules onto later pages",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A5",
+     "edit": "the approval table in another order",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A6",
+     "edit": "the severity of rule 2.1.1 changed from high to low",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "A7",
+     "edit": "approval limits in Indian digit grouping",
+     "expected": "read correctly",
+     "outcome": "read correctly",
+     "as_required": true
+    },
+    {
+     "id": "B1",
+     "edit": "the threshold sentence of rule 2.1.1 removed",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B2",
+     "edit": "rule 4.3.1 removed",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B3",
+     "edit": "a rule added that the system has no control for",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B4",
+     "edit": "no version stated",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B5",
+     "edit": "a non-business 'day' that is not a day of the week",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B6",
+     "edit": "the approval table removed",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "B7",
+     "edit": "the tolerance written in words",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "C1",
+     "edit": "rule 2.1.1 stated twice, with 1% and with 2%",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    },
+    {
+     "id": "C2",
+     "edit": "the approval table without the CFO",
+     "expected": "refused",
+     "outcome": "refused",
+     "as_required": true
+    }
+   ],
+   "note": "The first run found two ambiguous documents adopted (a rule stated twice; an approval table without a role). Both checks were added to the reader with tests; both runs are kept.",
+   "sources": [
+    {
+     "path": "auditiq/results/policy_robustness.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_robustness.json"
+    },
+    {
+     "path": "auditiq/results/policy_robustness-before-fix.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_robustness-before-fix.json"
+    }
+   ],
+   "command": "python -m evaluation.policy_robustness"
+  },
+  "policy_change_in_the_application": {
+   "label": "measured",
+   "question": "A policy change through the deployed path: the 20,000-invoice ledger in a database, audited, the strict policy PDF adopted, audited again.",
+   "ledger": "large_seed_505",
+   "store": "SQLite",
+   "adopted_version": "3.12",
+   "before": {
+    "invoices": 20000,
+    "findings": 300,
+    "states": {
+     "AUTO_APPROVED": 19760,
+     "PENDING_REVIEW": 240
+    },
+    "findings_by_rule": {
+     "2.1.1": 30,
+     "2.1.2": 30,
+     "2.1.3": 30,
+     "2.2.1": 30,
+     "3.1.1": 15,
+     "3.1.2": 15,
+     "3.1.3": 30,
+     "4.1.1": 30,
+     "4.2.1": 15,
+     "4.3.1": 15,
+     "4.4.1": 30,
+     "5.1.1": 30
+    }
+   },
+   "after": {
+    "invoices": 20000,
+    "findings": 6546,
+    "states": {
+     "AUTO_APPROVED": 13647,
+     "PENDING_REVIEW": 6353
+    },
+    "findings_by_rule": {
+     "2.1.1": 60,
+     "2.1.2": 30,
+     "2.1.3": 30,
+     "2.2.1": 30,
+     "3.1.1": 15,
+     "3.1.2": 15,
+     "3.1.3": 30,
+     "4.1.1": 216,
+     "4.2.1": 15,
+     "4.3.1": 15,
+     "4.4.1": 30,
+     "5.1.1": 6060
+    }
+   },
+   "seconds": {
+    "audit_before": 49.6,
+    "adopt": 0.032,
+    "audit_after": 43.0
+   },
+   "changes": [
+    {
+     "clause": "2.1.1",
+     "parameter": "amount_tolerance_pct",
+     "from": 1.0,
+     "to": 0.5
+    },
+    {
+     "clause": "4.1.1",
+     "parameter": "max_invoices_per_vendor_per_day",
+     "from": 3,
+     "to": 2
+    },
+    {
+     "clause": "4.3.1",
+     "parameter": "round_amount_multiple",
+     "from": 10000,
+     "to": 5000
+    },
+    {
+     "clause": "5.1.1",
+     "parameter": "approval_limits",
+     "from": {
+      "Manager": 100000,
+      "Senior Manager": 500000,
+      "Director": 2500000,
+      "CFO": 10000000
+     },
+     "to": {
+      "Manager": 50000,
+      "Senior Manager": 250000,
+      "Director": 2500000,
+      "CFO": 10000000
+     }
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/application_demo.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/application_demo.json"
+    },
+    {
+     "path": "auditiq/results/application_demo.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/application_demo.md"
+    }
+   ],
+   "command": "python -m evaluation.application_demo"
+  },
+  "every_ledger_through_the_deployed_system": {
+   "label": "measured",
+   "question": "What does the deployed system produce when each ledger of the project is loaded from an Excel workbook and audited with the controls through the data store?",
+   "policy_version": "2.5",
+   "configuration": "C1",
+   "ledgers": [
+    {
+     "ledger": "bench_seed_101",
+     "workbook_kb": 1979,
+     "records": {
+      "vendor_master": 250,
+      "purchase_orders": 4920,
+      "goods_receipts": 4910,
+      "invoices": 5000,
+      "approval_logs": 5680,
+      "benchmark_labels": 5000
+     },
+     "seconds": {
+      "load": 16.4,
+      "audit": 24.6
+     },
+     "invoices": 5000,
+     "findings": 300,
+     "invoices_with_a_finding": 300,
+     "states": {
+      "AUTO_APPROVED": 4760,
+      "PENDING_REVIEW": 240
+     },
+     "findings_by_rule": {
+      "2.1.1": 30,
+      "2.1.2": 30,
+      "2.1.3": 30,
+      "2.2.1": 30,
+      "3.1.1": 15,
+      "3.1.2": 15,
+      "3.1.3": 30,
+      "4.1.1": 30,
+      "4.2.1": 15,
+      "4.3.1": 15,
+      "4.4.1": 30,
+      "5.1.1": 30
+     },
+     "review_queue": {
+      "invoices": 240,
+      "amount": 66974538.72,
+      "risk_levels": {
+       "CRITICAL": 90,
+       "HIGH": 150
+      },
+      "top_vendors": [
+       {
+        "vendor": "Koshy Inc",
+        "waiting": 7,
+        "amount": 330334.7
+       },
+       {
+        "vendor": "Goswami, Palla and Bhalla",
+        "waiting": 5,
+        "amount": 1705571.73
+       },
+       {
+        "vendor": "Mani, Wadhwa and Koshy",
+        "waiting": 5,
+        "amount": 1105894.44
+       }
+      ]
+     },
+     "answer_key": {
+      "hard negative": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "judgement anomaly": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "ordinary clean": {
+       "invoices": 4460,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 300,
+       "with_finding": 300,
+       "escalated": 240
+      }
+     }
+    },
+    {
+     "ledger": "bench_seed_202",
+     "workbook_kb": 1983,
+     "records": {
+      "vendor_master": 250,
+      "purchase_orders": 4920,
+      "goods_receipts": 4910,
+      "invoices": 5000,
+      "approval_logs": 5688,
+      "benchmark_labels": 5000
+     },
+     "seconds": {
+      "load": 16.9,
+      "audit": 23.7
+     },
+     "invoices": 5000,
+     "findings": 300,
+     "invoices_with_a_finding": 300,
+     "states": {
+      "AUTO_APPROVED": 4760,
+      "PENDING_REVIEW": 240
+     },
+     "findings_by_rule": {
+      "2.1.1": 30,
+      "2.1.2": 30,
+      "2.1.3": 30,
+      "2.2.1": 30,
+      "3.1.1": 15,
+      "3.1.2": 15,
+      "3.1.3": 30,
+      "4.1.1": 30,
+      "4.2.1": 15,
+      "4.3.1": 15,
+      "4.4.1": 30,
+      "5.1.1": 30
+     },
+     "review_queue": {
+      "invoices": 240,
+      "amount": 85968710.46,
+      "risk_levels": {
+       "CRITICAL": 90,
+       "HIGH": 150
+      },
+      "top_vendors": [
+       {
+        "vendor": "Bahl LLC",
+        "waiting": 8,
+        "amount": 5322022.94
+       },
+       {
+        "vendor": "Hans-Varkey",
+        "waiting": 8,
+        "amount": 4400646.58
+       },
+       {
+        "vendor": "Nayak, Chowdhury and Hora",
+        "waiting": 7,
+        "amount": 671911.55
+       }
+      ]
+     },
+     "answer_key": {
+      "hard negative": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "judgement anomaly": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "ordinary clean": {
+       "invoices": 4460,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 300,
+       "with_finding": 300,
+       "escalated": 240
+      }
+     }
+    },
+    {
+     "ledger": "bench_seed_303",
+     "workbook_kb": 1978,
+     "records": {
+      "vendor_master": 250,
+      "purchase_orders": 4920,
+      "goods_receipts": 4910,
+      "invoices": 5000,
+      "approval_logs": 5651,
+      "benchmark_labels": 5000
+     },
+     "seconds": {
+      "load": 12.8,
+      "audit": 20.2
+     },
+     "invoices": 5000,
+     "findings": 300,
+     "invoices_with_a_finding": 300,
+     "states": {
+      "AUTO_APPROVED": 4760,
+      "PENDING_REVIEW": 240
+     },
+     "findings_by_rule": {
+      "2.1.1": 30,
+      "2.1.2": 30,
+      "2.1.3": 30,
+      "2.2.1": 30,
+      "3.1.1": 15,
+      "3.1.2": 15,
+      "3.1.3": 30,
+      "4.1.1": 30,
+      "4.2.1": 15,
+      "4.3.1": 15,
+      "4.4.1": 30,
+      "5.1.1": 30
+     },
+     "review_queue": {
+      "invoices": 240,
+      "amount": 73574489.0,
+      "risk_levels": {
+       "CRITICAL": 90,
+       "HIGH": 150
+      },
+      "top_vendors": [
+       {
+        "vendor": "Roy-Doctor",
+        "waiting": 5,
+        "amount": 4565724.62
+       },
+       {
+        "vendor": "Bora, Sankar and Agate",
+        "waiting": 5,
+        "amount": 1584804.74
+       },
+       {
+        "vendor": "Sunder, Yogi and Chada",
+        "waiting": 5,
+        "amount": 669701.63
+       }
+      ]
+     },
+     "answer_key": {
+      "hard negative": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "judgement anomaly": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "ordinary clean": {
+       "invoices": 4460,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 300,
+       "with_finding": 300,
+       "escalated": 240
+      }
+     }
+    },
+    {
+     "ledger": "large_seed_505",
+     "workbook_kb": 8025,
+     "records": {
+      "vendor_master": 1000,
+      "purchase_orders": 19920,
+      "goods_receipts": 19910,
+      "invoices": 20000,
+      "approval_logs": 22665,
+      "benchmark_labels": 20000
+     },
+     "seconds": {
+      "load": 52.4,
+      "audit": 82.5
+     },
+     "invoices": 20000,
+     "findings": 300,
+     "invoices_with_a_finding": 300,
+     "states": {
+      "AUTO_APPROVED": 19760,
+      "PENDING_REVIEW": 240
+     },
+     "findings_by_rule": {
+      "2.1.1": 30,
+      "2.1.2": 30,
+      "2.1.3": 30,
+      "2.2.1": 30,
+      "3.1.1": 15,
+      "3.1.2": 15,
+      "3.1.3": 30,
+      "4.1.1": 30,
+      "4.2.1": 15,
+      "4.3.1": 15,
+      "4.4.1": 30,
+      "5.1.1": 30
+     },
+     "review_queue": {
+      "invoices": 240,
+      "amount": 68552886.0,
+      "risk_levels": {
+       "CRITICAL": 90,
+       "HIGH": 150
+      },
+      "top_vendors": [
+       {
+        "vendor": "Talwar-Verma",
+        "waiting": 5,
+        "amount": 1374396.15
+       },
+       {
+        "vendor": "Choudhry-Khare",
+        "waiting": 5,
+        "amount": 807035.55
+       },
+       {
+        "vendor": "Rattan, Ghosh and Atwal",
+        "waiting": 5,
+        "amount": 511467.48
+       }
+      ]
+     },
+     "answer_key": {
+      "hard negative": {
+       "invoices": 240,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "judgement anomaly": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "ordinary clean": {
+       "invoices": 19340,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 300,
+       "with_finding": 300,
+       "escalated": 240
+      }
+     }
+    },
+    {
+     "ledger": "pilot_seed_909",
+     "workbook_kb": 1977,
+     "records": {
+      "vendor_master": 250,
+      "purchase_orders": 4920,
+      "goods_receipts": 4910,
+      "invoices": 5000,
+      "approval_logs": 5675,
+      "benchmark_labels": 5000
+     },
+     "seconds": {
+      "load": 12.6,
+      "audit": 20.9
+     },
+     "invoices": 5000,
+     "findings": 300,
+     "invoices_with_a_finding": 300,
+     "states": {
+      "AUTO_APPROVED": 4760,
+      "PENDING_REVIEW": 240
+     },
+     "findings_by_rule": {
+      "2.1.1": 30,
+      "2.1.2": 30,
+      "2.1.3": 30,
+      "2.2.1": 30,
+      "3.1.1": 15,
+      "3.1.2": 15,
+      "3.1.3": 30,
+      "4.1.1": 30,
+      "4.2.1": 15,
+      "4.3.1": 15,
+      "4.4.1": 30,
+      "5.1.1": 30
+     },
+     "review_queue": {
+      "invoices": 240,
+      "amount": 62387249.14,
+      "risk_levels": {
+       "CRITICAL": 90,
+       "HIGH": 150
+      },
+      "top_vendors": [
+       {
+        "vendor": "Majumdar Inc",
+        "waiting": 7,
+        "amount": 1088969.4
+       },
+       {
+        "vendor": "Balasubramanian, Oza and Mannan",
+        "waiting": 6,
+        "amount": 1754818.92
+       },
+       {
+        "vendor": "Pandey PLC",
+        "waiting": 6,
+        "amount": 1126447.24
+       }
+      ]
+     },
+     "answer_key": {
+      "hard negative": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "judgement anomaly": {
+       "invoices": 120,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "ordinary clean": {
+       "invoices": 4460,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 300,
+       "with_finding": 300,
+       "escalated": 240
+      }
+     }
+    },
+    {
+     "ledger": "swap_seed_404",
+     "workbook_kb": 2013,
+     "records": {
+      "vendor_master": 250,
+      "purchase_orders": 5000,
+      "goods_receipts": 5000,
+      "invoices": 5000,
+      "approval_logs": 5654,
+      "benchmark_labels": 5000
+     },
+     "seconds": {
+      "load": 12.7,
+      "audit": 20.5
+     },
+     "invoices": 5000,
+     "findings": 150,
+     "invoices_with_a_finding": 150,
+     "states": {
+      "AUTO_APPROVED": 4850,
+      "PENDING_REVIEW": 150
+     },
+     "findings_by_rule": {
+      "2.1.1": 50,
+      "4.1.1": 50,
+      "5.1.1": 50
+     },
+     "review_queue": {
+      "invoices": 150,
+      "amount": 21920589.03,
+      "risk_levels": {
+       "CRITICAL": 50,
+       "HIGH": 100
+      },
+      "top_vendors": [
+       {
+        "vendor": "Devan-Sehgal",
+        "waiting": 6,
+        "amount": 1472674.29
+       },
+       {
+        "vendor": "Comar Inc",
+        "waiting": 5,
+        "amount": 616394.09
+       },
+       {
+        "vendor": "Munshi PLC",
+        "waiting": 5,
+        "amount": 567993.68
+       }
+      ]
+     },
+     "answer_key": {
+      "ordinary clean": {
+       "invoices": 4850,
+       "with_finding": 0,
+       "escalated": 0
+      },
+      "rule-defined anomaly": {
+       "invoices": 150,
+       "with_finding": 150,
+       "escalated": 150
+      }
+     }
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/ledger_runs.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/ledger_runs.json"
+    },
+    {
+     "path": "auditiq/results/ledger_runs.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/ledger_runs.md"
+    }
+   ],
+   "command": "python -m evaluation.ledger_runs"
+  },
+  "scalability_of_the_control_stage": {
+   "label": "measured",
+   "question": "How fast is the control stage, against worker processes and ledger size?",
+   "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+   "logical_cpus": 12,
+   "by_workers": [
+    {
+     "workers": 1,
+     "audits": 300000,
+     "seconds": 5.29,
+     "findings": 16840,
+     "invoices_per_second": 56660,
+     "runs": [
+      5.7,
+      5.29,
+      5.27
+     ]
+    },
+    {
+     "workers": 2,
+     "audits": 300000,
+     "seconds": 3.1,
+     "findings": 16840,
+     "invoices_per_second": 96724,
+     "runs": [
+      3.1,
+      3.01,
+      3.59
+     ]
+    },
+    {
+     "workers": 4,
+     "audits": 300000,
+     "seconds": 2.5,
+     "findings": 16840,
+     "invoices_per_second": 119780,
+     "runs": [
+      2.5,
+      2.44,
+      2.67
+     ]
+    },
+    {
+     "workers": 8,
+     "audits": 300000,
+     "seconds": 1.74,
+     "findings": 16840,
+     "invoices_per_second": 172226,
+     "runs": [
+      1.73,
+      1.74,
+      1.9
+     ]
+    }
+   ],
+   "by_size": [
+    {
+     "invoices": 5000,
+     "seconds": 0.089,
+     "findings": 300,
+     "invoices_per_second": 56117,
+     "microseconds_per_invoice": 17.8
+    },
+    {
+     "invoices": 20000,
+     "seconds": 0.389,
+     "findings": 300,
+     "invoices_per_second": 51433,
+     "microseconds_per_invoice": 19.4
+    },
+    {
+     "invoices": 40000,
+     "seconds": 0.731,
+     "findings": 1350,
+     "invoices_per_second": 54722,
+     "microseconds_per_invoice": 18.3
+    }
+   ],
+   "note": "The control stage in memory on one laptop, median of three runs. A rerun under background load gave the same findings with 21-36% lower throughput (RESULTS.md, Section 5).",
+   "sources": [
+    {
+     "path": "auditiq/results/scalability.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/scalability.json"
+    },
+    {
+     "path": "auditiq/results/scalability.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/scalability.md"
+    }
+   ],
+   "command": "python -m evaluation.scalability"
+  },
+  "policies_in_their_own_wording": {
+   "label": "measured",
+   "question": "Policies written in their own wording: a local 7B model proposes the values, code verifies each against the document, a person confirms. Six documents, 14 values each.",
+   "model": "qwen2.5:7b-ctx12k",
+   "total": {
+    "values": 84,
+    "right_verified": 56,
+    "right_held_back": 24,
+    "wrong_caught": 2,
+    "wrong_passed": 2,
+    "missing": 0,
+    "rules": 96,
+    "located": 92,
+    "right_passage": 92
+   },
+   "documents": [
+    {
+     "file": "memo_reference_v5.1.pdf",
+     "style": "memo",
+     "values": 14,
+     "right_verified": 9,
+     "right_held_back": 4,
+     "wrong_caught": 1,
+     "wrong_passed": 0,
+     "missing": 0,
+     "rules": 16,
+     "located": 16,
+     "right_passage": 16,
+     "policy_correct_after_confirmation": true
+    },
+    {
+     "file": "memo_strict_v5.2.pdf",
+     "style": "memo",
+     "values": 14,
+     "right_verified": 9,
+     "right_held_back": 4,
+     "wrong_caught": 1,
+     "wrong_passed": 0,
+     "missing": 0,
+     "rules": 16,
+     "located": 16,
+     "right_passage": 16,
+     "policy_correct_after_confirmation": true
+    },
+    {
+     "file": "memo_lenient_v5.3.pdf",
+     "style": "memo",
+     "values": 14,
+     "right_verified": 10,
+     "right_held_back": 4,
+     "wrong_caught": 0,
+     "wrong_passed": 0,
+     "missing": 0,
+     "rules": 16,
+     "located": 15,
+     "right_passage": 15,
+     "policy_correct_after_confirmation": true
+    },
+    {
+     "file": "handbook_reference_v5.4.pdf",
+     "style": "handbook",
+     "values": 14,
+     "right_verified": 9,
+     "right_held_back": 4,
+     "wrong_caught": 0,
+     "wrong_passed": 1,
+     "missing": 0,
+     "rules": 16,
+     "located": 15,
+     "right_passage": 15,
+     "policy_correct_after_confirmation": false
+    },
+    {
+     "file": "handbook_strict_v5.5.pdf",
+     "style": "handbook",
+     "values": 14,
+     "right_verified": 9,
+     "right_held_back": 4,
+     "wrong_caught": 0,
+     "wrong_passed": 1,
+     "missing": 0,
+     "rules": 16,
+     "located": 15,
+     "right_passage": 15,
+     "policy_correct_after_confirmation": false
+    },
+    {
+     "file": "handbook_lenient_v5.6.pdf",
+     "style": "handbook",
+     "values": 14,
+     "right_verified": 10,
+     "right_held_back": 4,
+     "wrong_caught": 0,
+     "wrong_passed": 0,
+     "missing": 0,
+     "rules": 16,
+     "located": 15,
+     "right_passage": 15,
+     "policy_correct_after_confirmation": true
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/policy_llm.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_llm.json"
+    },
+    {
+     "path": "auditiq/results/policy_llm.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_llm.md"
+    }
+   ],
+   "command": "python -m evaluation.policy_llm_eval"
+  },
+  "policy_search": {
+   "label": "measured",
+   "question": "Policy search: recall of the right passage for 48 fixed questions (16 in the policy's wording, 32 paraphrases split into dev and test).",
+   "rows": [
+    {
+     "Ranker": "lexical",
+     "Questions": "wording",
+     "Recall@1": 1.0,
+     "Recall@3": 1.0,
+     "MRR": 1.0
+    },
+    {
+     "Ranker": "lexical",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.062,
+     "Recall@3": 0.25,
+     "MRR": 0.234
+    },
+    {
+     "Ranker": "lexical",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.25,
+     "Recall@3": 0.312,
+     "MRR": 0.34
+    },
+    {
+     "Ranker": "dense",
+     "Questions": "wording",
+     "Recall@1": 0.938,
+     "Recall@3": 1.0,
+     "MRR": 0.969
+    },
+    {
+     "Ranker": "dense",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.625,
+     "Recall@3": 0.812,
+     "MRR": 0.733
+    },
+    {
+     "Ranker": "dense",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.438,
+     "Recall@3": 0.812,
+     "MRR": 0.637
+    },
+    {
+     "Ranker": "hybrid",
+     "Questions": "wording",
+     "Recall@1": 1.0,
+     "Recall@3": 1.0,
+     "MRR": 1.0
+    },
+    {
+     "Ranker": "hybrid",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.25,
+     "Recall@3": 0.688,
+     "MRR": 0.467
+    },
+    {
+     "Ranker": "hybrid",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.312,
+     "Recall@3": 0.312,
+     "MRR": 0.415
+    },
+    {
+     "Ranker": "lexical + rewrite",
+     "Questions": "wording",
+     "Recall@1": 1.0,
+     "Recall@3": 1.0,
+     "MRR": 1.0
+    },
+    {
+     "Ranker": "lexical + rewrite",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.625,
+     "Recall@3": 0.938,
+     "MRR": 0.786
+    },
+    {
+     "Ranker": "lexical + rewrite",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.625,
+     "Recall@3": 0.812,
+     "MRR": 0.75
+    },
+    {
+     "Ranker": "dense + rewrite",
+     "Questions": "wording",
+     "Recall@1": 1.0,
+     "Recall@3": 1.0,
+     "MRR": 1.0
+    },
+    {
+     "Ranker": "dense + rewrite",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.625,
+     "Recall@3": 0.875,
+     "MRR": 0.763
+    },
+    {
+     "Ranker": "dense + rewrite",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.562,
+     "Recall@3": 0.938,
+     "MRR": 0.745
+    },
+    {
+     "Ranker": "hybrid + rewrite",
+     "Questions": "wording",
+     "Recall@1": 1.0,
+     "Recall@3": 1.0,
+     "MRR": 1.0
+    },
+    {
+     "Ranker": "hybrid + rewrite",
+     "Questions": "paraphrase (dev)",
+     "Recall@1": 0.75,
+     "Recall@3": 0.938,
+     "MRR": 0.849
+    },
+    {
+     "Ranker": "hybrid + rewrite",
+     "Questions": "paraphrase (test)",
+     "Recall@1": 0.625,
+     "Recall@3": 0.938,
+     "MRR": 0.768
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/retrieval.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/retrieval.md"
+    }
+   ],
+   "command": "python -m evaluation.retrieval_eval --rewrite"
+  },
+  "vendor_history_cap": {
+   "label": "measured",
+   "question": "Does the cap of 40 vendor-history invoices per rule hide an invoice that a labelled case depends on?",
+   "rows": [
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "HN_DAILY_LIMIT",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "HN_RECURRING",
+     "Cases": 24,
+     "Complete for the owning stage": 24,
+     "Complete for the single auditor": 24
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "HN_SIMILAR_NUMBER",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "J1",
+     "Cases": 7,
+     "Complete for the owning stage": 7,
+     "Complete for the single auditor": 7
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "J2",
+     "Cases": 12,
+     "Complete for the owning stage": 12,
+     "Complete for the single auditor": 12
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "R3",
+     "Cases": 5,
+     "Complete for the owning stage": 5,
+     "Complete for the single auditor": 5
+    },
+    {
+     "Dataset": "bench_seed_101",
+     "Invoices above the cap": "955 of 5,000",
+     "Kind": "R6",
+     "Cases": 5,
+     "Complete for the owning stage": 5,
+     "Complete for the single auditor": 5
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "HN_DAILY_LIMIT",
+     "Cases": 3,
+     "Complete for the owning stage": 3,
+     "Complete for the single auditor": 3
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "HN_RECURRING",
+     "Cases": 8,
+     "Complete for the owning stage": 8,
+     "Complete for the single auditor": 8
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "HN_SIMILAR_NUMBER",
+     "Cases": 2,
+     "Complete for the owning stage": 2,
+     "Complete for the single auditor": 2
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "J1",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "J2",
+     "Cases": 9,
+     "Complete for the owning stage": 9,
+     "Complete for the single auditor": 9
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "R3",
+     "Cases": 9,
+     "Complete for the owning stage": 9,
+     "Complete for the single auditor": 9
+    },
+    {
+     "Dataset": "bench_seed_202",
+     "Invoices above the cap": "1,034 of 5,000",
+     "Kind": "R6",
+     "Cases": 17,
+     "Complete for the owning stage": 17,
+     "Complete for the single auditor": 17
+    },
+    {
+     "Dataset": "bench_seed_303",
+     "Invoices above the cap": "1,062 of 5,000",
+     "Kind": "HN_DAILY_LIMIT",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "bench_seed_303",
+     "Invoices above the cap": "1,062 of 5,000",
+     "Kind": "HN_SIMILAR_NUMBER",
+     "Cases": 8,
+     "Complete for the owning stage": 8,
+     "Complete for the single auditor": 8
+    },
+    {
+     "Dataset": "bench_seed_303",
+     "Invoices above the cap": "1,062 of 5,000",
+     "Kind": "J1",
+     "Cases": 5,
+     "Complete for the owning stage": 5,
+     "Complete for the single auditor": 5
+    },
+    {
+     "Dataset": "bench_seed_303",
+     "Invoices above the cap": "1,062 of 5,000",
+     "Kind": "J2",
+     "Cases": 15,
+     "Complete for the owning stage": 15,
+     "Complete for the single auditor": 15
+    },
+    {
+     "Dataset": "bench_seed_303",
+     "Invoices above the cap": "1,062 of 5,000",
+     "Kind": "R3",
+     "Cases": 8,
+     "Complete for the owning stage": 8,
+     "Complete for the single auditor": 8
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "HN_DAILY_LIMIT",
+     "Cases": 3,
+     "Complete for the owning stage": 3,
+     "Complete for the single auditor": 3
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "HN_RECURRING",
+     "Cases": 8,
+     "Complete for the owning stage": 8,
+     "Complete for the single auditor": 8
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "HN_SIMILAR_NUMBER",
+     "Cases": 10,
+     "Complete for the owning stage": 10,
+     "Complete for the single auditor": 10
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "J1",
+     "Cases": 4,
+     "Complete for the owning stage": 4,
+     "Complete for the single auditor": 4
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "R3",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "large_seed_505",
+     "Invoices above the cap": "4,055 of 20,000",
+     "Kind": "R6",
+     "Cases": 4,
+     "Complete for the owning stage": 4,
+     "Complete for the single auditor": 4
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "HN_DAILY_LIMIT",
+     "Cases": 3,
+     "Complete for the owning stage": 3,
+     "Complete for the single auditor": 3
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "HN_RECURRING",
+     "Cases": 24,
+     "Complete for the owning stage": 24,
+     "Complete for the single auditor": 24
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "HN_SIMILAR_NUMBER",
+     "Cases": 12,
+     "Complete for the owning stage": 12,
+     "Complete for the single auditor": 12
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "J1",
+     "Cases": 6,
+     "Complete for the owning stage": 6,
+     "Complete for the single auditor": 6
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "J2",
+     "Cases": 9,
+     "Complete for the owning stage": 9,
+     "Complete for the single auditor": 9
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "R3",
+     "Cases": 17,
+     "Complete for the owning stage": 17,
+     "Complete for the single auditor": 17
+    },
+    {
+     "Dataset": "pilot_seed_909",
+     "Invoices above the cap": "1,333 of 5,000",
+     "Kind": "R6",
+     "Cases": 4,
+     "Complete for the owning stage": 4,
+     "Complete for the single auditor": 4
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/history_cap.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/history_cap.md"
+    }
+   ],
+   "command": "python -m evaluation.history_cap"
+  },
+  "llm_stages_pilot_20_invoices": {
+   "label": "pilot",
+   "question": "The five configurations with a local 7B model on 20 invoices of the development ledger.",
+   "configurations": {
+    "C1": "controls only",
+    "C2": "one LLM prompt, no controls",
+    "C3": "controls and three agents",
+    "C4": "C3 and the challenger",
+    "C5": "C4 and confidence (sampled review)"
+   },
+   "metrics": {
+    "Macro-F1, rule-defined classes": {
+     "C1": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.095,
+      "ci_low": 0.017,
+      "ci_high": 0.172
+     }
+    },
+    "Macro-F1, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.17,
+      "ci_low": 0.0,
+      "ci_high": 0.383
+     },
+     "C4": {
+      "value": 0.167,
+      "ci_low": 0.0,
+      "ci_high": 0.333
+     },
+     "C5": {
+      "value": 0.167,
+      "ci_low": 0.0,
+      "ci_high": 0.333
+     },
+     "C2": {
+      "value": 0.167,
+      "ci_low": 0.0,
+      "ci_high": 0.5
+     }
+    },
+    "Macro-recall, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.5,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.25,
+      "ci_low": 0.0,
+      "ci_high": 0.5
+     },
+     "C5": {
+      "value": 0.25,
+      "ci_low": 0.0,
+      "ci_high": 0.5
+     },
+     "C2": {
+      "value": 0.25,
+      "ci_low": 0.0,
+      "ci_high": 0.5
+     }
+    },
+    "Recall, J1 near-duplicate": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J2 structuring across days": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J3 description against the PO": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J4 goods-receipt remark": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     }
+    },
+    "Invoice-level recall": {
+     "C1": {
+      "value": 0.714,
+      "ci_low": 0.467,
+      "ci_high": 0.933
+     },
+     "C3": {
+      "value": 0.929,
+      "ci_low": 0.75,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.857,
+      "ci_low": 0.643,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.857,
+      "ci_low": 0.643,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.929,
+      "ci_low": 0.765,
+      "ci_high": 1.0
+     }
+    },
+    "Invoice-level precision": {
+     "C1": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 0.812,
+      "ci_low": 0.6,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.8,
+      "ci_low": 0.571,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.8,
+      "ci_low": 0.571,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.722,
+      "ci_low": 0.5,
+      "ci_high": 0.895
+     }
+    },
+    "FPR, ordinary clean": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     }
+    },
+    "FPR, hard negatives": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.6,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.6,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.6,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.8,
+      "ci_low": 0.392,
+      "ci_high": 1.0
+     }
+    },
+    "Precision at 2% prevalence": {
+     "C1": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 0.037,
+      "ci_low": 0.02,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.034,
+      "ci_low": 0.017,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.034,
+      "ci_low": 0.017,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.022,
+      "ci_low": 0.016,
+      "ci_high": 0.039
+     }
+    },
+    "Citation correctness": {
+     "C1": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 0.5,
+      "ci_low": 0.37,
+      "ci_high": 0.7
+     },
+     "C4": {
+      "value": 0.688,
+      "ci_low": 0.529,
+      "ci_high": 0.883
+     },
+     "C5": {
+      "value": 0.688,
+      "ci_low": 0.529,
+      "ci_high": 0.883
+     },
+     "C2": {
+      "value": 0.091,
+      "ci_low": 0.033,
+      "ci_high": 0.176
+     }
+    },
+    "Model findings naming a violated rule": {
+     "C1": null,
+     "C3": {
+      "value": 0.111,
+      "ci_low": 0.0,
+      "ci_high": 0.308
+     },
+     "C4": {
+      "value": 0.111,
+      "ci_low": 0.0,
+      "ci_high": 0.334
+     },
+     "C5": {
+      "value": 0.111,
+      "ci_low": 0.0,
+      "ci_high": 0.334
+     },
+     "C2": {
+      "value": 0.067,
+      "ci_low": 0.022,
+      "ci_high": 0.123
+     }
+    },
+    "Exact match of cited clauses": {
+     "C1": {
+      "value": 0.8,
+      "ci_low": 0.6,
+      "ci_high": 0.95
+     },
+     "C3": {
+      "value": 0.45,
+      "ci_low": 0.2,
+      "ci_high": 0.65
+     },
+     "C4": {
+      "value": 0.5,
+      "ci_low": 0.299,
+      "ci_high": 0.7
+     },
+     "C5": {
+      "value": 0.5,
+      "ci_low": 0.299,
+      "ci_high": 0.7
+     },
+     "C2": {
+      "value": 0.1,
+      "ci_low": 0.0,
+      "ci_high": 0.25
+     }
+    },
+    "Escalation precision": {
+     "C1": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 0.667,
+      "ci_low": 0.411,
+      "ci_high": 0.895
+     },
+     "C4": {
+      "value": 0.643,
+      "ci_low": 0.364,
+      "ci_high": 0.883
+     },
+     "C5": {
+      "value": 0.75,
+      "ci_low": 0.461,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.556,
+      "ci_low": 0.316,
+      "ci_high": 0.765
+     }
+    },
+    "Escalation recall": {
+     "C1": {
+      "value": 0.727,
+      "ci_low": 0.444,
+      "ci_high": 1.0
+     },
+     "C3": {
+      "value": 0.909,
+      "ci_low": 0.7,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.818,
+      "ci_low": 0.571,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.818,
+      "ci_low": 0.571,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.909,
+      "ci_low": 0.7,
+      "ci_high": 1.0
+     }
+    },
+    "Invoices in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 2,
+     "C2": 0
+    },
+    "True anomalies in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 2,
+     "C2": 0
+    },
+    "High or critical anomalies auto-approved": {
+     "C1": 3,
+     "C3": 1,
+     "C4": 2,
+     "C5": 2,
+     "C2": 1
+    },
+    "LLM calls per invoice": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 3.0,
+      "ci_low": 3.0,
+      "ci_high": 3.0
+     },
+     "C4": {
+      "value": 3.6,
+      "ci_low": 3.4,
+      "ci_high": 3.8
+     },
+     "C5": {
+      "value": 4.95,
+      "ci_low": 4.15,
+      "ci_high": 5.85
+     },
+     "C2": {
+      "value": 1.15,
+      "ci_low": 1.0,
+      "ci_high": 1.35
+     }
+    },
+    "Tokens per invoice": {
+     "C1": 0,
+     "C3": 9557,
+     "C4": 12005,
+     "C5": 16779,
+     "C2": 5835
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/pilot_seed_909/pilot20.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/pilot_seed_909/pilot20.md"
+    }
+   ],
+   "command": "python -m evaluation.run_pilot --dataset data/pilot_seed_909 --ids-file evaluation/pilot_ids.txt --tag pilot20",
+   "note": "Too few invoices to compare configurations: no difference between them is significant."
+  },
+  "llm_stages_sample_34_invoices": {
+   "label": "sample",
+   "question": "The five configurations with a local 7B model and frozen prompts on 34 invoices of benchmark ledger 101.",
+   "configurations": {
+    "C1": "controls only",
+    "C2": "one LLM prompt, no controls",
+    "C3": "controls and three agents",
+    "C4": "C3 and the challenger",
+    "C5": "C4 and confidence (sampled review)"
+   },
+   "metrics": {
+    "Macro-F1, rule-defined classes": {
+     "C1": null,
+     "C3": null,
+     "C4": null,
+     "C5": null,
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Macro-F1, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.468,
+      "ci_low": 0.287,
+      "ci_high": 0.596
+     },
+     "C4": {
+      "value": 0.447,
+      "ci_low": 0.233,
+      "ci_high": 0.602
+     },
+     "C5": {
+      "value": 0.447,
+      "ci_low": 0.233,
+      "ci_high": 0.602
+     },
+     "C2": {
+      "value": 0.222,
+      "ci_low": 0.125,
+      "ci_high": 0.25
+     }
+    },
+    "Macro-recall, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.6,
+      "ci_low": 0.418,
+      "ci_high": 0.781
+     },
+     "C4": {
+      "value": 0.4,
+      "ci_low": 0.207,
+      "ci_high": 0.613
+     },
+     "C5": {
+      "value": 0.4,
+      "ci_low": 0.207,
+      "ci_high": 0.613
+     },
+     "C2": {
+      "value": 0.2,
+      "ci_low": 0.083,
+      "ci_high": 0.25
+     }
+    },
+    "Recall, J1 near-duplicate": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.2,
+      "ci_low": 0.0,
+      "ci_high": 0.667
+     },
+     "C5": {
+      "value": 0.2,
+      "ci_low": 0.0,
+      "ci_high": 0.667
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J2 structuring across days": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.4,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.4,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.4,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J3 description against the PO": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.2,
+      "ci_low": 0.0,
+      "ci_high": 0.667
+     },
+     "C4": {
+      "value": 0.2,
+      "ci_low": 0.0,
+      "ci_high": 0.667
+     },
+     "C5": {
+      "value": 0.2,
+      "ci_low": 0.0,
+      "ci_high": 0.667
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J4 goods-receipt remark": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.8,
+      "ci_low": 0.333,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.8,
+      "ci_low": 0.333,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.8,
+      "ci_low": 0.333,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.8,
+      "ci_low": 0.333,
+      "ci_high": 1.0
+     }
+    },
+    "Invoice-level recall": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.7,
+      "ci_low": 0.476,
+      "ci_high": 0.889
+     },
+     "C4": {
+      "value": 0.55,
+      "ci_low": 0.333,
+      "ci_high": 0.773
+     },
+     "C5": {
+      "value": 0.55,
+      "ci_low": 0.333,
+      "ci_high": 0.773
+     },
+     "C2": {
+      "value": 0.9,
+      "ci_low": 0.75,
+      "ci_high": 1.0
+     }
+    },
+    "Invoice-level precision": {
+     "C1": null,
+     "C3": {
+      "value": 0.56,
+      "ci_low": 0.37,
+      "ci_high": 0.76
+     },
+     "C4": {
+      "value": 0.647,
+      "ci_low": 0.429,
+      "ci_high": 0.875
+     },
+     "C5": {
+      "value": 0.647,
+      "ci_low": 0.429,
+      "ci_high": 0.875
+     },
+     "C2": {
+      "value": 0.621,
+      "ci_low": 0.444,
+      "ci_high": 0.8
+     }
+    },
+    "FPR, ordinary clean": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.75,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.5,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.5,
+      "ci_low": 0.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     }
+    },
+    "FPR, hard negatives": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.8,
+      "ci_low": 0.5,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.4,
+      "ci_low": 0.111,
+      "ci_high": 0.728
+     },
+     "C5": {
+      "value": 0.4,
+      "ci_low": 0.111,
+      "ci_high": 0.728
+     },
+     "C2": {
+      "value": 0.7,
+      "ci_low": 0.357,
+      "ci_high": 1.0
+     }
+    },
+    "Precision at 2% prevalence": {
+     "C1": null,
+     "C3": {
+      "value": 0.018,
+      "ci_low": 0.012,
+      "ci_high": 0.027
+     },
+     "C4": {
+      "value": 0.026,
+      "ci_low": 0.013,
+      "ci_high": 0.064
+     },
+     "C5": {
+      "value": 0.026,
+      "ci_low": 0.013,
+      "ci_high": 0.064
+     },
+     "C2": {
+      "value": 0.023,
+      "ci_low": 0.017,
+      "ci_high": 0.033
+     }
+    },
+    "Citation correctness": {
+     "C1": null,
+     "C3": {
+      "value": 0.632,
+      "ci_low": 0.474,
+      "ci_high": 0.8
+     },
+     "C4": {
+      "value": 0.727,
+      "ci_low": 0.437,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 0.727,
+      "ci_low": 0.437,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.049,
+      "ci_low": 0.012,
+      "ci_high": 0.084
+     }
+    },
+    "Model findings naming a violated rule": {
+     "C1": null,
+     "C3": {
+      "value": 0.375,
+      "ci_low": 0.235,
+      "ci_high": 0.538
+     },
+     "C4": {
+      "value": 0.471,
+      "ci_low": 0.235,
+      "ci_high": 0.714
+     },
+     "C5": {
+      "value": 0.471,
+      "ci_low": 0.235,
+      "ci_high": 0.714
+     },
+     "C2": {
+      "value": 0.031,
+      "ci_low": 0.008,
+      "ci_high": 0.057
+     }
+    },
+    "Exact match of cited clauses": {
+     "C1": {
+      "value": 0.412,
+      "ci_low": 0.235,
+      "ci_high": 0.588
+     },
+     "C3": {
+      "value": 0.294,
+      "ci_low": 0.147,
+      "ci_high": 0.441
+     },
+     "C4": {
+      "value": 0.471,
+      "ci_low": 0.294,
+      "ci_high": 0.647
+     },
+     "C5": {
+      "value": 0.471,
+      "ci_low": 0.294,
+      "ci_high": 0.647
+     },
+     "C2": {
+      "value": 0.088,
+      "ci_low": 0.0,
+      "ci_high": 0.176
+     }
+    },
+    "Escalation precision": {
+     "C1": null,
+     "C3": {
+      "value": 0.48,
+      "ci_low": 0.28,
+      "ci_high": 0.692
+     },
+     "C4": {
+      "value": 0.625,
+      "ci_low": 0.375,
+      "ci_high": 0.867
+     },
+     "C5": {
+      "value": 0.583,
+      "ci_low": 0.3,
+      "ci_high": 0.875
+     },
+     "C2": {
+      "value": 0.448,
+      "ci_low": 0.276,
+      "ci_high": 0.633
+     }
+    },
+    "Escalation recall": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.8,
+      "ci_low": 0.571,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.667,
+      "ci_low": 0.4,
+      "ci_high": 0.895
+     },
+     "C5": {
+      "value": 0.467,
+      "ci_low": 0.214,
+      "ci_high": 0.714
+     },
+     "C2": {
+      "value": 0.867,
+      "ci_low": 0.687,
+      "ci_high": 1.0
+     }
+    },
+    "Invoices in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 4,
+     "C2": 0
+    },
+    "True anomalies in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 3,
+     "C2": 0
+    },
+    "High or critical anomalies auto-approved": {
+     "C1": 15,
+     "C3": 3,
+     "C4": 5,
+     "C5": 5,
+     "C2": 2
+    },
+    "LLM calls per invoice": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 3.0,
+      "ci_low": 3.0,
+      "ci_high": 3.0
+     },
+     "C4": {
+      "value": 3.74,
+      "ci_low": 3.59,
+      "ci_high": 3.88
+     },
+     "C5": {
+      "value": 5.24,
+      "ci_low": 4.62,
+      "ci_high": 5.88
+     },
+     "C2": {
+      "value": 1.21,
+      "ci_low": 1.09,
+      "ci_high": 1.35
+     }
+    },
+    "Tokens per invoice": {
+     "C1": 0,
+     "C3": 9678,
+     "C4": 12562,
+     "C5": 17828,
+     "C2": 6259
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/bench_seed_101/sample34.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_101/sample34.md"
+    }
+   ],
+   "command": "python -m evaluation.run_pilot --dataset data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34",
+   "note": "Too few invoices to compare configurations: no difference between them is significant."
+  }
+ }
+}

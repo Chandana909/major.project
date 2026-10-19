@@ -7,6 +7,13 @@ policy changes are drawn in 3D with React Three Fiber.
 **Writing the paper? Start with [`RESULTS.md`](RESULTS.md):** every measured
 result, with its table, figure, source file and the command that produced it.
 
+**Reading the results with a program or another language model?** Every
+result is also in one JSON file,
+[`auditiq/results/results.json`](auditiq/results/results.json)
+(raw: https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/results.json),
+with the kind of each number, the question it answers, its source files and
+the command that produced it.
+
 | Folder | Content |
 |---|---|
 | [`auditiq/`](auditiq/README.md) | The system, the web application (`auditiq/frontend/`), the AuditIQ-Bench datasets, the evaluation harness, results and documentation. Start with its README. |

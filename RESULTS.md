@@ -19,6 +19,15 @@ end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 (Section 2). The language-model stages have been run only on samples (20 and
 34 invoices), with a local 7B model on a laptop CPU (Section 7).
 
+**For programs and other language models:** every result in this document
+is also in one machine-readable file, `auditiq/results/results.json`
+(https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/results.json), built from the result files by
+`python -m evaluation.collect_results` and checked against them by a test.
+Each entry gives its kind (measured, pilot or sample), the question it
+answers, the numbers, the source files with their public raw URLs, and the
+command that produced them. This document itself is at
+https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
+
 **Before the paper is submitted, the team still has to:**
 
 1. Read the two base papers in full and correct Section III of the paper where
@@ -63,6 +72,7 @@ end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 | 9 | Can a model read a policy written in its own words? | 6 documents, 84 values: 80 proposed correctly; the code check verified 56, held back 24 right ones, caught 2 wrong ones and passed 2. | Measured (one 7B model) | 6 |
 | 10 | How do the language-model stages do? | Benchmark sample of 34 invoices: the agents (C3) found 12 of 20 judgement anomalies (0.600); 0.375 of their findings name a violated rule (0.471 with the challenger); the single prompt (C2) found 4 of 20 and 4 of its 128 findings name a violated rule. 3 to 5 model calls per invoice. No difference is significant on 34 invoices. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
+| 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
 
 ## 2. Data
 
@@ -228,6 +238,42 @@ invoices with storage of every result, finding and trail entry (SQLite) took
 development laptop and depend on its load: a run on the same day while the
 language model was busy took 169 s and 90 s. Write "under a minute", not a
 precise figure.
+
+### 3.6 Every ledger through the deployed system (Measured)
+
+Source: `results/ledger_runs.md` and `results/ledger_runs.json`,
+`python -m evaluation.ledger_runs`. Each of the six ledgers is written as an
+Excel workbook and loaded from it through the checked import, version 2.5 is
+active, and every invoice is audited with the controls (C1) through the data
+store, which keeps every result, finding and trail entry; the outcome is read
+back from the store as the review queue reads it. No language model is used.
+
+| Ledger | Invoices | Findings | Escalated to review | Approved automatically | Amount waiting for review (INR) |
+|---|---|---|---|---|---|
+| bench_seed_101 | 5,000 | 300 | 240 | 4,760 | 66,974,539 |
+| bench_seed_202 | 5,000 | 300 | 240 | 4,760 | 85,968,710 |
+| bench_seed_303 | 5,000 | 300 | 240 | 4,760 | 73,574,489 |
+| large_seed_505 | 20,000 | 300 | 240 | 19,760 | 68,552,886 |
+| pilot_seed_909 | 5,000 | 300 | 240 | 4,760 | 62,387,249 |
+| swap_seed_404 | 5,000 | 150 | 150 | 4,850 | 21,920,589 |
+
+Against the answer key, which the audit never reads (escalated / with a
+finding / invoices of each kind):
+
+| Ledger | Rule-defined anomalies | Judgement anomalies | Hard negatives | Ordinary invoices |
+|---|---|---|---|---|
+| bench_seed_101 | 240 / 300 / 300 | 0 / 0 / 120 | 0 / 0 / 120 | 0 / 0 / 4,460 |
+| bench_seed_202 | 240 / 300 / 300 | 0 / 0 / 120 | 0 / 0 / 120 | 0 / 0 / 4,460 |
+| bench_seed_303 | 240 / 300 / 300 | 0 / 0 / 120 | 0 / 0 / 120 | 0 / 0 / 4,460 |
+| large_seed_505 | 240 / 300 / 300 | 0 / 0 / 120 | 0 / 0 / 240 | 0 / 0 / 19,340 |
+| pilot_seed_909 | 240 / 300 / 300 | 0 / 0 / 120 | 0 / 0 / 120 | 0 / 0 / 4,460 |
+| swap_seed_404 | 150 / 150 / 150 | - | - | 0 / 0 / 4,850 |
+
+- Every rule-defined anomaly gets a finding (300 of 300 on each benchmark ledger). 240 are escalated (90 critical, 150 high); the other 60 carry only low or medium findings (GSTIN format or state code, a weekend date, a round amount), score below 50 and are approved with the finding recorded.
+- No hard negative and no ordinary invoice gets a finding.
+- The judgement anomalies get no finding from the controls; they are the task of the language-model agents (Section 7).
+- The counts agree with the evaluation harness (Section 4): 300 invoices flagged on each ledger of 5,000 (a flagged share of 0.060), recall 0.714 of the 420 anomalous invoices at precision 1.000.
+- Loading took 12.8 to 16.9 s for a workbook of 5,000 invoices and the stored audit 20.2 to 24.6 s on the laptop.
 
 ## 4. Controls against classical anomaly detectors
 
@@ -543,7 +589,7 @@ The paper draws its own figures in TikZ and pgfplots from the same numbers
 
 ## 13. How to reproduce every number
 
-From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 need no model.
+From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8, 13 and 14 need no model.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -559,6 +605,8 @@ From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 need no model.
 | 10 | `python -m evaluation.policy_llm_eval` (chat model) | `results/policy_llm.*` |
 | 11 | `python -m evaluation.run_pilot ... --tag pilot20` and `... --tag sample34` (chat model) | `results/pilot_seed_909/pilot20.md`, `results/bench_seed_101/sample34.md` |
 | 12 | `python -m evaluation.figures` | `results/figures/*.png` |
+| 13 | `python -m evaluation.ledger_runs` | `results/ledger_runs.*` |
+| 14 | `python -m evaluation.collect_results` (after the others) | `results/results.json` |
 
 Model replies are cached (`.auditiq/`), so re-running step 10 or 11 on the same
 machine reuses them; on another machine the model must be configured
@@ -573,6 +621,13 @@ reports how much the timings moved). Steps 9 and 10 were run again with every
 chat reply taken from the cache and new model calls blocked (the embeddings of
 step 9 were computed afresh): both results are identical to the committed ones.
 Step 11, about 12 hours of model time, was not repeated; its reports are
-computed from the per-invoice records stored next to them (`*.jsonl`). The Python test
+computed from the per-invoice records stored next to them (`*.jsonl`).
+
+**Final re-run, 19 October 2026.** After the ledger import was added, steps 1
+to 8 were run once more with the final code, from datasets regenerated into a
+separate folder: again 54 of 54 dataset files identical byte for byte, and
+every result file identical to the committed one apart from dates and timings
+(the scalability rerun, under load, again found the same 16,840 findings in
+every row). Step 13 was run for the first time on that day. The Python test
 suite (SQLite and PostgreSQL) and the frontend checks (lint, types, tests,
 build, dependency audit) passed.

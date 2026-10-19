@@ -137,7 +137,9 @@ and audit tables that a dataset folder does not have.
 ## What has been measured, and what has not
 
 Every result, with its table, its source file and the command that produced it, is collected in
-[`../RESULTS.md`](../RESULTS.md): the one document to read while writing the paper.
+[`../RESULTS.md`](../RESULTS.md): the one document to read while writing the paper. The same results in
+one machine-readable file: [`results/results.json`](results/results.json)
+(`python -m evaluation.collect_results`, checked against its sources by a test).
 
 Measured, by scripts in this repository:
 
@@ -154,6 +156,9 @@ Measured, by scripts in this repository:
   (`python -m evaluation.policy_robustness`).
 - **A policy change in the application**, with storage, on the 20,000-invoice
   ledger: `results/application_demo.md` (`python -m evaluation.application_demo`).
+- **Every ledger through the deployed system**: each of the six ledgers loaded
+  from an Excel workbook and audited through the store, with the review queue
+  and the answer key: `results/ledger_runs.md` (`python -m evaluation.ledger_runs`).
 - **Policy retrieval** on 48 fixed questions, lexical, dense and hybrid, with
   and without question rewriting: `results/retrieval.md`.
 - **The vendor-history cap** against the labels: `results/history_cap.md`.
