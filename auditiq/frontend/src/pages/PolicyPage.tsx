@@ -4,7 +4,7 @@ import type { Hit, Job, Preview, Proposal } from "../api/types";
 import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, SeverityBadge } from "../components/ui";
 import { count } from "../lib/format";
 import { changeRows } from "../lib/policy";
-import { useApi } from "../lib/useApi";
+import { notifyStoreChanged, useApi } from "../lib/useApi";
 
 function ProposalForm({ proposal, uploadId, onAdopted }: { proposal: Proposal; uploadId: string; onAdopted: (v: string) => void }) {
   const [reviewer, setReviewer] = useState("");
@@ -276,6 +276,7 @@ export function PolicyPage() {
   const changed = (message: string) => {
     setNotice(message);
     policy.reload();
+    notifyStoreChanged();
   };
 
   const apply = async () => {

@@ -2,6 +2,8 @@
 
 Set up the database (ledger, policy versions, policy PDFs):
     python -m auditiq setup --dataset data/large_seed_505
+    python -m auditiq ledger import ledger.xlsx            replace the ledger (workbook, .zip of CSVs or folder)
+    python -m auditiq ledger export data/large_seed_505 ledger.xlsx
 
 Audit:
     python -m auditiq run --config C1                      every invoice, controls only
@@ -40,7 +42,7 @@ from pathlib import Path
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from . import copilot, db, policy_extract, policy_ingest, policy_llm, service
+from . import copilot, db, ledger_import, policy_extract, policy_ingest, policy_llm, service
 from .audit_pack import render_markdown
 from .config import configure_logging
 from .extraction import extract
@@ -71,7 +73,13 @@ def table(rows: list[dict], columns: list[str]) -> str:
 # ------------------------------------------------------------------- setup
 def cmd_setup(args: argparse.Namespace) -> int:
     conn = open_db(args)
-    counts = db.load_dataset(conn, Path(args.dataset))
+    ledger = ledger_import.read(Path(args.dataset), conn)
+    if not ledger.usable:
+        for problem in ledger.problems:
+            print(f"problem: {problem}", file=sys.stderr)
+        print("the ledger was not loaded", file=sys.stderr)
+        return 1
+    counts = ledger_import.load(conn, ledger)
     print(f"ledger loaded from {args.dataset}: " + ", ".join(f"{n} {t}" for t, n in counts.items()))
     for version in args.policies:
         db.store_policy(conn, load_policy(version), active=(version == args.policies[0]))
@@ -88,6 +96,32 @@ def cmd_setup(args: argparse.Namespace) -> int:
         print("no embedding model configured (AUDITIQ_EMBED_MODEL): policy search is lexical only")
     else:
         print(f"embedded {embed_chunks(conn, embedder)} chunks with {embedder.name}")
+    return 0
+
+
+def cmd_ledger(args: argparse.Namespace) -> int:
+    if args.action == "export":
+        if len(args.arguments) != 2:
+            print("give the dataset folder and the workbook to write", file=sys.stderr)
+            return 2
+        print(f"wrote {ledger_import.export_workbook(*args.arguments)}")
+        return 0
+    if len(args.arguments) != 1:
+        print("give one workbook, zip archive or dataset folder", file=sys.stderr)
+        return 2
+    conn = open_db(args)
+    ledger = ledger_import.read(Path(args.arguments[0]), conn)
+    for problem in ledger.problems:
+        print(f"problem: {problem}", file=sys.stderr)
+    if not ledger.usable:
+        print("the ledger was not loaded", file=sys.stderr)
+        return 1
+    if args.action == "check":
+        print(f"{ledger.name}: usable; " + ", ".join(f"{n} {t}" for t, n in ledger.counts().items()))
+        return 0
+    counts = ledger_import.load(conn, ledger)
+    print(f"ledger {ledger.name} loaded: " + ", ".join(f"{n} {t}" for t, n in counts.items()))
+    print("the previous ledger and its audit results were replaced; audit it with `run --config C1`")
     return 0
 
 
@@ -387,9 +421,16 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="command", required=True)
 
     setup = sub.add_parser("setup", help="load a dataset, the policy versions and the policy PDFs into the database")
-    setup.add_argument("--dataset", required=True, help="folder with the five record tables as CSV")
+    setup.add_argument("--dataset", required=True, help="folder with the five record tables as CSV, a .zip "
+                                                     "archive of them, or an .xlsx workbook with one sheet each")
     setup.add_argument("--policies", nargs="+", default=["2.5", "2.6"], help="versions to store; the first is active")
     setup.set_defaults(run=cmd_setup)
+
+    led = sub.add_parser("ledger", help="check or import a ledger (workbook, zip of CSVs, folder); export one")
+    led.add_argument("action", choices=["check", "import", "export"])
+    led.add_argument("arguments", nargs="+", help="check/import: the ledger; export: the dataset folder and "
+                                                  "the workbook to write")
+    led.set_defaults(run=cmd_ledger)
 
     pol = sub.add_parser("policy", help="policy documents: make-pdfs, ingest, adopt, embed, activate, search")
     pol.add_argument("action", choices=["make-pdfs", "ingest", "adopt", "embed", "activate", "search"])

@@ -38,7 +38,7 @@ erDiagram
 
 ## Ledger
 
-The records under audit. They are loaded from the five CSV files of a dataset by `python -m auditiq setup --dataset <folder>` and are never changed by the audit.
+The records under audit. They are loaded from the five CSV files of a dataset by `python -m auditiq setup --dataset <folder>`, or from a workbook or zip archive of the same tables (`ledger import`, the web application), and are never changed by the audit.
 
 ### `vendor_master`
 

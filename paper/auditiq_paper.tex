@@ -59,28 +59,16 @@
 
 \title{A Distributed Multi-Agent AI Platform for Scalable Forensic Audit and Compliance}
 
-\author{\IEEEauthorblockN{Podichetty Samiksha}
-\IEEEauthorblockA{\textit{Department of Information Technology} \\
-\textit{Chaitanya Bharathi Institute of Technology}\\
-Hyderabad, Telangana, India \\
-samiksha10.1b@gmail.com}
-\and
-\IEEEauthorblockN{Chandana Devanaboyina}
-\IEEEauthorblockA{\textit{Department of Information Technology} \\
-\textit{Chaitanya Bharathi Institute of Technology}\\
-Hyderabad, Telangana, India \\
-chandanad3884@gmail.com}
-\and
-\IEEEauthorblockN{Medapally Shiva Reddy}
-\IEEEauthorblockA{\textit{Department of Information Technology} \\
-\textit{Chaitanya Bharathi Institute of Technology}\\
-Hyderabad, Telangana, India}
+\author{\IEEEauthorblockN{Podichetty Samiksha, Chandana Devanaboyina and Medapally Shiva Reddy}
+\IEEEauthorblockA{\textit{Department of Information Technology, Chaitanya Bharathi Institute of Technology}\\
+Hyderabad, Telangana, India\\
+samiksha10.1b@gmail.com, chandanad3884@gmail.com}
 }
 
 \maketitle
 
 \begin{abstract}
-Auditing procurement means checking every vendor invoice against its purchase order, goods receipt, vendor record and approval trail, and justifying each exception against a written policy. AuditBench shows that large language models (LLMs) find injected errors in financial data but explain them poorly and rarely cite the governing standard; a survey of LLM-based multi-agent systems in finance shows that systems of specialised agents suit interactive financial tasks. We present AuditIQ, a platform for the forensic audit of procurement transactions built as separate services: audit workers, a policy service, a data store, a model endpoint, and a REST API with a web application for reviewers. Its base is a multi-agent audit pipeline that follows these two works, and we add one feature: \emph{policy-driven deterministic controls}. The system reads the organisation's policy PDF, takes every threshold from the wording of the rule that states it, and twelve controls execute these thresholds before any LLM is called; no threshold is written in code or in a prompt. Given fourteen policy documents, the system read 196 of 196 thresholds correctly and decided all 40{,}000 invoices of five synthetic ledgers as each policy requires, whereas the same controls with frozen thresholds decided up to 30.7\% of them against the policy in force; twenty further documents drawn at random were also read and followed without a wrong decision. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000, against 0.536 and 0.498 for an isolation forest and a one-class SVM, and the control stage audited 172{,}000 invoices per second with eight processes on one laptop. With a local 7B model, a model-assisted reader proposed 80 of 84 thresholds of six free-form policies correctly, and on a 34-invoice sample of a benchmark ledger the LLM agents found 12 of 20 judgement anomalies, while only 0.375 of their findings named the violated rule. The LLM stages have not been measured at benchmark scale; for them we state expected values fixed before measurement.
+Procurement audit checks every invoice against its purchase order, goods receipt, vendor record and approval trail, and justifies each exception against a written policy. AuditBench shows that large language models (LLMs) find errors in financial data but rarely cite the governing standard, and a survey shows that specialised LLM agents suit financial tasks. We present AuditIQ, a platform for forensic procurement audit built as separate services, whose base is a multi-agent audit pipeline following these two works. We add one feature, \emph{policy-driven deterministic controls}: the system reads the organisation's policy PDF, takes every threshold from the wording of its rule, and twelve controls execute these thresholds before any LLM is called; no threshold is written in code or in a prompt. Given fourteen policy documents, the system read 196 of 196 thresholds correctly and decided all 40{,}000 invoices of five synthetic ledgers as each policy requires, whereas frozen thresholds decided up to 30.7\% of them wrongly; twenty held-out random documents were followed without error. On three benchmark ledgers the controls reached an F1 of 0.833 at a precision of 1.000, against 0.536 and 0.498 for an isolation forest and a one-class SVM, and audited 172{,}000 invoices per second with eight processes on one laptop. On a 34-invoice benchmark sample, agents using a local 7B model found 12 of 20 judgement anomalies, and 0.375 of their findings named the violated rule. For the LLM stages at benchmark scale we state expected values, fixed before measurement.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -103,7 +91,7 @@ This paper presents AuditIQ, a multi-agent platform for forensic audit and compl
 \item twelve deterministic controls execute the registry before any LLM is called, and contain no constant of their own;
 \item a document that the system cannot execute is refused with the reason.
 \end{itemize}
-The feature is implemented, tested and measured (Sections~\ref{sec:feature}--\ref{sec:results}), including its throughput against the number of worker processes and the size of the ledger. We also measure the controls against two classical anomaly detectors, a model-assisted reading of policies written in free prose with verification by code and confirmation by a person, and, as a pilot on 20 invoices, every LLM stage of the base system with a local model. The paper reports these measured results and, separately and clearly marked, expected values for what has not been measured.
+The feature is implemented, tested and measured (Sections~\ref{sec:feature}--\ref{sec:results}), including its throughput against the number of worker processes and the size of the ledger. We also measure the controls against two classical anomaly detectors, a model-assisted reading of policies written in free prose with verification by code and confirmation by a person, and, on a pilot of 20 invoices and a sample of 34 invoices of a benchmark ledger, every LLM stage of the base system with a local model. The paper reports these measured results and, separately and clearly marked, expected values for what has not been measured.
 
 \subsection{Organisation}
 Section~II reviews related work. Section~III presents the two base papers. Section~IV describes the base system and Section~V the extra feature. Section~VI gives the implementation and technology stack, Section~VII the experimental setup, and Section~VIII the measured and the expected results. Sections~IX and~X give limitations and conclusions.
@@ -410,7 +398,7 @@ Policies in free prose (extension) & LLM; Python verification & The model propos
 Pipeline orchestration & LangGraph~\cite{langgraph} & Graph of stages; parallel agents; pause for the reviewer & Implemented \\
 Specialist agents and challenger & LLM behind an OpenAI-compatible endpoint & Judgement rules; removal of unsupported findings & Implemented; pilot (20) and sample (34) \\
 Risk score and route & Python & Equation~\eqref{eq:score} and the threshold of 50 & Implemented \\
-REST API & FastAPI~\cite{fastapi}, Uvicorn & Ledger, results, review, policy adoption and copilot over HTTP; background jobs; optional bearer token & Implemented, tested \\
+REST API & FastAPI~\cite{fastapi}, Uvicorn & Ledger upload, results, review, policy adoption and copilot over HTTP; background jobs; optional bearer token & Implemented, tested \\
 Web application & React, TypeScript, React Three Fiber~\cite{r3f}, three.js~\cite{threejs} & Review queue, audit packs, policy adoption, results; 3D views of vendor risk, of the pipeline and of the policy change & Implemented, tested \\
 Lightweight dashboard & Streamlit & The same review work in a simpler interface & Implemented \\
 \addlinespace
@@ -431,14 +419,14 @@ Tests & pytest; Vitest, Testing Library & Python suite on SQLite and PostgreSQL;
 \textit{Finding.} A finding holds the rule, the severity, the name of the control, a sentence that states the exception, the evidence as pairs of field and value, and the citation (document and page).
 
 \subsection{Operation}
-Adopting a policy document is one command, or one upload in the web application; auditing the ledger is a second. No code and no prompt is edited when the policy changes. The prompts of the model stages contain no threshold and no rule number; the policy text is inserted at run time. An agent sees at most 40 of the vendor's other invoices per selection rule, and a reply that is not valid JSON is sent back once for repair. Every audit stores, for each invoice, the result, the findings and one audit-trail entry per stage, together with the policy version that was applied.
+Adopting a policy document is one command, or one upload in the web application; auditing the ledger is a second. A ledger is loaded the same way, from an Excel workbook with one sheet per table or a zip archive of CSV files; it is checked (tables, columns, identifiers, amounts, dates and references) before it replaces the current one. No code and no prompt is edited when the policy changes. The prompts of the model stages contain no threshold and no rule number; the policy text is inserted at run time. An agent sees at most 40 of the vendor's other invoices per selection rule, and a reply that is not valid JSON is sent back once for repair. Every audit stores, for each invoice, the result, the findings and one audit-trail entry per stage, together with the policy version that was applied.
 
 \subsection{Web Application}
 \label{sec:web}
 Reviewers work in a browser application written in React and TypeScript that uses only the REST API. Its pages are an overview of the audit; the review queue; the audit pack of one invoice, with each finding, its evidence and citation, the audit trail and the decision form; the policy, where a new document is uploaded, the changes it makes are shown before it is adopted, and a document in free prose is read by the model and confirmed by the reviewer; a copilot that answers with citations; the pipeline; and the measured results. Three views are three-dimensional, drawn with React Three Fiber~\cite{r3f} on three.js~\cite{threejs}: a \emph{risk constellation} that places every vendor in the sector of its spending category, at a height given by the highest risk among its invoices and with a size that grows with its number of invoices, drawn as one instanced mesh so that the number of vendors does not change the number of draw calls; the pipeline as a graph whose stages light up for the chosen configuration; and the share of invoices that a frozen system decides against each policy. Every 3D view has a table with the same data beside it, and a fallback for browsers without WebGL. The API compares its bearer token in constant time, accepts only PDF uploads of up to 20~MB, and validates every request body.
 
 \subsection{Testing}
-The Python test suite (316 tests, each backend counted separately) runs on SQLite and on PostgreSQL. The 26 tests of the web application cover the API client, every page against a mocked API, and the three 3D scenes, which React Three Fiber's test renderer draws without a graphics processor. Continuous integration runs both suites, the linters, a production build and a check of the shipped packages for known vulnerabilities on every change. No test calls a model: where a stage needs one, a scripted stand-in replies, so the tests check what the pipeline asks and how it handles the reply, not how well a model audits.
+The Python test suite (327 tests, each backend counted separately) runs on SQLite and on PostgreSQL. The 28 tests of the web application cover the API client, every page against a mocked API, and the three 3D scenes, which React Three Fiber's test renderer draws without a graphics processor. Continuous integration runs both suites, the linters, a production build and a check of the shipped packages for known vulnerabilities on every change. No test calls a model: where a stage needs one, a scripted stand-in replies, so the tests check what the pipeline asks and how it handles the reply, not how well a model audits.
 
 % ---------------------------------------------------------------------------
 \section{Experimental Setup}
@@ -764,7 +752,7 @@ To see the LLM stages on data that played no part in their development, we ran a
 \toprule
  & C1 & C2 & C3 & C4 & C5 \\
 \midrule
-Judgement anomalies found & 0.000 & 0.200 & 0.600 & 0.400 & 0.400 \\
+Share of judgement anomalies found & 0.000 & 0.200 & 0.600 & 0.400 & 0.400 \\
 \quad J1 / J2 / J3 / J4 (of 5 each) & 0/0/0/0 & 0/0/0/4 & 5/2/1/4 & 1/2/1/4 & 1/2/1/4 \\
 Hard negatives flagged (of 10) & 0 & 7 & 8 & 4 & 4 \\
 Ordinary invoices flagged (of 4) & 0 & 4 & 3 & 2 & 2 \\
@@ -789,10 +777,10 @@ The sample agrees with the pilot: with the controls first, the model's errors ar
 
 \subsection{Expected Results for What Is Not Yet Measured}
 \label{sec:expected}
-An earlier version of this table expected an adherence of 1.000 for a further policy in the template's wording (X1); that has since been measured on twenty held-out documents (Section~\ref{sec:heldout}), and the value is 1.000. The LLM stages of the base system have been run only in the pilot of Section~\ref{sec:pilot}, which is too small to measure them. Table~\ref{tab:expected} states what we expect on the benchmark ledgers, with the basis of each expectation and the observation that would refute it; the last column shows what the pilot observed, for orientation only. \emph{The expected values are fixed before measurement. They are not results.}
+An earlier version of this table expected an adherence of 1.000 for a further policy in the template's wording (X1); that has since been measured on twenty held-out documents (Section~\ref{sec:heldout}), and the value is 1.000. The LLM stages of the base system have been run only on the pilot of Section~\ref{sec:pilot} and the sample of Section~\ref{sec:sample}, which are too small to measure them. Table~\ref{tab:expected} states what we expect on the benchmark ledgers, with the basis of each expectation and the observation that would refute it; the last column shows what the sample and the pilot observed, for orientation only. \emph{The expected values are fixed before measurement. They are not results.}
 
 \begin{table*}[t]
-\caption{Expected Values (Not Measured), Fixed Before Measurement, With the Observation of the 20-Invoice Pilot for Orientation}
+\caption{Expected Values (Not Measured), Fixed Before Measurement, With the Observations of the 34-Invoice Sample and the 20-Invoice Pilot for Orientation}
 \label{tab:expected}
 \centering
 \footnotesize

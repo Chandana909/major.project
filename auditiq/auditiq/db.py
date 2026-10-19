@@ -509,16 +509,23 @@ def load_dataset(db: Database, dataset: Path, replace: bool = True) -> dict[str,
     labels) are cleared first, so the database holds exactly one ledger.
     """
     dataset = Path(dataset)
+    names = LEDGER_TABLES + (["labels"] if (dataset / "labels.csv").exists() else [])
+    frames = {name: pd.read_csv(dataset / f"{name}.csv", dtype=str, keep_default_na=False, encoding="utf-8")
+              for name in names}
+    return load_frames(db, frames, dataset.name, replace=replace)
+
+
+def load_frames(db: Database, frames: dict[str, pd.DataFrame], name: str, replace: bool = True) -> dict[str, int]:
+    """Load the record tables of a ledger given as text frames (see ``load_dataset``); ``name`` is recorded."""
     if replace:
         for table in ["review_decisions", "audit_trail", "audit_flags", "audit_results", "audit_runs",
                       "benchmark_labels", "approval_logs", "invoices", "goods_receipts", "purchase_orders",
                       "vendor_master"]:
             db.execute(f"DELETE FROM {table}")
     counts = {}
-    names = LEDGER_TABLES + (["labels"] if (dataset / "labels.csv").exists() else [])
-    for name in names:
-        table = "benchmark_labels" if name == "labels" else name
-        frame = pd.read_csv(dataset / f"{name}.csv", dtype=str, keep_default_na=False, encoding="utf-8")
+    for source in [n for n in LEDGER_TABLES + ["labels"] if n in frames]:
+        table = "benchmark_labels" if source == "labels" else source
+        frame = frames[source]
         kinds = db.columns(table)
         frame = frame[[c for c in frame.columns if c in kinds]]
         rows = []
@@ -541,7 +548,7 @@ def load_dataset(db: Database, dataset: Path, replace: bool = True) -> dict[str,
         db.executemany(f"INSERT INTO {table} ({', '.join(frame.columns)}) VALUES ({marks})", rows)
         counts[table] = len(rows)
     db.execute("INSERT INTO meta (key, value) VALUES ('dataset', ?) "
-               "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (dataset.name,))
+               "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (name,))
     db.commit()
     return counts
 

@@ -487,9 +487,10 @@ experimental results.
 |---|---|
 | Pipeline | LangGraph state graph; configurations C1 to C5 are subsets of its stages |
 | Store | SQLite or PostgreSQL 17, same schema; every result, finding (with evidence), challenger removal and trail entry is stored; results are never replaced |
-| REST API | FastAPI, 21 endpoints, background jobs, optional bearer token (constant-time comparison), PDF upload checks |
+| REST API | FastAPI, 22 endpoints, background jobs, optional bearer token (constant-time comparison), checks on every upload |
+| Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
 | Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | Python suite on SQLite and PostgreSQL; 26 frontend tests including the 3D scenes; no test calls a model |
+| Tests | 327 Python tests on SQLite and PostgreSQL (324 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; no test calls a model |
 | Continuous integration | GitHub Actions: Python (ruff, tests on both backends) and frontend (lint, types, tests, build, dependency audit) |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 

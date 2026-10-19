@@ -105,7 +105,7 @@ Part & Content & Status \\
 \midrule
 A & Work that needs no model: datasets, controls, classical baselines, policy reading, policy change, scalability, policy search. & Done and measured (Section~\ref{sec:measured}). \\
 B & The language-model pipeline: specialist agents, challenger, agreement re-runs, configurations C1 to C5, batch runner. & Built and tested with a scripted model. Run with a local 7B model on a pilot of 20 invoices and on a sample of 34 invoices of benchmark ledger 101. Full benchmark ledgers wait for a faster model endpoint. \\
-C & The application: the database on SQLite and PostgreSQL, the review queue and decisions, policy adoption, the copilot, the Streamlit dashboard, the REST API and the web application with 3D views. & Built. 316 Python test cases and 26 frontend tests. Continuous integration passes. All seven pages were checked in a browser. \\
+C & The application: the database on SQLite and PostgreSQL, the review queue and decisions, policy adoption, the copilot, the Streamlit dashboard, the REST API, the web application with 3D views, and loading a ledger from Excel or a zip archive. & Built. 327 Python test cases and 28 frontend tests. Continuous integration passes. All seven pages were checked in a browser. \\
 D & The paper: measured results, expected values, references. & Updated to 13 pages, with the held-out, robustness and benchmark-sample results. It waits for the team's review and for the template of the target venue. \\
 \bottomrule
 \end{tabular}
@@ -462,7 +462,7 @@ The base system is the multi-agent pipeline. The features below are what this pr
 \textbf{Status and evidence.} Retrieval was measured on 48 fixed questions: 16 in the policy's own wording and 32 paraphrases. The lexical ranking finds every question in the policy's wording at rank 1. On the held-out paraphrases, hybrid ranking with question rewriting finds the right passage at rank 1 for 0.625 of the questions and within the top three for 0.938 (16 questions). In a real check, the first answer named the wrong rule, because retrieval by the question's wording ranked the duplicate-invoice rules first. Placing the passages of the cited rules first corrected the answer.
 
 \subsection{F7 REST API with background jobs}
-\textbf{What it does.} The REST API exposes the ledger, the review, the policy, the copilot and the measured results over HTTP. It has 21 endpoints (Appendix~\ref{app:api}), and its description is served at \texttt{/api/docs}.
+\textbf{What it does.} The REST API exposes the ledger, the review, the policy, the copilot and the measured results over HTTP. It has 22 endpoints (Appendix~\ref{app:api}), and its description is served at \texttt{/api/docs}.
 
 \textbf{Input and output.} The requests are JSON, validated and length-limited, except for the policy upload, which is multipart. The responses are JSON; errors carry a message in \texttt{detail}.
 
@@ -479,7 +479,7 @@ The base system is the multi-agent pipeline. The features below are what this pr
 
 \textbf{Technology.} React 18 with TypeScript, Vite, React Router 7, three.js~\cite{threejs} and React Three Fiber~\cite{r3f} with drei. The constellation draws all vendors as one instanced mesh, with one colour per vendor.
 
-\textbf{Status and evidence.} Built and tested: 26 frontend tests, including the three 3D scenes, rendered with React Three Fiber's test renderer. Lint, type checking, the production build and the dependency audit are clean. All seven pages were checked in a browser. The 3D library is in its own bundle of about 822\,kB (221\,kB gzipped), which loads only with the Overview, Pipeline and Results pages.
+\textbf{Status and evidence.} Built and tested: 28 frontend tests, including the three 3D scenes, rendered with React Three Fiber's test renderer. Lint, type checking, the production build and the dependency audit are clean. All seven pages were checked in a browser. The 3D library is in its own bundle of about 822\,kB (221\,kB gzipped), which loads only with the Overview, Pipeline and Results pages.
 
 \subsection{F9 Two storage backends and bulk processing}
 \textbf{What it does.} The same schema runs on SQLite, a single file that is the default, and on PostgreSQL 17, a server for several users. Money is \texttt{NUMERIC} on PostgreSQL and \texttt{REAL} on SQLite; the application sees floats and ISO dates either way.
@@ -489,6 +489,13 @@ The base system is the multi-agent pipeline. The features below are what this pr
 \textbf{Status and evidence.} Measured: a batch audit of 20,000 invoices under C1 on PostgreSQL took 2 minutes 58 seconds after bulk extraction, against 4 minutes 57 seconds before. A test opens 32 connections at once to guard against the deadlock.
 
 % ---------------------------------------------------------- 5 measured
+\subsection{F10 Loading a ledger from Excel or a zip archive}
+\textbf{What it does.} An organisation brings its own ledger: an Excel workbook with one sheet per table (vendors, purchase orders, goods receipts, invoices, approval log), a \texttt{.zip} archive of the same tables as CSV files, or a folder of them. It is loaded from the Overview page of the web application or of the dashboard, or with \texttt{python -m auditiq ledger import}.
+
+\textbf{Logic.} The ledger is checked before anything is replaced: every table and column is present, every identifier is filled and unique, amounts and dates can be read, and every reference the store enforces points to a record of the ledger. A ledger with any problem is refused with the list of problems. An invoice may name a purchase order that does not exist; that is the exception of rule 2.1.3, not a defect of the file. Spreadsheet cells (dates, numbers, true or false) are read as the text a CSV file would hold. Loading replaces the previous ledger with its results, so the application asks for confirmation, and then offers to audit the new ledger with the controls.
+
+\textbf{Status and evidence.} Built and tested: all six datasets pass the checks; a workbook and a zip archive give exactly the CSV ledger; a workbook typed by hand, with real dates and numbers, is audited with exactly the same findings as the CSV ledger; defective ledgers are refused with their reasons and nothing is replaced. Checked in the browser: a 40-invoice ledger uploaded, loaded and audited.
+
 \section{Measured results}
 \label{sec:measured}
 Each table below is read from the files that the scripts write under \texttt{results/}, named in its caption. Intervals are 95\% bootstrap intervals over invoices, with 1,000 resamples, where they are shown.
@@ -651,8 +658,8 @@ Table~\ref{tab:quality} lists the checks run on the code and the results, and th
 \toprule
 Check & Result \\
 \midrule
-Python tests & 316 test cases collected. 313 pass and 3 are skipped on the development laptop. One of the skipped tests is skipped on PostgreSQL by design, so it is also skipped in continuous integration. \\
-Frontend tests & 26 pass (Vitest, Testing Library, and the three 3D scenes). \\
+Python tests & 327 test cases collected. 324 pass and 3 are skipped on the development laptop. One of the skipped tests is skipped on PostgreSQL by design, so it is also skipped in continuous integration. \\
+Frontend tests & 28 pass (Vitest, Testing Library, and the three 3D scenes). \\
 API tests & 10 test functions: nine run on SQLite and on PostgreSQL, and one checks the answer when the database is unreachable. \\
 Lint and types & ruff is clean for the Python code; ESLint and the TypeScript check are clean for the frontend. \\
 Dependencies and build & \texttt{npm audit} reports no known vulnerability; the production build succeeds. \\
@@ -690,7 +697,7 @@ End-to-end check & All six datasets regenerated: 54 of 54 files identical byte f
 \section{REST API endpoints}
 \label{app:api}
 \begin{table}[htbp]
-\caption{The 21 endpoints of the REST API. Endpoints marked as jobs answer with status 202 and a job identifier.}
+\caption{The 22 endpoints of the REST API. Endpoints marked as jobs answer with status 202 and a job identifier.}
 \label{tab:api}
 \centering
 \small
@@ -714,6 +721,7 @@ Method and path & Purpose \\
 \texttt{POST /api/policy/propose} & A model reads a document in its own wording (job) \\
 \texttt{POST /api/policy/confirm} & Adopt a proposal after the reviewer's confirmation \\
 \texttt{POST /api/policy/apply} & Re-audit the ledger under the active version (job) \\
+\texttt{POST /api/ledger} & Upload a ledger (workbook or zip archive); checked, then loaded (job) \\
 \texttt{GET /api/search} & Search the policy documents \\
 \texttt{POST /api/copilot/ask} & A policy or invoice question, with citations (job) \\
 \texttt{POST /api/copilot/data} & A question about the data, answered by one checked query (job) \\
@@ -757,7 +765,11 @@ python -m auditiq run --config C1
 cd frontend && npm ci && npm run build && cd ..
 python -m auditiq serve
 \end{verbatim}
-The web application is then at \url{http://127.0.0.1:8000}, and the API description at \url{http://127.0.0.1:8000/api/docs}. The documents in \texttt{auditiq/docs}, namely \texttt{WEB.md}, \texttt{OPERATIONS.md} and \texttt{ARCHITECTURE.md}, give the details.
+The web application is then at \url{http://127.0.0.1:8000}, and the API description at \url{http://127.0.0.1:8000/api/docs}. A ledger of the organisation's own, an Excel workbook or a \texttt{.zip} archive of the CSV files, replaces the sample one on the Overview page, or with
+\begin{verbatim}
+python -m auditiq ledger import ledger.xlsx
+\end{verbatim}
+The documents in \texttt{auditiq/docs}, namely \texttt{WEB.md}, \texttt{OPERATIONS.md} and \texttt{ARCHITECTURE.md}, give the details.
 
 % ---------------------------------------------------------------- references
 \section*{References}

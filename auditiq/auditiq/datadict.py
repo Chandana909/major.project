@@ -25,7 +25,8 @@ AUDITED = {"vendor_master": VENDOR_FIELDS, "purchase_orders": PO_FIELDS, "goods_
 
 GROUPS = [
     ("Ledger", "The records under audit. They are loaded from the five CSV files of a dataset by "
-               "`python -m auditiq setup --dataset <folder>` and are never changed by the audit.",
+               "`python -m auditiq setup --dataset <folder>`, or from a workbook or zip archive of the same tables "
+               "(`ledger import`, the web application), and are never changed by the audit.",
      ["vendor_master", "purchase_orders", "goods_receipts", "invoices", "approval_logs"]),
     ("Policy", "The policy the audit applies: the clause registry and the rendered text of every version, and the "
                "policy documents (PDF) cut into passages for retrieval.",

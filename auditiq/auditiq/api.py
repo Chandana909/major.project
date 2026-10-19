@@ -8,8 +8,8 @@ frontend has been built (`npm run build` in frontend/), it is served at /.
 
 Every request opens its own database connection, so the API serves SQLite and
 PostgreSQL alike and holds no state between requests. Work that takes long
-(an audit with a model, re-auditing a ledger, a copilot answer, reading a
-policy with a model) runs as a background job: the request returns a job id
+(an audit with a model, re-auditing a ledger, loading a new ledger, a copilot
+answer, reading a policy with a model) runs as a background job: the request returns a job id
 at once, and GET /api/jobs/{id} reports progress and the result.
 
 Settings (environment or .env):
@@ -35,13 +35,13 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import __version__, copilot, db, policy_extract, policy_llm, service
+from . import __version__, copilot, db, ledger_import, policy_extract, policy_llm, service
 from .config import load_env
 from .graph import PRESETS
 from .llm import LLMSettings, OpenAIChatClient, ResponseCache
@@ -53,6 +53,7 @@ FRONTEND = PROJECT_ROOT / "frontend" / "dist"
 UPLOADS = PROJECT_ROOT / ".auditiq" / "uploads"
 RESULTS = PROJECT_ROOT / "results"
 MAX_UPLOAD = 20 * 1024 * 1024
+MAX_LEDGER = 100 * 1024 * 1024
 UPLOAD_ID = re.compile(r"^[0-9a-f]{16}$")
 INVOICE_ID = re.compile(r"^[A-Z0-9_-]{1,40}$")
 
@@ -522,6 +523,44 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
                 conn.close()
 
         return request.app.state.jobs.start("apply-policy", work).public()
+
+    # -- ledger --------------------------------------------------------------
+    @app.post("/api/ledger", tags=["ledger"], dependencies=protected, status_code=202)
+    async def load_ledger(request: Request, file: UploadFile = File(...), replace: bool = Form(False)) -> dict:
+        """Replace the ledger with an uploaded one: an .xlsx workbook with one sheet per table, or a .zip
+        archive of the CSV files (a background job). The ledger is checked first; with any problem nothing is
+        replaced. Loading removes the previous ledger with every audit result and review decision, so the
+        request must say replace=true."""
+        if not replace:
+            raise HTTPException(400, "loading a ledger replaces the current ledger with its audit results and "
+                                     "review decisions; send replace=true")
+        suffix = Path(file.filename or "").suffix.lower()
+        if suffix not in (".xlsx", ".zip"):
+            raise HTTPException(415, "give an .xlsx workbook or a .zip archive of CSV files")
+        data = await file.read(MAX_LEDGER + 1)
+        if len(data) > MAX_LEDGER:
+            raise HTTPException(413, "the ledger is larger than 100 MB")
+        if not data.startswith(b"PK"):                    # both formats are zip containers
+            raise HTTPException(415, "the file is not an .xlsx workbook or a .zip archive")
+        name = re.sub(r"[^A-Za-z0-9._-]+", "_", Path(file.filename or "ledger").stem)[:60] or "ledger"
+        UPLOADS.mkdir(parents=True, exist_ok=True)
+        path = UPLOADS / f"ledger_{hashlib.sha256(data).hexdigest()[:16]}{suffix}"
+        path.write_bytes(data)
+        target = request.app.state.target
+
+        def work(job: Job) -> dict:
+            conn = db.connect(target)
+            try:
+                ledger = ledger_import.read(path, conn)
+                ledger.name = name
+                if not ledger.usable:
+                    return {"loaded": False, "ledger": name, "problems": ledger.problems, "counts": ledger.counts()}
+                return {"loaded": True, "ledger": name, "problems": [], "counts": ledger_import.load(conn, ledger)}
+            finally:
+                conn.close()
+                path.unlink(missing_ok=True)
+
+        return request.app.state.jobs.start("load-ledger", work).public()
 
     @app.get("/api/search", tags=["policy"], dependencies=protected)
     def search(q: str, k: int = 4, conn: db.Database = Depends(connection)) -> dict:

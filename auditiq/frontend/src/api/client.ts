@@ -7,6 +7,7 @@ import type {
   InvoiceDetail,
   InvoiceRow,
   Job,
+  LedgerLoad,
   Overview,
   Pipeline,
   PolicyOverview,
@@ -109,6 +110,12 @@ export const api = {
       `/api/invoices/${encodeURIComponent(id)}/audit`,
       json({ config }),
     ),
+  loadLedger: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    form.append("replace", "true");
+    return request<Job<LedgerLoad>>("/api/ledger", { method: "POST", body: form });
+  },
   policy: () => request<PolicyOverview>("/api/policy"),
   activate: (version: string) => request<{ active: string }>("/api/policy/activate", json({ version })),
   preview: (file: File) => {

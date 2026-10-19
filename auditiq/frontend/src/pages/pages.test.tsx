@@ -57,6 +57,48 @@ describe("the overview", () => {
     expect(await screen.findByText("Invoices in the ledger")).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("loads a ledger only after the replacement is confirmed, then audits it", async () => {
+    let sent: FormData | null = null;
+    const done = (result: unknown) => ({ id: "job1", kind: "k", status: "done", done: 1, total: 1, result, error: null, seconds: 1 });
+    mockApi([
+      ["/api/ledger", (_url, init) => {
+        sent = init?.body as FormData;
+        return done({ loaded: true, ledger: "new_ledger", problems: [], counts: { invoices: 1200, vendor_master: 60 } });
+      }],
+      ["/api/policy/apply", () => done({ invoices: 1200, flags: 420, states: { PENDING_REVIEW: 400 } })],
+      ["/api/overview", () => overview],
+      ["/api/risk-map", () => ({ vendors: [] })],
+    ]);
+    renderAt("/", "/", <OverviewPage />);
+    await userEvent.upload(await screen.findByLabelText("Ledger file"), new File(["PK"], "new ledger.xlsx"));
+    const load = screen.getByRole("button", { name: "Load the ledger" });
+    expect(load).toBeDisabled();
+    await userEvent.click(screen.getByLabelText(/Replace the current ledger/));
+    await userEvent.click(load);
+    expect(await screen.findByText(/1,200 invoices from 60 vendors/)).toBeInTheDocument();
+    expect(sent!.get("replace")).toBe("true");
+    expect((sent!.get("file") as File).name).toBe("new ledger.xlsx");
+
+    await userEvent.click(screen.getByRole("button", { name: "Audit it with the controls" }));
+    expect(await screen.findByText("1,200 invoices audited with the controls: 420 findings, 400 waiting for review.")).toBeInTheDocument();
+  });
+
+  it("lists the problems of a ledger that cannot be loaded", async () => {
+    mockApi([
+      ["/api/ledger", () => ({ id: "job2", kind: "load-ledger", status: "done", done: 0, total: 0, error: null, seconds: 1,
+                              result: { loaded: false, ledger: "broken", problems: ["the table vendor_master is missing"], counts: {} } })],
+      ["/api/overview", () => overview],
+      ["/api/risk-map", () => ({ vendors: [] })],
+    ]);
+    renderAt("/", "/", <OverviewPage />);
+    await userEvent.upload(await screen.findByLabelText("Ledger file"), new File(["PK"], "broken.zip"));
+    await userEvent.click(screen.getByLabelText(/Replace the current ledger/));
+    await userEvent.click(screen.getByRole("button", { name: "Load the ledger" }));
+    expect(await screen.findByText("the table vendor_master is missing")).toBeInTheDocument();
+    expect(screen.getByText(/nothing was replaced/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Audit it with the controls" })).not.toBeInTheDocument();
+  });
 });
 
 describe("the review queue", () => {

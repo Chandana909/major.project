@@ -88,6 +88,7 @@ flowchart LR
 |---|---|---|
 | Database, both backends | `auditiq/db.py` | no |
 | Data dictionary | `auditiq/datadict.py` | no |
+| Loading a ledger from a folder, an Excel workbook or a zip archive, checked first | `auditiq/ledger_import.py` | no |
 | Extraction: one transaction per invoice | `auditiq/extraction.py`, `auditiq/db.py` | no |
 | Controls | `auditiq/controls.py` | no |
 | Agents and challenger | `auditiq/agents.py`, `auditiq/prompts.py` | yes |

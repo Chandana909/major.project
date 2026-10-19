@@ -7,6 +7,13 @@ export interface Loaded<T> {
   reload: () => void;
 }
 
+/** Sent when a page changes the ledger or the policy, so that the sidebar shows the new state. */
+export const STORE_CHANGED = "auditiq:store-changed";
+
+export function notifyStoreChanged(): void {
+  window.dispatchEvent(new Event(STORE_CHANGED));
+}
+
 /** Load data from the API when the component mounts or a dependency changes. */
 export function useApi<T>(load: () => Promise<T>, deps: unknown[] = []): Loaded<T> {
   const [data, setData] = useState<T | null>(null);

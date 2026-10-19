@@ -126,6 +126,12 @@ def render(root: Path) -> str:
         "| `README.md` | the datasheet of the dataset, written from the generated tables | |",
         "",
         "The five ledger files load into the database with `python -m auditiq setup --dataset data/<name>`. "
+        "A ledger of your own loads the same way from a folder of these files, a .zip archive of them, or an Excel "
+        "workbook with one sheet per file (`python -m auditiq ledger import`, or the Overview page of the web "
+        "application); it is checked first, and a ledger with a missing table or column, a repeated or empty "
+        "identifier, an amount or date that cannot be read, or a vendor or purchase order that is not in the ledger "
+        "replaces nothing. An invoice may name a purchase order or goods receipt that does not exist: that is the "
+        "exception of rule 2.1.3. "
         "CSV files are UTF-8 with a header row, amounts have two decimals, dates are `YYYY-MM-DD`, and an empty "
         "field means no value. `labels.csv` of the policy-swap dataset has three more columns "
         "(`alt_policy_version`, `alt_label`, `alt_clause_ids`): the ground truth under the other policy version.",

@@ -187,6 +187,14 @@ export interface InvoiceDetail {
   benchmark_label?: { label: string; class_id: string; clause_ids: string; hard_negative_type: string; note: string } | null;
 }
 
+/** The outcome of loading a ledger: with any problem, nothing was replaced. */
+export interface LedgerLoad {
+  loaded: boolean;
+  ledger: string;
+  problems: string[];
+  counts: Record<string, number>;
+}
+
 export interface Job<T = unknown> {
   id: string;
   kind: string;

@@ -191,6 +191,9 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | Command | Does |
 |---|---|
 | `python -m auditiq status` | backend, ledger, active policy, row counts |
+| `python -m auditiq ledger check ledger.xlsx` | check a ledger (an Excel workbook with one sheet per table, or a .zip archive of the five CSV files; every column of the store must be present) without loading it |
+| `python -m auditiq ledger import ledger.xlsx` | replace the ledger, and its audit results, with a checked one; then `run --config C1` |
+| `python -m auditiq ledger export data/large_seed_505 ledger.xlsx` | write a dataset as a workbook, one sheet per table |
 | `python -m auditiq run --config C1` | audit every invoice with the controls |
 | `python -m auditiq run --config C5 --invoice INV40042 INV40043` | audit chosen invoices with the full pipeline |
 | `python -m auditiq audit --invoice INV40042 --config C5 --review` | audit one invoice and decide it at the prompt |

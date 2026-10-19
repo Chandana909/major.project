@@ -62,6 +62,28 @@ def test_setup_run_review_and_search_from_the_command_line(cli, small_dataset, b
     assert code == 0 and "invoices.csv  1,200 rows" in out and (tmp_path / "export" / "audit_flags.csv").exists()
 
 
+def test_a_ledger_is_exported_to_a_workbook_checked_and_imported(cli, small_dataset, boundary_dataset, tmp_path):
+    assert cli("setup", "--dataset", str(boundary_dataset))[0] == 0
+    book = tmp_path / "ledger.xlsx"
+    code, out = cli("ledger", "export", str(small_dataset), str(book))
+    assert code == 0 and book.exists()
+    code, out = cli("ledger", "check", str(book))
+    assert code == 0 and "ledger: usable; 60 vendor_master" in out and "1200 invoices" in out
+    code, out = cli("ledger", "import", str(book))
+    assert code == 0 and "ledger ledger loaded" in out and "1200 invoices" in out
+    conn = db.connect(cli.path)
+    assert conn.scalar("SELECT COUNT(*) FROM invoices") == 1200
+    conn.close()
+
+    broken = tmp_path / "broken"
+    broken.mkdir()
+    (broken / "invoices.csv").write_text("invoice_id\nINV1\n", encoding="utf-8")
+    code, out = cli("ledger", "import", str(broken))
+    assert code == 1 and "the table vendor_master is missing" in out and "the ledger was not loaded" in out
+    code, out = cli("setup", "--dataset", str(broken))
+    assert code == 1 and "the ledger was not loaded" in out
+
+
 def test_the_policy_swap_from_the_command_line(cli, boundary_dataset):
     """Activating version 2.6 changes what the same controls flag, with no other change."""
     cli("setup", "--dataset", str(boundary_dataset))

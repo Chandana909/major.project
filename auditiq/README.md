@@ -73,7 +73,10 @@ with the twelve controls and stores results, findings and the audit trail.
 description is at `/api/docs`): the overview with a 3D map of every vendor's
 risk, the review queue and the decision form, single invoices with their audit
 pack and trail, policy adoption from a PDF, the copilot, the pipeline as a 3D
-graph, and the measured results. Building the frontend needs Node 20 or later;
+graph, and the measured results. A ledger of your own is loaded on the
+Overview page, or with `python -m auditiq ledger import ledger.xlsx`, from an
+Excel workbook with one sheet per table or a .zip archive of the CSV files; it
+is checked before it replaces the current one. Building the frontend needs Node 20 or later;
 without it the API runs alone. The Streamlit dashboard
 (`python -m streamlit run app/dashboard.py`) offers the same work in a simpler
 form.

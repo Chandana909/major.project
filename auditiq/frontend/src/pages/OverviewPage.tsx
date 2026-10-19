@@ -1,11 +1,113 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../api/client";
-import { BarList, Empty, ErrorBox, Kpi, Loading, Panel } from "../components/ui";
+import { api, waitForJob } from "../api/client";
+import type { Job, LedgerLoad } from "../api/types";
+import { BarList, Empty, ErrorBox, JobProgress, Kpi, Loading, Panel } from "../components/ui";
 import { count, rupeesCompact, stateLabel } from "../lib/format";
-import { useApi } from "../lib/useApi";
+import { notifyStoreChanged, useApi } from "../lib/useApi";
 import { RiskConstellation } from "../three/RiskConstellation";
 
 const SEVERITY_COLOR: Record<string, string> = { critical: "#f87171", high: "#fb923c", medium: "#fbbf24", low: "#94a3b8" };
+
+type AuditSummary = { invoices: number; flags: number; states: Record<string, number> };
+
+/** Replace the ledger with a workbook or a zip archive of CSV files, then audit it with the controls. */
+function LedgerPanel({ onChanged }: { onChanged: () => void }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [job, setJob] = useState<Job | null>(null);
+  const [outcome, setOutcome] = useState<LedgerLoad | null>(null);
+  const [audited, setAudited] = useState<string | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const choose = (chosen: File | null) => {
+    setFile(chosen);
+    setConfirmed(false);
+    setOutcome(null);
+    setAudited(null);
+    setError(null);
+  };
+
+  const load = async () => {
+    if (!file) return;
+    setError(null);
+    try {
+      const result = await waitForJob<LedgerLoad>(await api.loadLedger(file), setJob as (j: Job<LedgerLoad>) => void, 1000);
+      setOutcome(result);
+      if (result.loaded) {
+        setFile(null);
+        onChanged();
+      }
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setJob(null);
+    }
+  };
+
+  const audit = async () => {
+    setError(null);
+    try {
+      const summary = await waitForJob<AuditSummary>(await api.applyPolicy(), setJob as (j: Job<AuditSummary>) => void, 1000);
+      setAudited(`${count(summary.invoices)} invoices audited with the controls: ${count(summary.flags)} findings, ${count(summary.states.PENDING_REVIEW ?? 0)} waiting for review.`);
+      setOutcome(null);
+      onChanged();
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setJob(null);
+    }
+  };
+
+  return (
+    <Panel
+      title="Load a ledger"
+      subtitle="An Excel workbook with one sheet per table (vendor_master, purchase_orders, goods_receipts, invoices, approval_logs), or a .zip archive of the same tables as CSV files. The file is checked first; a ledger with any problem replaces nothing."
+    >
+      <label className="file">
+        <input type="file" accept=".xlsx,.zip" aria-label="Ledger file" onChange={(e) => choose(e.target.files?.[0] ?? null)} />
+        <span>{file ? file.name : "Choose a workbook or a zip archive"}</span>
+      </label>
+      {file && (
+        <div className="row">
+          <label className="toggle">
+            <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} /> Replace the current ledger with its audit results and review decisions
+          </label>
+          <button className="btn btn-primary" onClick={load} disabled={!confirmed || Boolean(job)}>
+            Load the ledger
+          </button>
+        </div>
+      )}
+      <JobProgress job={job} />
+      <ErrorBox error={error} />
+      {outcome && !outcome.loaded && (
+        <>
+          <p>The ledger was not loaded; nothing was replaced:</p>
+          <ul className="problems">
+            {outcome.problems.map((p) => (
+              <li key={p}>{p}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {outcome?.loaded && (
+        <div className="banner">
+          <span>
+            Ledger <strong>{outcome.ledger}</strong> loaded: {count(outcome.counts.invoices ?? 0)} invoices from {count(outcome.counts.vendor_master ?? 0)} vendors. It has not been audited yet.
+          </span>
+          <button className="btn btn-primary" onClick={audit} disabled={Boolean(job)}>
+            Audit it with the controls
+          </button>
+        </div>
+      )}
+      {audited && (
+        <div className="notice" role="status">
+          {audited}
+        </div>
+      )}
+    </Panel>
+  );
+}
 
 export function OverviewPage() {
   const overview = useApi(() => api.overview());
@@ -52,7 +154,7 @@ export function OverviewPage() {
           map.data.vendors.length ? (
             <RiskConstellation vendors={map.data.vendors} onSelect={(v) => navigate(`/invoice?q=${encodeURIComponent(v.vendor_name)}`)} />
           ) : (
-            <Empty>No vendor is loaded. Run <code>python -m auditiq setup --dataset data/large_seed_505</code>.</Empty>
+            <Empty>No vendor is loaded. Load a ledger below, or run <code>python -m auditiq setup --dataset data/large_seed_505</code>.</Empty>
           )
         ) : (
           map.loading && <Loading what="Placing the vendors" />
@@ -157,6 +259,14 @@ export function OverviewPage() {
           </table>
         </Panel>
       )}
+
+      <LedgerPanel
+        onChanged={() => {
+          overview.reload();
+          map.reload();
+          notifyStoreChanged();
+        }}
+      />
     </div>
   );
 }

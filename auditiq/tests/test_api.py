@@ -7,12 +7,13 @@ from __future__ import annotations
 
 import json
 import time
+import zipfile
 
 import pytest
 from fastapi.testclient import TestClient
 from test_policy_llm import client_for, right_reply
 
-from auditiq import api, db, service
+from auditiq import api, db, ledger_import, service
 from auditiq.graph import PRESETS
 from auditiq.policy import POLICY_DIR, load_policy
 from evaluation import policy_llm_eval as study
@@ -186,6 +187,33 @@ def test_the_measured_results_are_served(client):
     # The sample of benchmark ledger 101 is served with the pilots, marked by its ledger.
     for meta in api.RESULTS.glob("bench_seed_101/*-sample34.meta.json"):
         assert results["pilots"][meta.name.removesuffix(".meta.json")]["dataset"] == "bench_seed_101"
+
+
+def test_a_ledger_is_uploaded_checked_and_then_replaces_the_old_one(client, small_dataset, tmp_path):
+    book = ledger_import.export_workbook(small_dataset, tmp_path / "new ledger.xlsx").read_bytes()
+    sheet = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    upload = {"file": ("new ledger.xlsx", book, sheet)}
+    assert client.post("/api/ledger", files=upload).status_code == 400              # replacing was not confirmed
+    assert client.post("/api/ledger", files={"file": ("ledger.csv", b"a,b", "text/csv")},
+                       data={"replace": "true"}).status_code == 415
+
+    # A ledger with problems replaces nothing.
+    broken = tmp_path / "broken.zip"
+    with zipfile.ZipFile(broken, "w") as archive:
+        archive.write(small_dataset / "invoices.csv", "invoices.csv")
+    before = client.get("/api/overview").json()
+    job = wait(client, client.post("/api/ledger", files={"file": ("broken.zip", broken.read_bytes(), "application/zip")},
+                                   data={"replace": "true"}).json())
+    assert job["status"] == "done" and not job["result"]["loaded"]
+    assert "the table vendor_master is missing" in job["result"]["problems"]
+    assert client.get("/api/overview").json()["audited"] == before["audited"] == 60
+
+    # A sound workbook replaces the ledger and everything derived from it.
+    job = wait(client, client.post("/api/ledger", files=upload, data={"replace": "true"}).json())
+    assert job["status"] == "done" and job["result"]["loaded"], job
+    assert job["result"]["counts"]["invoices"] == 1200
+    overview = client.get("/api/overview").json()
+    assert (overview["ledger"], overview["invoices"], overview["audited"]) == ("new_ledger", 1200, 0)
 
 
 def test_a_token_protects_everything_but_the_health_check(library, monkeypatch):

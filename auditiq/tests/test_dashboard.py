@@ -117,6 +117,28 @@ def button(app: AppTest, label: str):
     return next(b for b in app.button if b.label.startswith(label))
 
 
+def test_overview_loads_a_ledger_only_after_confirmation_and_audits_it(app):
+    app.run()
+    assert not app.exception, app.exception
+    assert not app.warning                                                       # the small ledger is audited
+    app.selectbox[0].set_value("pilot_seed_909").run()
+    assert not app.exception, app.exception
+    assert any("pilot_seed_909: 5,000 invoices from 250 vendors" in i.value for i in app.info)
+    assert button(app, "Load the ledger").disabled
+    app.checkbox[0].check().run()
+    button(app, "Load the ledger").click().run()
+    assert not app.exception, app.exception
+    assert app.success[0].value == "Ledger pilot_seed_909 loaded: 5,000 invoices, not yet audited."
+    metrics = {m.label: m.value for m in app.metric}
+    assert metrics["Invoices in the ledger"] == "5,000" and metrics["Audited"] == "0"
+    assert "None of the 5,000 invoices of this ledger has been audited yet." in app.warning[0].value
+
+    button(app, "Audit every invoice with the controls").click().run()
+    assert not app.exception, app.exception
+    assert app.success[0].value.startswith("5,000 invoices audited with the controls")
+    assert {m.label: m.value for m in app.metric}["Audited"] == "5,000"
+
+
 def test_policy_page_adopts_a_document_and_applies_it_to_the_ledger(app):
     open_page(app, "Policy")
     assert not app.warning                                                       # every result follows version 2.5

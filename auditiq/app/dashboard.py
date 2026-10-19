@@ -19,7 +19,7 @@ import streamlit as st
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from auditiq import copilot, db, policy_extract, policy_llm, service  # noqa: E402
+from auditiq import copilot, db, ledger_import, policy_extract, policy_llm, service  # noqa: E402
 from auditiq.audit_pack import render_markdown  # noqa: E402
 from auditiq.config import configure_logging  # noqa: E402
 from auditiq.graph import PRESETS  # noqa: E402
@@ -32,6 +32,7 @@ PAGES = ["Overview", "Review queue", "Invoice", "Policy", "Copilot"]
 # Policy documents offered for adoption besides an upload, and where uploads are kept.
 POLICY_FOLDERS = [POLICY_DIR / "pdf", POLICY_DIR / "variants", POLICY_DIR / "freeform" / "pdf"]
 UPLOADS = PROJECT_ROOT / ".auditiq" / "uploads"
+DATA_DIR = PROJECT_ROOT / "data"
 STATES = {
     db.AUTO_APPROVED: "Approved automatically",
     db.PENDING_REVIEW: "Waiting for review",
@@ -104,6 +105,7 @@ def page_overview(conn) -> None:
     policy = conn.execute("SELECT version FROM company_policies WHERE is_active = 1").fetchone()
     st.caption(f"Ledger: {dataset[0] if dataset else 'none loaded'} · active policy: "
                f"{'version ' + policy[0] if policy else 'none'}")
+    audit_new_ledger(conn)
 
     states = {r[0]: int(r[1]) for r in conn.execute(
         "SELECT workflow_status, COUNT(*) FROM v_latest_results GROUP BY workflow_status")}
@@ -162,6 +164,63 @@ def page_overview(conn) -> None:
                                 "FROM audit_runs u LEFT JOIN audit_results r ON r.run_id = u.run_id "
                                 "GROUP BY u.run_id ORDER BY u.run_id DESC LIMIT 10"),
                     hide_index=True, width="stretch")
+    load_ledger(conn)
+
+
+def load_ledger(conn) -> None:
+    """Replace the ledger with a workbook, a zip archive of CSV files or a dataset of the project; then audit it."""
+    st.subheader("Load a ledger")
+    st.caption("An Excel workbook with one sheet per table (vendor_master, purchase_orders, goods_receipts, invoices, "
+               "approval_logs), or a .zip archive of the same tables as CSV files. The file is checked first; a ledger "
+               "with any problem replaces nothing.")
+    known = {folder.name: folder for folder in sorted(DATA_DIR.iterdir()) if (folder / "invoices.csv").exists()} \
+        if DATA_DIR.exists() else {}
+    upload = st.file_uploader("Ledger file", type=["xlsx", "zip"])
+    pick = st.selectbox("or a dataset of the project", ["(none)", *known])
+    if upload is not None:
+        UPLOADS.mkdir(parents=True, exist_ok=True)
+        source = UPLOADS / f"ledger_{Path(upload.name).name}"
+        source.write_bytes(upload.getvalue())
+        name = Path(upload.name).stem
+    elif pick != "(none)":
+        source, name = known[pick], pick
+    else:
+        return
+
+    ledger = ledger_import.read(source, conn)
+    ledger.name = name
+    if not ledger.usable:
+        st.error("This ledger cannot be loaded; nothing was replaced.")
+        for problem in ledger.problems:
+            st.error(problem)
+        return
+    counts = ledger.counts()
+    st.info(f"{name}: {counts.get('invoices', 0):,} invoices from {counts.get('vendor_master', 0):,} vendors, "
+            f"checked and ready to load.")
+    confirm = st.checkbox("Replace the current ledger with its audit results and review decisions")
+    if st.button("Load the ledger", disabled=not confirm):
+        ledger_import.load(conn, ledger)
+        st.session_state["notice"] = f"Ledger {name} loaded: {counts.get('invoices', 0):,} invoices, not yet audited."
+        st.rerun()
+
+
+def audit_new_ledger(conn) -> None:
+    """A ledger that has just been loaded has no result: offer to audit every invoice with the controls."""
+    invoices = scalar(conn, "SELECT COUNT(*) FROM invoices")
+    if not invoices or scalar(conn, "SELECT COUNT(*) FROM v_latest_results"):
+        return
+    st.warning(f"None of the {invoices:,} invoices of this ledger has been audited yet.")
+    if st.button("Audit every invoice with the controls"):
+        bar = st.progress(0.0, text="Auditing")
+        run_id = service.audit_invoices(
+            conn, PRESETS["C1"], db.read_policy(conn), None, db.invoice_ids(conn), note="ledger audited from the dashboard",
+            progress=lambda done, total: bar.progress(done / total, text=f"Auditing: {done:,} of {total:,}")
+            if done % 200 == 0 or done == total else None)
+        summary = service.run_summary(conn, run_id)
+        st.session_state["notice"] = (f"{summary['invoices']:,} invoices audited with the controls: "
+                                      f"{summary['flags']:,} findings, "
+                                      f"{summary['states'].get(db.PENDING_REVIEW, 0):,} waiting for review.")
+        st.rerun()
 
 
 # ------------------------------------------------------------ review queue

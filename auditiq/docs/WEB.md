@@ -102,6 +102,7 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | POST | `/api/policy/propose` | Let the model read a document in its own wording; answers the proposal with every value, its quote and its verification status | 202 job, 400 |
 | POST | `/api/policy/confirm` | Adopt a proposal after the reviewer's confirmation, corrections and passages | 200, 400, 404, 422 |
 | POST | `/api/policy/apply` | Audit the whole ledger again under the active version, with progress | 202 job |
+| POST | `/api/ledger` | Replace the ledger with an uploaded one (multipart: `file`, an .xlsx workbook with one sheet per table, or a .zip archive of the five CSV files; every column of the store must be present; and `replace=true`). The ledger is checked first; the job answers `loaded` and, if it was refused, the problems, with nothing replaced | 202 job, 400, 413, 415 |
 | GET | `/api/search?q=&k=` | Search the policy documents (hybrid when an embedding model is configured, lexical otherwise) | 200, 400, 409 |
 | POST | `/api/copilot/ask` | A question about the policy or an audited invoice, answered with citations | 202 job |
 | POST | `/api/copilot/data` | A question about the data, answered by one checked read-only query; needs a model | 202 job, 400 |
@@ -131,7 +132,7 @@ Every dependency is pinned to an exact version in `package.json`, and
 
 | Route | Page | Shows |
 |---|---|---|
-| `/` | Overview | Counts of the audit; the **risk constellation**, a 3D view of every vendor (sector = spending category, height = highest risk, size = number of invoices, pulsing = invoices waiting, violet = blacklisted; click a vendor to see its invoices); findings by rule; vendors with most invoices waiting; recent runs |
+| `/` | Overview | Counts of the audit; the **risk constellation**, a 3D view of every vendor (sector = spending category, height = highest risk, size = number of invoices, pulsing = invoices waiting, violet = blacklisted; click a vendor to see its invoices); findings by rule; vendors with most invoices waiting; recent runs; **loading a ledger** from a workbook or a zip archive, checked before it replaces the current one, and auditing it with the controls |
 | `/review` | Review queue | Invoices waiting for a reviewer, filtered by text and risk level |
 | `/invoice`, `/invoice/:id` | Invoices | Search; for one invoice: route, both risk scores, every finding with its evidence, confidence terms and citation, findings removed by the challenger, the records, the audit trail with tokens and time per model call, the decision form, a new audit under any configuration, and the benchmark label on request |
 | `/policy` | Policy | Versions and activation; upload of a policy PDF with the changes it makes, adoption, reading by the model with the reviewer's confirmation; re-auditing the ledger under the active version with progress; the rules; policy search |
@@ -182,13 +183,14 @@ python -m pytest tests/test_api.py
 cd frontend && npm test
 ```
 
-- **API** (`tests/test_api.py`, 10 tests, on SQLite and on PostgreSQL): the
+- **API** (`tests/test_api.py`, 11 tests, on SQLite and on PostgreSQL): the
   status endpoints; the review flow from queue to recorded decision; an audit
   job; a policy previewed, adopted and applied to the ledger; a policy in its
   own wording proposed and confirmed (with a scripted model); search and the
-  copilot without a model; the results; the token; 503 for an unreachable
+  copilot without a model; the results; a ledger uploaded, refused with its
+  problems or loaded; the token; 503 for an unreachable
   database; the built frontend with client-side routes.
-- **Frontend** (26 tests): the API client (token, error messages, uploads, job
+- **Frontend** (28 tests): the API client (token, error messages, uploads, job
   polling); formatting and the policy and results helpers; the geometry of the
   3D views; the three 3D scenes rendered with React Three Fiber's test renderer
   (instances per vendor, stages per configuration, bars per policy); and the

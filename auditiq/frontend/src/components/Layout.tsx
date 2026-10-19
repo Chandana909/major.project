@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { api, getToken, setToken } from "../api/client";
-import { useApi } from "../lib/useApi";
+import { STORE_CHANGED, useApi } from "../lib/useApi";
 
 const NAV = [
   { to: "/", label: "Overview", icon: "◈" },
@@ -33,6 +33,11 @@ function TokenForm({ onSaved }: { onSaved: () => void }) {
 
 export function Layout() {
   const health = useApi(() => api.health());
+  const reloadHealth = health.reload;
+  useEffect(() => {
+    window.addEventListener(STORE_CHANGED, reloadHealth);
+    return () => window.removeEventListener(STORE_CHANGED, reloadHealth);
+  }, [reloadHealth]);
   const auth = useApi(() => api.overview().then(() => true), []);
   const needsToken = (auth.error as { status?: number } | null)?.status === 401;
   return (
