@@ -21,13 +21,20 @@
 %        python -m evaluation.run_pilot --dataset data/pilot_seed_909 \
 %            --ids-file evaluation/pilot_ids.txt --tag pilot20
 %                                             -> results/pilot_seed_909/pilot20.md
+%        python -m evaluation.run_pilot --dataset data/bench_seed_101 \
+%            --ids-file evaluation/bench101_sample_ids.txt --tag sample34
+%                                             -> results/bench_seed_101/sample34.md
 %    If an experiment is run again, update the numbers from those files.
-%  * Section VIII-J is a PILOT of 20 invoices with a local 7B model. It shows
-%    that the LLM stages run and what they cost; it is not a benchmark result.
-%  * Section VIII-K and its table give EXPECTED values for what has not been
+%  * Section VIII-J is a PILOT of 20 invoices and Section VIII-K a SAMPLE of
+%    34 invoices of a benchmark ledger, both with a local 7B model. They show
+%    that the LLM stages run, how they err and what they cost; no difference
+%    between configurations is significant on them.
+%  * Section VIII-L and its table give EXPECTED values for what has not been
 %    measured. They are targets fixed before measurement, not results.
-%  * Section III describes the two base papers from their published abstracts.
-%    Read the full papers and correct anything they contradict.
+%  * Section III (Base Papers) agrees with the published abstracts of both
+%    papers (checked 19 October 2026). Both full texts are behind the Springer
+%    paywall and have no preprint: read them through the college library and
+%    correct anything they contradict.
 % ============================================================================
 \documentclass[conference]{IEEEtran}
 \IEEEoverridecommandlockouts
@@ -307,7 +314,7 @@ The feature works in six steps.
 
 \textit{Step 3: extract the thresholds.} For every parameter, one pattern is matched against the text of the rule that states it (Table~\ref{tab:params}). The approval limits are read from the table of roles and amounts. The severity is read from the rule itself. The result is $\hat{\theta}=E(D)$ for document $D$.
 
-\textit{Step 4: check, and refuse if necessary.} The extraction is by pattern and not by an LLM, so a value is either found in the expected sentence or reported as missing. The document is refused, and nothing is stored, when (a) a rule that the system executes is absent, (b) a threshold is not found in the wording of its rule, (c) the document contains a rule for which the system has no check, (d) a value is not meaningful, for example a word that is not a day of the week, or (e) the document states no version.
+\textit{Step 4: check, and refuse if necessary.} The extraction is by pattern and not by an LLM, so a value is either found in the expected sentence or reported as missing. The document is refused, and nothing is stored, when (a) a rule that the system executes is absent, (b) a threshold is not found in the wording of its rule, (c) the document contains a rule for which the system has no check, (d) a value is not meaningful, for example a word that is not a day of the week, (e) the document states no version, (f) a rule is stated more than once, or (g) the table of approval limits lacks a role that the system applies.
 
 \textit{Step 5: adopt.} An accepted document becomes a new policy version $\hat{P}=(K,\hat{s},\kappa,\hat{\theta})$. Its passages are stored with their page numbers. The set $K$ and the kinds $\kappa$ come from a reference version, which records what the system is able to execute.
 
@@ -316,7 +323,7 @@ The feature works in six steps.
 F_{\mathrm{D}}(x)=\bigl\{\,c_k(x;\hat{\theta}_k)\ :\ \kappa(k)=\text{control}\,\bigr\}.
 \label{eq:controls}
 \end{equation}
-The findings then enter the score~\eqref{eq:score} unchanged. Fig.~\ref{fig:example} follows one threshold through these steps.
+The findings then enter the score~\eqref{eq:score} unchanged. No model stage can remove them: the challenger rules only on findings raised by the agents, and a finding that an agent raises outside its remit is discarded by code. Fig.~\ref{fig:example} follows one threshold through these steps.
 
 \begin{figure}[t]
 \centering
@@ -401,7 +408,7 @@ Policies in free prose (extension) & LLM; Python verification & The model propos
 \addlinespace
 \multicolumn{4}{l}{\textit{Base system}} \\
 Pipeline orchestration & LangGraph~\cite{langgraph} & Graph of stages; parallel agents; pause for the reviewer & Implemented \\
-Specialist agents and challenger & LLM behind an OpenAI-compatible endpoint & Judgement rules; removal of unsupported findings & Implemented; 20-invoice pilot \\
+Specialist agents and challenger & LLM behind an OpenAI-compatible endpoint & Judgement rules; removal of unsupported findings & Implemented; pilot (20) and sample (34) \\
 Risk score and route & Python & Equation~\eqref{eq:score} and the threshold of 50 & Implemented \\
 REST API & FastAPI~\cite{fastapi}, Uvicorn & Ledger, results, review, policy adoption and copilot over HTTP; background jobs; optional bearer token & Implemented, tested \\
 Web application & React, TypeScript, React Three Fiber~\cite{r3f}, three.js~\cite{threejs} & Review queue, audit packs, policy adoption, results; 3D views of vendor risk, of the pipeline and of the policy change & Implemented, tested \\
@@ -424,7 +431,7 @@ Tests & pytest; Vitest, Testing Library & Python suite on SQLite and PostgreSQL;
 \textit{Finding.} A finding holds the rule, the severity, the name of the control, a sentence that states the exception, the evidence as pairs of field and value, and the citation (document and page).
 
 \subsection{Operation}
-Adopting a policy document is one command, or one upload in the web application; auditing the ledger is a second. No code and no prompt is edited when the policy changes. Every audit stores, for each invoice, the result, the findings and one audit-trail entry per stage, together with the policy version that was applied.
+Adopting a policy document is one command, or one upload in the web application; auditing the ledger is a second. No code and no prompt is edited when the policy changes. The prompts of the model stages contain no threshold and no rule number; the policy text is inserted at run time. An agent sees at most 40 of the vendor's other invoices per selection rule, and a reply that is not valid JSON is sent back once for repair. Every audit stores, for each invoice, the result, the findings and one audit-trail entry per stage, together with the policy version that was applied.
 
 \subsection{Web Application}
 \label{sec:web}

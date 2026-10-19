@@ -63,7 +63,7 @@ tests/           the test suite; no test calls a model
 |---|---|---|
 | A1 | SOP v2.5: one numbered rule per exception, one severity each, clauses for all fourteen classes | Done: 16 clauses |
 | A2 | Clause registry with parameters; v2.6 for the policy swap | Done |
-| A3 | SQL for the clause and parameter tables | Generated; not applied to any database |
+| A3 | SQL for the clause and parameter tables | Done: the project's store creates `policy_clauses` and `policy_parameters` and fills them at setup (C1); `policy/policy_parameters.sql` is the stand-alone export |
 | A4 | Generator: benchmark ledgers of 5,000 invoices from 250 vendors (420 anomalous, 120 hard negatives, 4,460 ordinary clean), labels written at injection | Done: seeds 101, 202, 303, and the pilot ledger, seed 909; byte-identical on re-run; about 20,750 ledger records each |
 | A5 | Policy-swap ledger: 150 boundary invoices, labelled under v2.5 and v2.6, among 4,850 invoices that are clean under both | Done: seed 404 |
 | A6 | Controls for R1 to R10 | Done: 12 controls |
@@ -104,12 +104,12 @@ What phase A showed (`results/summary.md`, run of 2026-10-13):
    subset and the ledger; precision and the ordinary false-positive rate agree
    within sampling error.
 
-### Phase B: the LLM pipeline (built; real runs pending)
+### Phase B: the LLM pipeline (built; run on a pilot and a benchmark sample; full benchmark runs pending)
 
 | # | Deliverable | Status |
 |---|---|---|
 | B1 | Model client with cache, retries and token accounting | Done; tested against a fake endpoint and used for the real calls of B8 |
-| B2 | Prompts without thresholds or rule numbers; the policy text is inserted at run time and is a shared prefix of every call | Done; first wording, to be fixed on the pilot |
+| B2 | Prompts without thresholds or rule numbers; the policy text is inserted at run time and is a shared prefix of every call | Done; the wording was fixed on the pilot and then frozen for the benchmark sample (B12) |
 | B3 | Three specialists with remits derived from the policy sections; flags outside the remit discarded by code | Done |
 | B4 | Challenger that can remove agent flags only | Done |
 | B5 | Agreement term: m = 3 re-runs at temperature 0.7 of each agent that raised a flag | Done |
@@ -119,7 +119,7 @@ What phase A showed (`results/summary.md`, run of 2026-10-13):
 | B9 | Pilot on stratified invoices of the pilot ledger to fix the prompts and measure cost | Done with the local 7B model on 20 invoices (one of each of the 14 classes, the five hard-negative types, one ordinary invoice) under C1 to C5, and on six invoices before that; both are recorded in section 6. A pilot of 50 or more needs a faster endpoint (open decision 1) |
 | B12 | The configurations on a sample of a benchmark ledger, with frozen prompts | 34 invoices of `bench_seed_101` (5 of each judgement class, 2 of each hard-negative type, 4 ordinary; `evaluation/bench101_sample_ids.txt`, drawn by `evaluation.sample_ids`), C1 then C3, C4, C5 and C2, with the local 7B model. Done 2026-10-18: all five configurations on 34 of 34 invoices; the agents (C3) found 12 of 20 judgement anomalies and 0.375 of their findings named the violated rule, the single prompt (C2) 4 and 0.031; no difference is significant (`results/bench_seed_101/sample34.md`; shown on the Results page of the web application) |
 | B11 | Bounded prompts: at most 40 of a vendor's other invoices per selection rule | Done; no labelled case loses an invoice it depends on (`results/history_cap.md`) |
-| B10 | Full run: 3 seeds x C2 to C5; second model on the main comparison; consistency subset of 300; policy swap under v2.5 and v2.6 | Pending |
+| B10 | Full run: 3 seeds x C2 to C5; second model on the main comparison; consistency subset of 300; policy swap under v2.5 and v2.6 | Pending: needs a GPU or a hosted model endpoint. On the laptop's CPU a call takes 3 to 5 minutes, and one benchmark ledger needs about 1,200 invoices with three to five calls each. The paper reports the pilot and the sample and gives expected values for this run (Section VIII-L) |
 
 Everything in B1 to B7 is verified with a scripted stand-in for the model. That
 shows that the pipeline asks, parses, scores and routes as designed. It shows
@@ -173,13 +173,14 @@ were measured again after the correction of the policy dates and did not change.
 
 ### Phase D: the paper
 
-| # | Deliverable |
-|---|---|
-| D1 | Section VII rewritten with measured tables and intervals; each hypothesis marked supported or refuted |
-| D2 | Section V (System Implementation) and Table III rewritten for the standalone stack of section 2 |
-| D3 | Abstract, contributions, figure and conclusion updated to match |
-| D4 | The items in the header comment of `auditiq_paper.tex` closed (model identifier, base papers read in full, Roumeliotis reference checked) |
-| D5 | Every decision of section 5 reflected in the text |
+| # | Deliverable | Status |
+|---|---|---|
+| D1 | The expected-results section replaced by measured tables and intervals | Done: Section VIII, subsections A to K measured (J a pilot, K a sample); L keeps expected values only for what is not measured, each with the observation that would refute it |
+| D2 | The implementation section rewritten for the standalone stack of section 2 | Done |
+| D3 | Abstract, contributions, figures and conclusion updated to match | Done (13 pages, 20 references, every figure drawn in the `.tex`) |
+| D4 | The items in the header comment of `auditiq_paper.tex` closed | Model identifier: done (Qwen2.5, 7B). Roumeliotis reference: removed. Base papers: the text agrees with both published abstracts; the full texts are behind the Springer paywall and must be read through the college library |
+| D5 | Every decision of section 5 reflected in the text | Done |
+| D6 | Venue template, page limit and the third author's e-mail | Open: the team's decision |
 
 ## 5. Decisions made while implementing (differences from the draft)
 

@@ -19,6 +19,19 @@ end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 (Section 2). The language-model stages have been run only on samples (20 and
 34 invoices), with a local 7B model on a laptop CPU (Section 7).
 
+**Before the paper is submitted, the team still has to:**
+
+1. Read the two base papers in full and correct Section III of the paper where
+   they disagree. Its text agrees with both published abstracts; both full texts
+   are behind the Springer paywall, with no preprint, so they must be read
+   through the college library.
+2. Add the third author's e-mail and confirm the affiliations of all three.
+3. Choose the venue: its template and page limit. The paper is 13 pages in the
+   IEEE conference format.
+4. Optional: run C2 to C5 on the full benchmark ledgers. This needs a GPU or a
+   hosted model endpoint (Section 7). Until then the paper reports the pilot
+   and the sample, and gives expected values for the full run (Section 10).
+
 ## Contents
 
 1. [The results at a glance](#1-the-results-at-a-glance)
