@@ -29,6 +29,7 @@ export default defineConfig({
     },
   },
   test: {
+    include: ["src/**/*.test.{ts,tsx}"], // the browser tests in e2e/ run with Playwright (npm run e2e)
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: false,

@@ -237,12 +237,28 @@ def history_cap() -> dict:
             "sources": [source("history_cap.md")], "command": "python -m evaluation.history_cap"}
 
 
-def model_runs(path: str, label: str, question: str, command: str) -> dict:
+def model_runs(path: str, label: str, question: str, command: str,
+               note: str = "Too few invoices to compare configurations: no difference between them is significant.") -> dict:
     return {"label": label, "question": question, "configurations": {
                 "C1": "controls only", "C2": "one LLM prompt, no controls", "C3": "controls and three agents",
                 "C4": "C3 and the challenger", "C5": "C4 and confidence (sampled review)"},
-            "metrics": metric_table(path), "sources": [source(path)], "command": command,
-            "note": "Too few invoices to compare configurations: no difference between them is significant."}
+            "metrics": metric_table(path), "sources": [source(path)], "command": command, "note": note}
+
+
+def full_runs() -> dict:
+    """The reports of evaluation.run_full that exist (plan item B10), one entry per benchmark ledger."""
+    out = {}
+    for path in sorted(RESULTS.glob("bench_seed_*/full.md")):
+        ledger = path.parent.name
+        whole = path.read_text(encoding="utf-8").startswith("# Full run")
+        out[f"llm_stages_full_run_{ledger}"] = model_runs(
+            f"{ledger}/full.md", "measured" if whole else "sample",
+            f"The five configurations on the evaluation subset of {ledger}"
+            + ("" if whole else ", a stratified sample of it") + ".",
+            f"python -m evaluation.run_full --ledgers {ledger}" + ("" if whole else " --n <size>"),
+            "The whole evaluation subset; read differences between configurations from the McNemar tests of the "
+            "source." if whole else "A stratified sample of the evaluation subset; not the full run.")
+    return out
 
 
 def build() -> dict:
@@ -278,6 +294,7 @@ def build() -> dict:
                 "bench_seed_101/sample34.md", "sample", "The five configurations with a local 7B model and frozen "
                 "prompts on 34 invoices of benchmark ledger 101.", "python -m evaluation.run_pilot --dataset "
                 "data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34"),
+            **full_runs(),
         }),
     }
 

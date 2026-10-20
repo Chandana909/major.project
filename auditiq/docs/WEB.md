@@ -122,7 +122,7 @@ forgets them; the work they did is in the database.
 | Language, build | TypeScript 5.6 (strict), Vite 6 |
 | UI | React 18, React Router 7 |
 | 3D | three.js 0.170, React Three Fiber 8, drei 9 (orbit controls, HTML labels, rounded boxes) |
-| Tests | Vitest 4 with jsdom, Testing Library, React Three Fiber's test renderer |
+| Tests | Vitest 4 with jsdom, Testing Library, React Three Fiber's test renderer; Playwright 1.63 with Chromium for the end-to-end tests |
 | Lint | ESLint 9 with typescript-eslint and the React hooks rules |
 
 Every dependency is pinned to an exact version in `package.json`, and
@@ -150,6 +150,7 @@ Every dependency is pinned to an exact version in `package.json`, and
 | `src/three/` | The 3D views and their geometry (`layout.ts`, plain functions without rendering, tested on their own) and the frame every 3D view sits in |
 | `src/pages/` | One file per page; each is loaded when first opened |
 | `src/test/` | Test set-up, API fixtures, a fetch mock |
+| `e2e/` | The end-to-end tests in a browser (Playwright); `playwright.config.ts` starts the server with `../scripts/e2e_server.py` |
 
 ### 3D views
 
@@ -183,6 +184,10 @@ python -m pytest tests/test_api.py
 cd frontend && npm test
 ```
 
+```bash
+cd frontend && npm run build && npm run e2e
+```
+
 - **API** (`tests/test_api.py`, 11 tests, on SQLite and on PostgreSQL): the
   status endpoints; the review flow from queue to recorded decision; an audit
   job; a policy previewed, adopted and applied to the ledger; a policy in its
@@ -198,10 +203,23 @@ cd frontend && npm test
   an error, queue filters, invoice findings and records, decision validation
   and recording, policy preview and adoption, a document the patterns cannot
   read, the results, the token prompt, an unknown route).
+- **End to end** (`e2e/app.spec.ts`, 10 tests in Chromium, about two minutes):
+  the real server on a new SQLite store, the built application, no mock. The
+  overview of the ledger set up from the command line; a workbook loaded
+  through the page (nothing is replaced before the confirmation) and audited
+  with the controls (300 findings, 240 waiting for review on ledger 909); an
+  escalated invoice opened from the queue and approved, after which the queue
+  has one invoice fewer; an invoice found by vendor and by number and audited
+  again; a policy PDF previewed, adopted and the ledger audited under it; the
+  policy search; the results, pipeline (every configuration) and copilot pages;
+  a page reloaded at its address and an unknown address. An error in the
+  browser's console fails a test. The first run installs the browser:
+  `npx playwright install chromium`.
 
-CI runs both: the Python job (ruff, the tests on SQLite and PostgreSQL) and the
-frontend job (`npm ci`, lint, typecheck, tests, build, and `npm audit` of the
-packages shipped to the browser).
+CI runs all three: the Python job (ruff, the tests on SQLite and PostgreSQL),
+the frontend job (`npm ci`, lint, typecheck, tests, build, and `npm audit` of
+the packages shipped to the browser) and the e2e job (the build and the
+browser tests).
 
 ## 7. Limits
 

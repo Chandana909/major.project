@@ -680,6 +680,10 @@ Per invoice: route (E escalate, S sampled review, A approve), then each cited ru
 - **Cost.** Model calls per invoice: C2 1.210, C3 3.000, C4 3.740, C5 5.240; on the laptop's CPU a call took minutes, so a benchmark ledger needs a GPU or a hosted endpoint.
 - **No difference between configurations is significant** on 34 invoices (table above); these are observations on a sample, not estimates for the benchmark.
 
+### 18.4 The full run on the benchmark ledgers
+
+Not run yet. The configurations with a model are measured only on the pilot and the sample above. The full run (the 1,200-invoice evaluation subset of each benchmark ledger, about 1,200 times three to five model calls per ledger) needs a GPU or a hosted endpoint; the command is `python -m evaluation.run_full` (RESULTS.md, Section 10.1). Its reports appear here once they exist.
+
 ## 19. Policy search
 
 Source: [`retrieval.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/retrieval.md).

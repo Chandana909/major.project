@@ -14,7 +14,8 @@
     "typecheck": "tsc -b",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@react-three/drei": "9.122.0",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
     "@react-three/test-renderer": "8.2.1",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.0.1",

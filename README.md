@@ -38,6 +38,19 @@ python -m auditiq serve
 The web application is then at http://127.0.0.1:8000 and the API description
 at http://127.0.0.1:8000/api/docs ([`auditiq/docs/WEB.md`](auditiq/docs/WEB.md)).
 
+End to end, from `auditiq/`: the whole application in a browser (Playwright;
+once, `npx playwright install chromium` in `frontend/`), and every result that
+needs no model reproduced in a temporary folder and compared with the committed
+files:
+
+```bash
+cd frontend && npm run e2e && cd ..
+```
+
+```bash
+python scripts/reproduce.py
+```
+
 The measured feature and its results:
 [`auditiq/docs/FEATURE_POLICY_AS_DATA.md`](auditiq/docs/FEATURE_POLICY_AS_DATA.md).
 Every measured number and how to reproduce it: the "What has been measured"

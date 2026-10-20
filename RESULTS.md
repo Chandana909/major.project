@@ -546,7 +546,7 @@ experimental results.
 | REST API | FastAPI, 22 endpoints, background jobs, optional bearer token (constant-time comparison), checks on every upload |
 | Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
 | Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | 330 Python tests on SQLite and PostgreSQL (327 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; no test calls a model |
+| Tests | 337 Python tests on SQLite and PostgreSQL (334 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
 | Continuous integration | GitHub Actions: Python (ruff, tests on both backends) and frontend (lint, types, tests, build, dependency audit) |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 
@@ -571,6 +571,40 @@ What the observations say: with a 7B model the agents fall short of X2 and far
 short of X3, on the pilot and on the benchmark sample alike. X2 and X3 stay
 expected values for the full benchmark with a larger model; in the paper,
 report the sample values beside them as observations, not as their measurement.
+
+### 10.1 How to measure them (plan item B10)
+
+Everything for this run is built and tested; only the hardware is missing.
+With a GPU or a hosted OpenAI-compatible endpoint, set `AUDITIQ_LLM_BASE_URL`,
+`AUDITIQ_LLM_MODEL` and, for a hosted provider, `AUDITIQ_LLM_API_KEY` in
+`auditiq/.env` (see `docs/OPERATIONS.md`, Section 5), then run from `auditiq/`:
+
+```bash
+python -m auditiq check-llm
+```
+
+```bash
+python -m evaluation.run_full --n 25
+```
+
+```bash
+python -m evaluation.run_full
+```
+
+The first run audits a stratified 25 invoices per ledger to check the endpoint
+and the cost of an invoice; the second audits the whole 1,200-invoice
+evaluation subset of each of the three benchmark ledgers under C1, C3, C4, C5
+and C2, with the whole ledger as vendor history, and writes
+`results/bench_seed_*/full.md` with intervals and McNemar's tests. The command
+refuses to run if the prompts differ from the ones frozen for the benchmark
+sample. A run that stops continues where it stopped, and C3, C4 and C5 share
+their agent calls through the response cache. Estimated volume: about 12
+million prompt tokens per ledger for C2 to C4, plus the re-runs of C5. Then
+`python -m evaluation.collect_results` and `python -m evaluation.full_report`
+take the reports into `results.json` and `REPORT.md` (Section 18.4); move X2 to
+X4 out of the expected table. The command is tested end to end against a
+stand-in endpoint (`tests/test_run_full.py`), which shows that it runs, not how
+a model audits.
 
 ## 11. Limitations to state in the paper
 
@@ -632,6 +666,17 @@ chat reply taken from the cache and new model calls blocked (the embeddings of
 step 9 were computed afresh): both results are identical to the committed ones.
 Step 11, about 12 hours of model time, was not repeated; its reports are
 computed from the per-invoice records stored next to them (`*.jsonl`).
+
+**One command, 20 October 2026.** `python scripts/reproduce.py` (from
+`auditiq/`) now does steps 1 to 6, 8 and 13 in a temporary folder and compares
+every file it writes with the committed one; dates, the machine and measured
+durations are the only differences it allows. Its first run: 54 of 54 dataset
+files identical byte for byte, and 32 of 32 result files identical (25 from
+steps 2 to 4, 7 from steps 5, 6, 8 and 13). The same day, a fresh clone of the
+repository from GitHub passed every check: install, the dataset hashes, ruff,
+the Python tests on SQLite and PostgreSQL, the frontend's lint, types, tests,
+build and dependency audit, set-up and audit of the large ledger from the
+command line, the server, and both papers.
 
 **Final re-run, 19 October 2026.** After the ledger import was added, steps 1
 to 8 were run once more with the final code, from datasets regenerated into a

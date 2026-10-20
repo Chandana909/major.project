@@ -81,6 +81,19 @@ without it the API runs alone. The Streamlit dashboard
 (`python -m streamlit run app/dashboard.py`) offers the same work in a simpler
 form.
 
+End to end, two more checks need no model either. The first runs the whole
+application in a browser (Playwright, after `npx playwright install chromium`
+once); the second reproduces every result that needs no model in a temporary
+folder and compares it with the committed files:
+
+```bash
+cd frontend && npm run e2e && cd ..
+```
+
+```bash
+python scripts/reproduce.py
+```
+
 For PostgreSQL, a chat model, and an embedding model, see
 [docs/OPERATIONS.md](docs/OPERATIONS.md). In short:
 

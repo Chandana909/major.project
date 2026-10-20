@@ -215,7 +215,20 @@ meaning; `--mode lexical` forces the wording-based ranking.
 
 ## 8. Reproducing the evaluation
 
-In this order. Steps 1 to 3 need no model.
+**In one command,** every result that needs no model except the timings
+(steps 2, 3, 4, 5a to 5d and 6c), run again in a temporary folder and compared
+with the committed files:
+
+```bash
+python scripts/reproduce.py
+```
+
+The datasets must come out byte for byte the same; in the results only dates,
+the machine and measured durations may differ. It takes about a quarter of an
+hour on the development laptop; `--steps` runs a part (`--list` shows the steps) and
+`--keep <folder>` keeps what it wrote. Nothing in the working copy changes.
+
+Step by step, in this order. Steps 1 to 3 need no model.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -238,6 +251,7 @@ In this order. Steps 1 to 3 need no model.
 | 6e. The full report: methodology, results and analysis (after the others) | `python -m evaluation.full_report` | `../REPORT.md` and `results/results.json` |
 | 7. One LLM configuration on a benchmark ledger | `python -m evaluation.run_config --dataset data/bench_seed_101 --config C5` | `results/bench_seed_101/C5.jsonl` |
 | 8. Comparison | `python -m evaluation.report --dataset data/bench_seed_101 results/bench_seed_101/C*.jsonl --compare C3:C2 C4:C3 C5:C4` | a table |
+| 9. The full run of the LLM configurations (plan item B10; needs a GPU or a hosted endpoint) | `python -m evaluation.run_full` (`--n 25` first, to try the endpoint) | `results/bench_seed_*/C*-full.jsonl`, `results/bench_seed_*/full.md`; then steps 6d and 6e take them in |
 
 Rules that keep the results honest:
 
@@ -299,6 +313,28 @@ The tests run in Node with a simulated browser and a mocked API, so they need
 neither the server nor a GPU; the 3D scenes are rendered with React Three
 Fiber's test renderer. CI runs these checks and a production build in a second
 job.
+
+**End to end in a browser.** Playwright drives Chromium against the real
+application (`frontend/e2e/`): `scripts/e2e_server.py` sets up a new SQLite
+store with benchmark ledger 202 from the command line and serves the built web
+application; the tests then load a workbook of ledger 909 through the page,
+audit it, review an escalated invoice, find and re-audit an invoice, adopt a
+policy document and audit the ledger under it, search the policy, and open the
+results, pipeline and copilot pages. Any error in the browser's console fails
+the test. Once, to install the browser:
+
+```bash
+npx playwright install chromium
+```
+
+Then, from `frontend/` after `npm run build`:
+
+```bash
+npm run e2e
+```
+
+The server ignores `.env`, so the run is the same on every machine; CI runs it
+in a third job.
 
 After changing the schema or a column's meaning, regenerate the data
 dictionary; after regenerating datasets, the overview:

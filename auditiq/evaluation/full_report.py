@@ -672,6 +672,30 @@ def llm_section() -> list[str]:
             "ledger needs a GPU or a hosted endpoint.",
             "- **No difference between configurations is significant** on 34 invoices (table above); these are "
             "observations on a sample, not estimates for the benchmark.", ""]
+    return out + full_run_section()
+
+
+def full_run_section() -> list[str]:
+    """18.4: the reports of evaluation.run_full, when they exist."""
+    reports = sorted(RESULTS.glob("bench_seed_*/full.md"))
+    out = ["### 18.4 The full run on the benchmark ledgers", ""]
+    if not reports:
+        return out + ["Not run yet. The configurations with a model are measured only on the pilot and the sample "
+                      "above. The full run (the 1,200-invoice evaluation subset of each benchmark ledger, about 1,200 "
+                      "times three to five model calls per ledger) needs a GPU or a hosted endpoint; the command is "
+                      "`python -m evaluation.run_full` (RESULTS.md, Section 10.1). Its reports appear here once they "
+                      "exist.", ""]
+    for path in reports:
+        rel = path.relative_to(RESULTS).as_posix()
+        heading = path.read_text(encoding="utf-8").splitlines()[0].lstrip("# ")
+        t = metric_table(rel)
+        configs = [c for c in ("C1", "C2", "C3", "C4", "C5") if any(c in v for v in t.values())]
+        tests = table(rel, "Comparison")
+        out += [f"#### {heading}", "", src(rel), "",
+                *md(["Metric (value [95% interval])"] + configs, [[m] + [ci(t[m].get(c)) for c in configs] for m in t]),
+                *md(["Comparison", "Only first correct", "Only second correct", "p", "Holm-adjusted p"],
+                    [[x["Comparison"], x["Only first correct"], x["Only second correct"], x["p"], x["Holm-adjusted p"]]
+                     for x in tests])]
     return out
 
 
