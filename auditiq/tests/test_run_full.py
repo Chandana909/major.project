@@ -100,3 +100,19 @@ def test_a_full_run_report_is_taken_into_the_results_and_the_report(tmp_path, mo
     section = "\n".join(full_report.full_run_section())
     assert "#### Full run on `bench_seed_101`" in section and "Not run yet" not in section
     assert "| C3-sample34 vs C2-sample34 |" in section      # the McNemar tests of the report
+
+
+def test_a_listed_sample_is_audited_without_a_model_under_the_controls(small_dataset, tmp_path):
+    from evaluation.metrics import read_subset
+
+    ids = list(read_subset(small_dataset).index[:6])
+    ids_file = tmp_path / "ids.txt"
+    ids_file.write_text("\n".join(ids) + "\n", encoding="utf-8")
+    argv = ["--ledgers", small_dataset.name, "--data", str(small_dataset.parent), "--results", str(tmp_path),
+            "--configs", "C1", "--ids-file", str(ids_file), "--tag", "listed"]
+    assert run_full.main(argv) == 0
+    folder = tmp_path / small_dataset.name
+    assert len((folder / "C1-listed.jsonl").read_text(encoding="utf-8").splitlines()) == 6
+    report = (folder / "listed.md").read_text(encoding="utf-8")
+    assert report.startswith(f"# Sample of the evaluation subset on `{small_dataset.name}`")
+    assert "the 6 listed in `ids.txt`" in report

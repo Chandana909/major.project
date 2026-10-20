@@ -41,18 +41,18 @@ def snapshot(conn: db.Database, run_id: int) -> dict:
             "findings_by_rule": by_rule}
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--store", type=Path, default=PROJECT_ROOT / ".auditiq" / "application_demo.db")
-    ap.add_argument("--out", type=Path, default=PROJECT_ROOT / "results")
-    args = ap.parse_args()
+def demo(dataset: Path, store: Path) -> dict:
+    """Load ``dataset`` into a new SQLite store, audit it, adopt the strict policy, audit it again."""
     if not STRICT.exists():
         raise SystemExit(f"{STRICT} is missing; run python -m evaluation.policy_change first")
-    if args.store.exists():
-        args.store.unlink()
+    if store.exists():
+        store.unlink()
+    store.parent.mkdir(parents=True, exist_ok=True)
 
-    conn = db.connect(args.store)
-    db.load_dataset(conn, PROJECT_ROOT / "data" / LEDGER)
+    conn = db.connect(store)
+    began = time.perf_counter()
+    db.load_dataset(conn, dataset)
+    load_seconds = time.perf_counter() - began
     for version in ("2.5", "2.6"):
         db.store_policy(conn, load_policy(version), active=version == "2.5")
     for pdf in make_sample_pdfs():
@@ -73,13 +73,22 @@ def main() -> None:
     after_run = service.audit_invoices(conn, PRESETS["C1"], db.read_policy(conn), None, ids, note="after")
     audit_after = time.perf_counter() - began
 
-    result = {"produced": time.strftime("%Y-%m-%d %H:%M"), "ledger": LEDGER, "store": "SQLite",
+    result = {"produced": time.strftime("%Y-%m-%d %H:%M"), "ledger": dataset.name, "store": "SQLite",
               "machine": f"{platform.processor() or platform.machine()}, Python {platform.python_version()}",
               "adopted_version": report["version"], "changes": report["changes"],
               "seconds": {"audit_before": round(audit_before, 1), "adopt": round(adopt_seconds, 3),
                           "audit_after": round(audit_after, 1)},
               "before": snapshot(conn, before_run), "after": snapshot(conn, after_run)}
     conn.close()
+    return result, round(load_seconds, 1)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--store", type=Path, default=PROJECT_ROOT / ".auditiq" / "application_demo.db")
+    ap.add_argument("--out", type=Path, default=PROJECT_ROOT / "results")
+    args = ap.parse_args()
+    result, _ = demo(PROJECT_ROOT / "data" / LEDGER, args.store)
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "application_demo.json").write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8", newline="\n")
     (args.out / "application_demo.md").write_text(markdown(result), encoding="utf-8", newline="\n")

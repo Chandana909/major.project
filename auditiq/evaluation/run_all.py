@@ -92,6 +92,7 @@ def evaluate_ledger(dataset: Path, out: Path, n_resamples: int) -> dict:
     transactions = extract(dataset)
     run_c1(transactions, "2.5", out / "C1.jsonl")
     run_c0.write(run_c0.run(transactions, labels, seed), out)
+    del transactions                      # the predictions are on disk; a large ledger needs the memory back
 
     sev = severities(policy)
     predictions = {c: read_predictions(out / f"{c}.jsonl") for c in CONFIGS}

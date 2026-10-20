@@ -1,6 +1,8 @@
 # secrets and local state
 .env
 .auditiq/
+# the huge ledger and its working files (python -m evaluation.huge)
+data_huge/
 
 # Python
 __pycache__/

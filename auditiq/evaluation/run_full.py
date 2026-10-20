@@ -50,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--data", type=Path, default=PROJECT_ROOT / "data")
     ap.add_argument("--results", type=Path, default=RESULTS)
     ap.add_argument("--n", type=int, help="audit a stratified sample of about this many invoices per ledger")
+    ap.add_argument("--ids-file", type=Path, help="audit the invoices listed in this file (one ledger)")
     ap.add_argument("--workers", type=int, default=4, help="invoices audited at the same time")
     ap.add_argument("--tag", default=TAG)
     ap.add_argument("--policy", default="2.5", help="the policy version the configurations apply")
@@ -75,7 +76,14 @@ def main(argv: list[str] | None = None) -> int:
     for name in args.ledgers:
         dataset = args.data / name
         size = len(read_subset(dataset))
-        if args.n:
+        if args.ids_file:
+            ids = args.ids_file.read_text(encoding="utf-8").split()
+            selection = ["--ids-file", str(args.ids_file.resolve())]
+            scope = (f"Invoices: the {len(ids)} listed in `{args.ids_file.name}`, from the evaluation subset of "
+                     f"{size:,} invoices")
+            notice = ("**A sample of the evaluation subset, not the full run.** Compare configurations only with "
+                      "the McNemar tests below, and remember how few invoices each class has.")
+        elif args.n:
             selection = ["--stratified", str(args.n), "--subset-seed", "0"]
             scope = (f"Invoices: {args.n} requested per configuration, stratified over the classes and hard-negative "
                      f"types (seed 0), from the evaluation subset of {size:,} invoices")
@@ -96,7 +104,7 @@ def main(argv: list[str] | None = None) -> int:
         elif not list((args.results / name).glob(f"*-{args.tag}.jsonl")):
             print(f"{name}: no prediction file of tag '{args.tag}' yet")
             continue
-        out = write_report(dataset, args.tag, "Full run" if not args.n else "Sample of the evaluation subset",
+        out = write_report(dataset, args.tag, "Sample of the evaluation subset" if args.n or args.ids_file else "Full run",
                            scope, notice, args.policy, args.results)
         print(f"wrote {out}")
     return 0

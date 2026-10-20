@@ -76,6 +76,15 @@ PROFILES = [
             "application is demonstrated on, and the one on which precision at a realistic rate is measured.",
             per_hard_negative=2 * PER_HARD_NEGATIVE_TYPE, eval_ordinary=480, approver_counts=(40, 25, 12, 2)),
 ]
+# Generated only when named (--only huge_seed_606): about 330 MB of CSV, too large for the repository. Its file
+# hashes are committed in results/huge_seed_606/manifest.json, so a regenerated copy can be checked.
+HUGE = Profile("huge_seed_606", "large", 606, 500_000, 25_000,
+               "The huge ledger: 500,000 invoices from 25,000 vendors at the anomaly rate of the large ledger "
+               "(714 invoices of each of the fourteen classes, 2.0%), with 720 hard negatives. It measures the "
+               "controls, the classical detectors, the policy change and the application at a scale 25 times the "
+               "large ledger and 100 times a benchmark ledger.",
+               per_class=714, per_hard_negative=144, eval_ordinary=600, approver_counts=(1000, 625, 300, 2))
+ON_REQUEST = [HUGE]
 
 
 def load_policy(version: str) -> dict:
@@ -188,15 +197,16 @@ def main() -> None:
     args = ap.parse_args()
 
     if args.list:
-        for p in PROFILES:
-            print(f"{p.name:16s} {p.kind:12s} {p.n_invoices:6,} invoices  {p.n_vendors:5,} vendors  seed {p.seed}")
+        for p in PROFILES + ON_REQUEST:
+            note = "  (only with --only)" if p in ON_REQUEST else ""
+            print(f"{p.name:16s} {p.kind:12s} {p.n_invoices:7,} invoices  {p.n_vendors:6,} vendors  seed {p.seed}{note}")
         return
-    names = {p.name for p in PROFILES}
+    names = {p.name for p in PROFILES + ON_REQUEST}
     unknown = set(args.only or []) - names
     if unknown:
         raise SystemExit(f"unknown dataset(s): {sorted(unknown)}; use --list")
-    for profile in PROFILES:
-        if not args.only or profile.name in args.only:
+    for profile in PROFILES + ON_REQUEST:
+        if (not args.only and profile in PROFILES) or (args.only and profile.name in args.only):
             generate(profile, args.out)
 
 
