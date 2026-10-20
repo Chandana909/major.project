@@ -90,7 +90,7 @@ def write_dataset(out: Path, tables: dict[str, pd.DataFrame], manifest: dict, re
         tables[name].to_csv(path, index=False, lineterminator="\n", float_format="%.2f", encoding="utf-8")
         files[path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
     manifest["sha256"] = files
-    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
     (out / "README.md").write_text(readme, encoding="utf-8", newline="\n")
 
 

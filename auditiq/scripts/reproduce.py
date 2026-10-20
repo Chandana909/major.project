@@ -34,8 +34,9 @@ DATA = ROOT / "data"
 RESULTS = ROOT / "results"
 
 # Keys whose values are dates, the machine or measured durations.
+# The size of an exported workbook (workbook_kb) is measured too: it changes with the version of pandas.
 VOLATILE_KEYS = re.compile(r"(produced|machine|seconds|second|_ms$|latency|elapsed|duration|throughput|"
-                           r"timing|per_invoice_us|microseconds|^us$|speed)", re.IGNORECASE)
+                           r"timing|per_invoice_us|microseconds|^us$|speed|_kb$)", re.IGNORECASE)
 DATE = re.compile(r"\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?)?")
 # A measured duration or rate written in a sentence: "0.04 s", "51 s", "3.2 minutes", "172,226 invoices per second".
 DURATION = re.compile(r"\d[\d,]*(\.\d+)?\s?(s|ms|µs|seconds?|minutes?|hours?)\b|\d[\d,]*(\.\d+)?\s?invoices per second",
