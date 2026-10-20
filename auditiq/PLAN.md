@@ -182,7 +182,7 @@ were measured again after the correction of the policy dates and did not change.
 | D3 | Abstract, contributions, figures and conclusion updated to match | Done (13 pages, 20 references, every figure drawn in the `.tex`) |
 | D4 | The items in the header comment of `auditiq_paper.tex` closed | Model identifier: done (Qwen2.5, 7B). Roumeliotis reference: removed. Base papers: the text agrees with both published abstracts; the full texts are behind the Springer paywall and must be read through the college library |
 | D5 | Every decision of section 5 reflected in the text | Done |
-| D6 | Venue template, page limit and the third author's e-mail | Open: the team's decision |
+| D6 | Venue template, page limit and the third author's e-mail | Done (team's decision, 2026-10-19): the 6-page conference version in the Hinweis Research camera-ready format (`../paper/conference/main.tex`, `main.pdf`), four authors with every e-mail; compiled with no overfull or underfull box, every number taken from the result files |
 
 ## 5. Decisions made while implementing (differences from the draft)
 

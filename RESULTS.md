@@ -39,9 +39,14 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
    they disagree. Its text agrees with both published abstracts; both full texts
    are behind the Springer paywall, with no preprint, so they must be read
    through the college library.
-2. Add the third author's e-mail and confirm the affiliations of all three.
-3. Choose the venue: its template and page limit. The paper is 13 pages in the
-   IEEE conference format.
+2. Done: authors, e-mails and affiliations. Four authors (Podichetty Samiksha,
+   Chandana Devanaboyina, Medapally Shiva Reddy; Dr. B. Veera Jyothi,
+   Associate Professor), all of the Department of Information Technology,
+   CBIT, Hyderabad; every e-mail is on the first page of the conference paper.
+3. Done: venue format and page limit. The submission is the 6-page version in
+   the Hinweis Research camera-ready format, `paper/conference/main.tex` and
+   `main.pdf`. The 13-page IEEE-format paper (`paper/auditiq_paper.tex`)
+   remains the long version, with three authors listed.
 4. Optional: run C2 to C5 on the full benchmark ledgers. This needs a GPU or a
    hosted model endpoint (Section 7). Until then the paper reports the pilot
    and the sample, and gives expected values for the full run (Section 10).
