@@ -670,13 +670,17 @@ computed from the per-invoice records stored next to them (`*.jsonl`).
 **One command, 20 October 2026.** `python scripts/reproduce.py` (from
 `auditiq/`) now does steps 1 to 6, 8 and 13 in a temporary folder and compares
 every file it writes with the committed one; dates, the machine and measured
-durations are the only differences it allows. Its first run: 54 of 54 dataset
-files identical byte for byte, and 32 of 32 result files identical (25 from
-steps 2 to 4, 7 from steps 5, 6, 8 and 13). The same day, a fresh clone of the
-repository from GitHub passed every check: install, the dataset hashes, ruff,
-the Python tests on SQLite and PostgreSQL, the frontend's lint, types, tests,
-build and dependency audit, set-up and audit of the large ledger from the
-command line, the server, and both papers.
+durations are the only differences it allows. Run from a fresh clone of the
+repository, it first found two faults that a run in the working copy had hidden:
+`matplotlib` was used by steps 3 and 12 but not declared as a dependency, and
+the generator wrote each dataset's `manifest.json` with Windows line endings.
+Both were fixed (commit 06dc5f0, with a test that every imported package is
+declared). A fresh clone of that commit then passed every check: install, the
+dataset hashes, ruff, the Python tests on SQLite and PostgreSQL, the frontend's
+lint, types, tests, build and dependency audit, the 10 browser tests, set-up
+and audit of the large ledger from the command line, the server, both papers,
+and `scripts/reproduce.py` with all its steps: 54 of 54 dataset files identical
+byte for byte and 32 of 32 result files identical.
 
 **Final re-run, 19 October 2026.** After the ledger import was added, steps 1
 to 8 were run once more with the final code, from datasets regenerated into a
