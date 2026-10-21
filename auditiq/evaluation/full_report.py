@@ -541,6 +541,18 @@ def ledger_runs_section() -> list[str]:
     ]
 
 
+def huge_subsection() -> list[str]:
+    """16.1: the 500,000-invoice ledger of evaluation.huge, once its report exists."""
+    path = RESULTS / "huge_seed_606" / "huge.md"
+    if not path.exists():
+        return []
+    body = path.read_text(encoding="utf-8").splitlines()[2:]          # without the report's own title
+    body = ["#### " + line[3:] if line.startswith("## ") else line for line in body]
+    return ["### 16.1 The huge ledger: every measurement at 500,000 invoices", "",
+            src("huge_seed_606/huge.md", "huge_seed_606/metrics.json", "huge_seed_606/policy_change.json",
+                "huge_seed_606/application.json", "huge_seed_606/size.json"), "", *body, ""]
+
+
 def scalability_section() -> list[str]:
     r = load("scalability.json")
     base = r["by_workers"][0]["seconds"]
@@ -557,7 +569,7 @@ def scalability_section() -> list[str]:
         "per invoice does not grow with the ledger, so time is linear in the number of invoices. Efficiency falls with "
         "more workers because the processor has two performance and eight efficiency cores. A rerun under background "
         "load gave the same findings with 21 to 36% lower throughput (RESULTS.md, Section 5).", "",
-    ]
+    ] + huge_subsection()
 
 
 def own_wording_section() -> list[str]:

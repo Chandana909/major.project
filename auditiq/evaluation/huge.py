@@ -58,9 +58,9 @@ def step_generate(dataset: Path, results: Path) -> None:
     out = out_dir(results)
     committed = out / "manifest.json"
     if not (dataset / "manifest.json").exists():
-        began = time.perf_counter()
+        began = time.process_time()               # processor time: a laptop that sleeps stops the clock too
         generate(HUGE, dataset.parent)
-        seconds = round(time.perf_counter() - began, 1)
+        seconds = round(time.process_time() - began, 1)
     else:
         seconds = None
     manifest = json.loads((dataset / "manifest.json").read_text(encoding="utf-8"))
@@ -169,7 +169,8 @@ def report(results: Path) -> Path:
                   f"{c['invoices']:,} invoices ({c['anomalous']:,} anomalous, {c['anomalous'] / c['invoices']:.1%}; "
                   f"{c['hard_negative']:,} hard negatives), {c['vendors']:,} vendors, {c['ledger_records']:,} records in "
                   f"the five tables. Files: {gen['files']}, {gen['status']}."
-                  + (f" Generation and validation took {gen['seconds']:,.0f} s." if gen.get("seconds") else ""), ""]
+                  + (f" Generation and validation took {gen['seconds']:,.0f} s of processor time." if gen.get("seconds") else "")
+                  + (f" {gen['note']}" if gen.get("note") else ""), ""]
     if det:
         names = {"C1": "Controls (C1)", "C0-IF": "Isolation forest", "C0-SVM": "One-class SVM"}
         rows = [("Recall", "detection_recall"), ("Precision", "detection_precision"), ("F1", "detection_f1"),

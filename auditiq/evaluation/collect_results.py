@@ -237,6 +237,38 @@ def history_cap() -> dict:
             "sources": [source("history_cap.md")], "command": "python -m evaluation.history_cap"}
 
 
+def huge_ledger() -> dict:
+    """The 500,000-invoice ledger (evaluation.huge), once its report exists."""
+    folder = "huge_seed_606"
+    if not (RESULTS / folder / "huge.md").exists():
+        return {}
+    gen, det = load(f"{folder}/generate.json"), load(f"{folder}/metrics.json")
+    pol, app, size = load(f"{folder}/policy_change.json"), load(f"{folder}/application.json"), load(f"{folder}/size.json")
+    keys = ["detection_recall", "detection_precision", "detection_f1", "fpr_hard_negative", "fpr_ordinary"]
+    n = pol["invoices"]
+    return {"huge_ledger": {
+        "label": "measured",
+        "question": "Do the results hold on a ledger of 500,000 invoices, and does the deployed path carry it?",
+        "data": gen["counts"],
+        "detection": {s: {k: det["metrics"][s][k] for k in keys} for s in ("C1", "C0-IF", "C0-SVM")},
+        "detection_mcnemar": det["mcnemar_detection"],
+        "bootstrap_resamples": det["bootstrap_resamples"],
+        "policy_change": {"invoices": n, "audits": pol["audits"], "reference_exact": pol["reference_check"]["exact"],
+                          "variants": [{"name": v["name"], "decisions_moved": v["affected"],
+                                        "adherence_policy_driven": v["driven"]["exact"] / n,
+                                        "adherence_frozen": v["frozen"]["exact"] / n,
+                                        "missed_exceptions": v["frozen"]["missed_exceptions"],
+                                        "missed_escalations": v["frozen"]["missed_escalations"],
+                                        "unsupported_findings": v["frozen"]["stale_findings"],
+                                        "needless_escalations": v["frozen"]["needless_escalations"]}
+                                       for v in pol["variants"]]},
+        "deployed_path": {"seconds": app["seconds"], "before": app["before"], "after": app["after"]},
+        "control_stage": {k: size[k] for k in ("invoices", "seconds", "microseconds_per_invoice", "findings")},
+        "sources": [source(f"{folder}/{f}") for f in ("huge.md", "manifest.json", "metrics.json", "policy_change.json",
+                                                      "application.json", "size.json")],
+        "command": "python -m evaluation.huge"}}
+
+
 def model_runs(path: str, label: str, question: str, command: str,
                note: str = "Too few invoices to compare configurations: no difference between them is significant.") -> dict:
     return {"label": label, "question": question, "configurations": {
@@ -295,6 +327,7 @@ def build() -> dict:
                 "prompts on 34 invoices of benchmark ledger 101.", "python -m evaluation.run_pilot --dataset "
                 "data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34"),
             **full_runs(),
+            **huge_ledger(),
         }),
     }
 

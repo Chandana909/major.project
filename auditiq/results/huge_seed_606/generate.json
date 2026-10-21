@@ -1,7 +1,7 @@
 {
  "produced": "2026-10-21 08:42",
  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
- "seconds": 51203.2,
+ "seconds": null,
  "files": 7,
  "status": "hashes recorded",
  "counts": {
@@ -15,5 +15,6 @@
   "vendors": 15000,
   "ledger_records": 2078077,
   "eval_subset": 12744
- }
+ },
+ "note": "The duration of this first generation was not measured: the laptop slept during it."
 }
