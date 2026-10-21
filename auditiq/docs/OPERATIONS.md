@@ -158,6 +158,29 @@ That is enough to see the pipeline work on a handful of invoices and far too
 slow for the benchmark (1,200 invoices per ledger, several calls each). The
 benchmark needs a GPU or a hosted endpoint.
 
+**An integrated GPU helps.** Ollama can run the model on an Intel Iris Xe
+(through Vulkan) when the integrated GPU is enabled. A second server on its own
+port leaves the usual one alone:
+
+```bash
+OLLAMA_HOST=127.0.0.1:11435 OLLAMA_IGPU_ENABLE=1 OLLAMA_FLASH_ATTENTION=1 ollama serve
+```
+
+Then set `AUDITIQ_LLM_BASE_URL=http://127.0.0.1:11435/v1`. Measured on the
+development laptop with the pipeline's own prompts (2,300 to 4,300 tokens), on
+2026-10-20:
+
+| Model | Prompt tokens per second, CPU | Prompt tokens per second, Iris Xe |
+|---|---|---|
+| Qwen2.5-7B | 7 to 12 | 63 to 79 |
+| Qwen2.5-3B | 34 to 44 | 112 to 144 |
+
+The whole 7B model fits in the GPU's share of memory (about 4.2 GB), so a call
+takes 40 to 55 seconds instead of minutes, and a repeated prompt prefix is
+served from the server's cache in about a second. That makes samples of a
+hundred invoices practical on a laptop; the full benchmark still needs a
+dedicated GPU or a hosted endpoint.
+
 ### Hosted
 
 Set `AUDITIQ_LLM_BASE_URL`, `AUDITIQ_LLM_MODEL` and `AUDITIQ_LLM_API_KEY` to
@@ -252,6 +275,7 @@ Step by step, in this order. Steps 1 to 3 need no model.
 | 7. One LLM configuration on a benchmark ledger | `python -m evaluation.run_config --dataset data/bench_seed_101 --config C5` | `results/bench_seed_101/C5.jsonl` |
 | 8. Comparison | `python -m evaluation.report --dataset data/bench_seed_101 results/bench_seed_101/C*.jsonl --compare C3:C2 C4:C3 C5:C4` | a table |
 | 9. The full run of the LLM configurations (plan item B10; needs a GPU or a hosted endpoint) | `python -m evaluation.run_full` (`--n 25` first, to try the endpoint) | `results/bench_seed_*/C*-full.jsonl`, `results/bench_seed_*/full.md`; then steps 6d and 6e take them in |
+| 10. The huge ledger: 500,000 invoices, generated from its seed and checked against its committed hashes; detection, the fourteen policy documents, the deployed path and the control stage at that scale (about two hours; 2 GB of working files) | `python -m evaluation.huge --work <folder outside a synced drive>` | `results/huge_seed_606/` (`huge.md` and the files it is built from); then steps 6d and 6e take them in |
 
 Rules that keep the results honest:
 
