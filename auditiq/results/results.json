@@ -3522,6 +3522,372 @@
    ],
    "command": "python -m evaluation.run_pilot --dataset data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34",
    "note": "Too few invoices to compare configurations: no difference between them is significant."
+  },
+  "huge_ledger": {
+   "label": "measured",
+   "question": "Do the results hold on a ledger of 500,000 invoices, and does the deployed path carry it?",
+   "data": {
+    "invoices": 500000,
+    "anomalous": 9996,
+    "hard_negative": 720,
+    "clean": 489284,
+    "purchase_orders": 498096,
+    "goods_receipts": 497858,
+    "approval_logs": 567123,
+    "vendors": 15000,
+    "ledger_records": 2078077,
+    "eval_subset": 12744
+   },
+   "detection": {
+    "C1": {
+     "detection_recall": {
+      "value": 0.7143,
+      "ci_low": 0.706,
+      "ci_high": 0.7218
+     },
+     "detection_precision": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "detection_f1": {
+      "value": 0.8333,
+      "ci_low": 0.8276,
+      "ci_high": 0.8384
+     },
+     "fpr_hard_negative": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "fpr_ordinary": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "C0-IF": {
+     "detection_recall": {
+      "value": 0.1917,
+      "ci_low": 0.1847,
+      "ci_high": 0.2003
+     },
+     "detection_precision": {
+      "value": 0.1914,
+      "ci_low": 0.1841,
+      "ci_high": 0.199
+     },
+     "detection_f1": {
+      "value": 0.1916,
+      "ci_low": 0.1849,
+      "ci_high": 0.1993
+     },
+     "fpr_hard_negative": {
+      "value": 0.1083,
+      "ci_low": 0.0825,
+      "ci_high": 0.1327
+     },
+     "fpr_ordinary": {
+      "value": 0.0164,
+      "ci_low": 0.016,
+      "ci_high": 0.0167
+     }
+    },
+    "C0-SVM": {
+     "detection_recall": {
+      "value": 0.3759,
+      "ci_low": 0.3675,
+      "ci_high": 0.3856
+     },
+     "detection_precision": {
+      "value": 0.5039,
+      "ci_low": 0.4945,
+      "ci_high": 0.5146
+     },
+     "detection_f1": {
+      "value": 0.4306,
+      "ci_low": 0.423,
+      "ci_high": 0.4393
+     },
+     "fpr_hard_negative": {
+      "value": 0.5208,
+      "ci_low": 0.4878,
+      "ci_high": 0.5545
+     },
+     "fpr_ordinary": {
+      "value": 0.0068,
+      "ci_low": 0.0066,
+      "ci_high": 0.0071
+     }
+    }
+   },
+   "detection_mcnemar": {
+    "C1 vs C0-IF": {
+     "only_a_correct": 13730,
+     "only_b_correct": 413,
+     "p_value": 0.0,
+     "p_holm": 0.0,
+     "reject": true
+    },
+    "C1 vs C0-SVM": {
+     "only_a_correct": 7913,
+     "only_b_correct": 831,
+     "p_value": 0.0,
+     "p_holm": 0.0,
+     "reject": true
+    }
+   },
+   "bootstrap_resamples": 200,
+   "policy_change": {
+    "invoices": 500000,
+    "audits": 7000000,
+    "reference_exact": 500000,
+    "variants": [
+     {
+      "name": "Tolerance 0.5%",
+      "decisions_moved": 78,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9998,
+      "missed_exceptions": 78,
+      "missed_escalations": 78,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Tolerance 2%",
+      "decisions_moved": 0,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 1.0,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Tolerance 5%",
+      "decisions_moved": 78,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9998,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 78,
+      "needless_escalations": 78
+     },
+     {
+      "name": "Daily count 2",
+      "decisions_moved": 9720,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9806,
+      "missed_exceptions": 9720,
+      "missed_escalations": 9629,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Daily count 5",
+      "decisions_moved": 714,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9986,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 714,
+      "needless_escalations": 714
+     },
+     {
+      "name": "Manager limit 50,000",
+      "decisions_moved": 96382,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.8072,
+      "missed_exceptions": 96382,
+      "missed_escalations": 95503,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Manager limit 150,000",
+      "decisions_moved": 116,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9998,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 116,
+      "needless_escalations": 116
+     },
+     {
+      "name": "Senior Manager limit 250,000",
+      "decisions_moved": 52418,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.8952,
+      "missed_exceptions": 52418,
+      "missed_escalations": 51899,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Round multiple 5,000",
+      "decisions_moved": 3,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 1.0,
+      "missed_exceptions": 3,
+      "missed_escalations": 0,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Round multiple 50,000",
+      "decisions_moved": 294,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9994,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 294,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Six-day week",
+      "decisions_moved": 170,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9997,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 170,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Strict policy",
+      "decisions_moved": 155826,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.6883,
+      "missed_exceptions": 158601,
+      "missed_escalations": 154356,
+      "unsupported_findings": 0,
+      "needless_escalations": 0
+     },
+     {
+      "name": "Lenient policy",
+      "decisions_moved": 1372,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9973,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 1372,
+      "needless_escalations": 908
+     },
+     {
+      "name": "Version 2.6",
+      "decisions_moved": 908,
+      "adherence_policy_driven": 1.0,
+      "adherence_frozen": 0.9982,
+      "missed_exceptions": 0,
+      "missed_escalations": 0,
+      "unsupported_findings": 908,
+      "needless_escalations": 908
+     }
+    ]
+   },
+   "deployed_path": {
+    "seconds": {
+     "audit_before": 708.1,
+     "adopt": 0.024,
+     "audit_after": 755.0,
+     "load": 36.4
+    },
+    "before": {
+     "invoices": 500000,
+     "findings": 7140,
+     "states": {
+      "AUTO_APPROVED": 494288,
+      "PENDING_REVIEW": 5712
+     },
+     "findings_by_rule": {
+      "2.1.1": 714,
+      "2.1.2": 714,
+      "2.1.3": 714,
+      "2.2.1": 714,
+      "3.1.1": 357,
+      "3.1.2": 357,
+      "3.1.3": 714,
+      "4.1.1": 714,
+      "4.2.1": 357,
+      "4.3.1": 357,
+      "4.4.1": 714,
+      "5.1.1": 714
+     }
+    },
+    "after": {
+     "invoices": 500000,
+     "findings": 165741,
+     "states": {
+      "AUTO_APPROVED": 339932,
+      "PENDING_REVIEW": 160068
+     },
+     "findings_by_rule": {
+      "2.1.1": 792,
+      "2.1.2": 714,
+      "2.1.3": 714,
+      "2.2.1": 714,
+      "3.1.1": 357,
+      "3.1.2": 357,
+      "3.1.3": 714,
+      "4.1.1": 10434,
+      "4.2.1": 357,
+      "4.3.1": 360,
+      "4.4.1": 714,
+      "5.1.1": 149514
+     }
+    }
+   },
+   "control_stage": {
+    "invoices": 500000,
+    "seconds": 15.857,
+    "microseconds_per_invoice": 31.7,
+    "findings": 7140,
+    "reference": {
+     "dataset": "large_seed_505",
+     "invoices": 20000,
+     "microseconds_per_invoice": 16.2
+    },
+    "ratio": 1.96,
+    "history_fit": {
+     "ledger": {
+      "mean_history": 49.4,
+      "intercept_us": 10.6,
+      "us_per_history_record": 0.431
+     },
+     "reference": {
+      "mean_history": 29.4,
+      "intercept_us": 11.7,
+      "us_per_history_record": 0.168
+     }
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/huge_seed_606/huge.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/huge.md"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/manifest.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/manifest.json"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/metrics.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/metrics.json"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/policy_change.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/policy_change.json"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/application.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/application.json"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/size.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/size.json"
+    }
+   ],
+   "command": "python -m evaluation.huge"
   }
  }
 }

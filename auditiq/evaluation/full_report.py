@@ -565,8 +565,9 @@ def scalability_section() -> list[str]:
         *md(["Worker processes", "Seconds", "Invoices per second", "Speed-up", "Efficiency (speed-up / workers)",
              "Findings"], rows),
         *md(["Ledger size", "Seconds (one process)", "Invoices per second", "Microseconds per invoice"], size),
-        "Every number of workers produced the same findings, which is the correctness condition of the split. The cost "
-        "per invoice does not grow with the ledger, so time is linear in the number of invoices. Efficiency falls with "
+        "Every number of workers produced the same findings, which is the correctness condition of the split. From "
+        "5,000 to 40,000 invoices the cost per invoice does not grow with the ledger; at 500,000 invoices it does, "
+        "because two controls read the vendor's history (16.1). Efficiency falls with "
         "more workers because the processor has two performance and eight efficiency cores. A rerun under background "
         "load gave the same findings with 21 to 36% lower throughput (RESULTS.md, Section 5).", "",
     ] + huge_subsection()

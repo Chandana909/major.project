@@ -111,8 +111,9 @@ not start with Windows: run `start` after a reboot.
 ### In a container
 
 `deploy/postgres/docker-compose.yml` starts PostgreSQL 17 with the same
-databases and role. It was not run on the machine this project was developed
-on, which has no Docker.
+databases and role. The machine this project was developed on has no Docker;
+CI starts the database from this file on every push, runs every test against
+it and sets up and audits a benchmark ledger in it.
 
 ### After switching backend
 

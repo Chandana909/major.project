@@ -140,6 +140,7 @@ ground truth of every invoice.
 | `pilot_seed_909` | 5,000 | 20,755 | development; the only ledger prompts may be tried on |
 | `swap_seed_404` | 5,000 | 20,904 | the policy-swap experiment |
 | `large_seed_505` | 20,000 | 83,495 | the application; a realistic anomaly rate (2.1%) |
+| `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale; generated only on request (`python -m evaluation.huge`), not committed |
 
 `python -m auditiq_bench` regenerates them byte-identically;
 `python -m auditiq_bench.overview --verify` checks the files against their
@@ -177,6 +178,9 @@ Measured, by scripts in this repository:
 - **The vendor-history cap** against the labels: `results/history_cap.md`.
 - **Scalability of the control stage** against worker processes and ledger size:
   `results/scalability.md`.
+- **The huge ledger**: detection, the fourteen policy documents, the deployed
+  path and the control stage on 500,000 invoices from 15,000 vendors:
+  `results/huge_seed_606/huge.md` (`python -m evaluation.huge`).
 - **The pipeline against a real local model** (`qwen2.5:7b`, on a laptop CPU):
   a pilot of 20 invoices under all five configurations, and a six-invoice
   demonstration, in `results/pilot_seed_909/` (`pilot20.md`, `demo.md`). A

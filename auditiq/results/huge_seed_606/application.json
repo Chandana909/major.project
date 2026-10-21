@@ -1,0 +1,93 @@
+{
+ "produced": "2026-10-21 09:35",
+ "ledger": "huge_seed_606",
+ "store": "SQLite",
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+ "adopted_version": "3.12",
+ "changes": [
+  {
+   "clause": "2.1.1",
+   "parameter": "amount_tolerance_pct",
+   "from": 1.0,
+   "to": 0.5
+  },
+  {
+   "clause": "4.1.1",
+   "parameter": "max_invoices_per_vendor_per_day",
+   "from": 3,
+   "to": 2
+  },
+  {
+   "clause": "4.3.1",
+   "parameter": "round_amount_multiple",
+   "from": 10000,
+   "to": 5000
+  },
+  {
+   "clause": "5.1.1",
+   "parameter": "approval_limits",
+   "from": {
+    "Manager": 100000,
+    "Senior Manager": 500000,
+    "Director": 2500000,
+    "CFO": 10000000
+   },
+   "to": {
+    "Manager": 50000,
+    "Senior Manager": 250000,
+    "Director": 2500000,
+    "CFO": 10000000
+   }
+  }
+ ],
+ "seconds": {
+  "audit_before": 708.1,
+  "adopt": 0.024,
+  "audit_after": 755.0,
+  "load": 36.4
+ },
+ "before": {
+  "invoices": 500000,
+  "findings": 7140,
+  "states": {
+   "AUTO_APPROVED": 494288,
+   "PENDING_REVIEW": 5712
+  },
+  "findings_by_rule": {
+   "2.1.1": 714,
+   "2.1.2": 714,
+   "2.1.3": 714,
+   "2.2.1": 714,
+   "3.1.1": 357,
+   "3.1.2": 357,
+   "3.1.3": 714,
+   "4.1.1": 714,
+   "4.2.1": 357,
+   "4.3.1": 357,
+   "4.4.1": 714,
+   "5.1.1": 714
+  }
+ },
+ "after": {
+  "invoices": 500000,
+  "findings": 165741,
+  "states": {
+   "AUTO_APPROVED": 339932,
+   "PENDING_REVIEW": 160068
+  },
+  "findings_by_rule": {
+   "2.1.1": 792,
+   "2.1.2": 714,
+   "2.1.3": 714,
+   "2.2.1": 714,
+   "3.1.1": 357,
+   "3.1.2": 357,
+   "3.1.3": 714,
+   "4.1.1": 10434,
+   "4.2.1": 357,
+   "4.3.1": 360,
+   "4.4.1": 714,
+   "5.1.1": 149514
+  }
+ }
+}

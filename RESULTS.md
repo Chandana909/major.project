@@ -17,7 +17,9 @@ Status: complete, 18 October 2026. Every result below was produced by the code
 in this repository, and every result that needs no model was reproduced end to
 end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 (Section 2). The language-model stages have been run only on samples (20 and
-34 invoices), with a local 7B model on a laptop CPU (Section 7).
+34 invoices), with a local 7B model on a laptop CPU (Section 7). On 21 October
+every measurement that needs no model was repeated on a ledger of 500,000
+invoices (Section 5.1).
 
 **The full report** (methodology, every result in detail, per-invoice
 analysis of the model runs, threats to validity): [`REPORT.md`](REPORT.md),
@@ -50,6 +52,11 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 4. Optional: run C2 to C5 on the full benchmark ledgers. This needs a GPU or a
    hosted model endpoint (Section 7). Until then the paper reports the pilot
    and the sample, and gives expected values for the full run (Section 10).
+5. Qualify one sentence in both papers (conference `main.tex`, Section on
+   scalability; `auditiq_paper.tex`, Section "Scalability"): the cost per
+   invoice is unchanged from 5,000 to 40,000 invoices, so time is linear over
+   that range, but at 500,000 invoices it is 1.96 times that of 20,000
+   (Section 5.1). The papers were not edited after 21 October.
 
 ## Contents
 
@@ -78,11 +85,12 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 5 | What does a policy change do in the application? | Strict policy on 20,000 invoices: findings 300 to 6,546; invoices waiting for review 240 to 6,353. No code edited. | Measured | 3.5 |
 | 6 | How do the controls compare with anomaly detectors? | F1 0.833 at precision 1.000, against 0.536 (isolation forest) and 0.498 (one-class SVM); false positives on hard negatives 0.000 against 0.403 and 0.481. | Measured | 4 |
 | 7 | And at a realistic anomaly rate (2.1%)? | F1 0.833 against 0.211 and 0.429. | Measured | 4 |
-| 8 | How fast is the control stage? | About 18 µs per invoice whatever the ledger size; 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
+| 8 | How fast is the control stage? | About 18 µs per invoice on 5,000 to 40,000 invoices, 31.7 µs on 500,000 (the vendors' histories are longer); 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
 | 9 | Can a model read a policy written in its own words? | 6 documents, 84 values: 80 proposed correctly; the code check verified 56, held back 24 right ones, caught 2 wrong ones and passed 2. | Measured (one 7B model) | 6 |
 | 10 | How do the language-model stages do? | Benchmark sample of 34 invoices: the agents (C3) found 12 of 20 judgement anomalies (0.600); 0.375 of their findings name a violated rule (0.471 with the challenger); the single prompt (C2) found 4 of 20 and 4 of its 128 findings name a violated rule. 3 to 5 model calls per invoice. No difference is significant on 34 invoices. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 | 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
+| 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage costs 1.96 times as much per invoice as on 20,000 invoices, because two controls read the vendor's history. | Measured | 5.1 |
 
 ## 2. Data
 
@@ -96,6 +104,7 @@ receipts, invoices, approval logs and the ground truth of every invoice.
 | `pilot_seed_909` | 5,000 | 420 | Development only: the only ledger on which prompts were tried |
 | `swap_seed_404` | 5,000 | 150 invoices at the boundary between versions 2.5 and 2.6 | The policy-swap check |
 | `large_seed_505` | 20,000 | 420 (2.1%) | The application; a realistic anomaly rate |
+| `huge_seed_606` | 500,000 (15,000 vendors) | 9,996 (2.0%), 714 in each of 14 classes; plus 720 hard negatives | Every measurement without a model at scale (Section 5.1). Generated only on request; its files (about 330 MB) are not committed, their hashes are |
 
 The 14 anomaly classes: R1 to R10 are decidable from field values (amount,
 quantity, exact duplicate, GSTIN format or state code, GSTIN against the vendor
@@ -369,8 +378,9 @@ under 15 policy versions); every run produced the same 16,840 findings.
 | 20,000 | 0.389 | 19.4 |
 | 40,000 | 0.731 | 18.3 |
 
-The cost per invoice does not grow with the ledger, so time is linear in the
-number of invoices. The speed-up is below the number of processes because of
+From 5,000 to 40,000 invoices the cost per invoice does not grow with the
+ledger, so over that range time is linear in the number of invoices. At
+500,000 invoices it is about twice as high (Section 5.1). The speed-up is below the number of processes because of
 the efficiency cores. With storage in the database, one process audits 20,000
 invoices in under a minute (Section 3.5). A deployment on several machines has
 not been measured.
@@ -383,6 +393,78 @@ Throughput depends on the load of the machine; the table reports the 13 October
 run.
 
 ![Throughput of the control stage](auditiq/results/figures/scalability.png)
+
+### 5.1 The huge ledger: 500,000 invoices (Measured)
+
+Source: `results/huge_seed_606/huge.md` and the JSON files beside it,
+`python -m evaluation.huge`. The ledger `huge_seed_606` is generated from its
+seed into a work folder outside the repository and checked against the file
+hashes committed in `results/huge_seed_606/manifest.json`: 500,000 invoices
+from 15,000 vendors, 2,078,077 records in the five tables, 9,996 anomalous
+invoices (714 in each of the 14 classes, 2.0%) and 720 hard negatives. No
+model is used. After generation the steps took about an hour (detection
+1,054 s, policy change 659 s, the deployed path 1,515 s). The duration of the
+generation itself was not measured: the laptop slept during it.
+
+**Detection on every invoice** (bootstrap intervals, 200 resamples; thresholds
+of the detectors by five-fold cross-fitting, as on the benchmark ledgers):
+
+| Measure | Controls (C1) | Isolation forest | One-class SVM |
+|---|---|---|---|
+| Recall | 0.714 [0.706, 0.722] | 0.192 [0.185, 0.200] | 0.376 [0.368, 0.386] |
+| Precision | 1.000 [1.000, 1.000] | 0.191 [0.184, 0.199] | 0.504 [0.495, 0.515] |
+| F1 | 0.833 [0.828, 0.838] | 0.192 [0.185, 0.199] | 0.431 [0.423, 0.439] |
+| False-positive rate, hard negatives | 0.000 | 0.108 [0.083, 0.133] | 0.521 [0.488, 0.554] |
+| False-positive rate, ordinary invoices | 0.000 | 0.016 | 0.007 |
+
+On paired invoices (McNemar, Holm-adjusted p < 0.001 for both) only the controls
+are right on 13,730 invoices and only the isolation forest on 413; against the
+one-class SVM, 7,913 and 831. The six construction checks of Section 4 hold on
+every one of the 500,000 invoices: every invoice of R1 to R10 reported under its
+labelled clause, none of J1 to J4, no flag on an ordinary invoice or a hard
+negative. The controls' F1 is the same as on the 20,000-invoice ledger (0.833);
+the isolation forest's is lower (0.192 against 0.211) and the SVM's about the
+same (0.431 against 0.429).
+
+**Policy change.** The fourteen policy documents of Section 3.2, read from
+their PDFs and applied to the 500,000 invoices: 7,000,000 audits in 247 s.
+The policy-driven controls decide every invoice as the policy in force
+requires under every document (adherence 1.0000, 0 wrong decisions; under
+version 2.5 they agree with the ground truth on 500,000 of 500,000). A system
+whose thresholds stay frozen decides against the policy in force on up to
+31.2% of the invoices (the strict policy: 155,826 decisions; on the 40,000
+invoices of Section 3.2 the same document gave 30.7%); the Manager limit of
+50,000 alone moves 96,382 decisions (19.3%) and the Senior Manager limit of
+250,000 moves 52,418 (10.5%). The per-document table is in `huge.md`.
+
+**The deployed path.** The ledger loaded into a new SQLite store in 36 s;
+every invoice audited with the controls, every result, finding and trail entry
+stored, in 708 s; the strict policy document adopted in 0.02 s; every invoice
+audited again in 755 s.
+
+| | Before (v2.5) | After (strict policy) |
+|---|---|---|
+| Findings | 7,140 | 165,741 |
+| Waiting for review | 5,712 | 160,068 |
+| Approved automatically | 494,288 | 339,932 |
+
+**The control stage.** 500,000 invoices in 15.9 s in one process, 31.7 µs per
+invoice (31,532 invoices per second), median of three runs. Timed in turn with
+it in the same process, the 20,000-invoice ledger took 16.2 µs per invoice: the
+larger ledger costs 1.96 times as much per invoice. A first measurement, taken
+while the test suite ran beside it, gave 33.7 µs and is not used. The reason is
+in the controls: two of them (2.2.1, exact duplicate, and 4.1.1, invoices of
+the vendor on one day) read every other invoice of the vendor. Timing each
+invoice alone and fitting a straight line gives 10.6 µs plus 0.431 µs per
+earlier invoice of the vendor on the huge ledger (mean history 49.4), and
+11.7 µs plus 0.168 µs on the 20,000-invoice ledger (mean history 29.4). So the
+histories are longer, and on the larger ledger each record of a history also
+costs more to read. The likely reason for the second is that the ledger in
+memory outgrows the processor's caches; that has not been tested. **The
+control stage is therefore not linear in the number of invoices at this
+scale.** An index of each vendor's invoices by number and by date would remove
+the scan. It has not been implemented, because every result in this document
+was computed with the controls as they are.
 
 ## 6. Policies written in their own wording
 
@@ -546,13 +628,17 @@ experimental results.
 | REST API | FastAPI, 22 endpoints, background jobs, optional bearer token (constant-time comparison), checks on every upload |
 | Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
 | Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | 337 Python tests on SQLite and PostgreSQL (334 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
-| Continuous integration | GitHub Actions: Python (ruff, tests on both backends) and frontend (lint, types, tests, build, dependency audit) |
+| Tests | 345 Python tests on SQLite and PostgreSQL (342 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
+| Continuous integration | GitHub Actions, four jobs on every push: Python (ruff, tests on both backends); frontend (lint, types, tests, build, dependency audit); the browser tests; and PostgreSQL started from the compose file, with every test run against it and a ledger set up and audited in it |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 
 A concurrency defect found during testing (simultaneous web requests could
 deadlock on PostgreSQL, because every connection re-created the database views)
-was fixed; a test now opens 32 connections at once.
+was fixed; a test now opens 32 connections at once. A second one was found by
+the compose job on 21 October: the command-line commands left their database
+connections to the garbage collector, and on PostgreSQL a connection that is
+not closed keeps its transaction and its locks. The commands now close every
+connection when they end, and a test checks it on both backends.
 
 ## 10. Expected values (not measured)
 
@@ -614,6 +700,7 @@ a model audits.
 - Pattern reading accepts only the template's wording; the model-assisted path was measured on six short documents written by the authors, and two wrong values passed its check.
 - Confidence measures stability, not correctness.
 - Everything ran on one laptop; the services are separable, but a multi-machine deployment has not been measured.
+- The control stage reads each vendor's history: at 500,000 invoices it costs about twice as much per invoice as at 20,000 (Section 5.1).
 - The web application has one shared token and no user accounts.
 - The two base papers were described from their abstracts.
 
@@ -633,7 +720,7 @@ The paper draws its own figures in TikZ and pgfplots from the same numbers
 
 ## 13. How to reproduce every number
 
-From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8, 13 and 14 need no model.
+From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 15 need no model.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -651,6 +738,7 @@ From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8, 13 and 14 need n
 | 12 | `python -m evaluation.figures` | `results/figures/*.png` |
 | 13 | `python -m evaluation.ledger_runs` | `results/ledger_runs.*` |
 | 14 | `python -m evaluation.collect_results` (after the others) | `results/results.json` |
+| 15 | `python -m evaluation.huge --work <folder outside OneDrive>` (generation takes hours; about 330 MB) | `results/huge_seed_606/` |
 
 Model replies are cached (`.auditiq/`), so re-running step 10 or 11 on the same
 machine reuses them; on another machine the model must be configured

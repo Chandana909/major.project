@@ -23,7 +23,8 @@ def test_the_huge_profile_is_generated_only_on_request_and_its_counts_fit_the_ge
 
 def test_every_step_runs_on_a_ledger_and_the_report_reads_them(small_dataset, tmp_path):
     work, results = tmp_path / "work", tmp_path / "results"
-    common = ["--dataset", str(small_dataset), "--work", str(work), "--results", str(results), "--resamples", "5"]
+    common = ["--dataset", str(small_dataset), "--work", str(work), "--results", str(results), "--resamples", "5",
+              "--reference", str(small_dataset), "--repeats", "2"]
     for step in huge.STEPS:
         assert huge.main(["--step", step, *common]) == 0, step
 
@@ -34,7 +35,12 @@ def test_every_step_runs_on_a_ledger_and_the_report_reads_them(small_dataset, tm
     assert all(v["driven"]["exact"] == 1200 for v in policy["variants"])     # the policy-driven controls never err
     app = json.loads((out / "application.json").read_text(encoding="utf-8"))
     assert app["before"]["invoices"] == app["after"]["invoices"] == 1200 and app["adopted_version"] == "3.12"
+    size = json.loads((out / "size.json").read_text(encoding="utf-8"))
+    assert size["invoices"] == size["reference"]["invoices"] == 1200 and size["findings"] == size["reference"]["findings"]
+    assert size["repeats"] == 2 and size["ratio"] > 0
     report = (out / "huge.md").read_text(encoding="utf-8")
+    assert "timed in turn with it" in report and "per earlier invoice" in report
+    assert sum(b["invoices"] for b in size["history"]["bins"]) == 1200 and size["history"]["us_per_history_record"] > 0
     for heading in ("## Data", "## Detection on every invoice", "## Policy change", "## The deployed path",
                     "## The control stage over the whole ledger"):
         assert heading in report

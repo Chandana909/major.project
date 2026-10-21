@@ -1,0 +1,1431 @@
+{
+ "dataset": "huge_seed_606",
+ "seed": 606,
+ "policy_version": "2.5",
+ "n_invoices": 500000,
+ "n_subset": 12744,
+ "bootstrap_resamples": 200,
+ "metrics": {
+  "C0-IF": {
+   "detection_recall": {
+    "value": 0.1916766706682673,
+    "ci_low": 0.18474622779910177,
+    "ci_high": 0.20026586134682067
+   },
+   "detection_precision": {
+    "value": 0.1914277150564492,
+    "ci_low": 0.1840510799747235,
+    "ci_high": 0.19897035976023045
+   },
+   "detection_f1": {
+    "value": 0.191552111972007,
+    "ci_low": 0.1849088777859401,
+    "ci_high": 0.19934737266289476
+   },
+   "detection_accuracy": {
+    "value": 0.967654,
+    "ci_low": 0.96717725,
+    "ci_high": 0.96816615
+   },
+   "flagged_share": {
+    "value": 0.020018,
+    "ci_low": 0.01958995,
+    "ci_high": 0.0204165
+   },
+   "prevalence": {
+    "value": 0.019992,
+    "ci_low": 0.01969125,
+    "ci_high": 0.02042445
+   },
+   "fpr": {
+    "value": 0.016516191704557513,
+    "ci_low": 0.01612861917850918,
+    "ci_high": 0.016838755563826163
+   },
+   "fpr_ordinary": {
+    "value": 0.0163810792913727,
+    "ci_low": 0.016017986236021305,
+    "ci_high": 0.016707209091808475
+   },
+   "fpr_hard_negative": {
+    "value": 0.10833333333333334,
+    "ci_low": 0.08253417576208073,
+    "ci_high": 0.13270279359990841
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.19149091219133646,
+    "ci_low": 0.1851239632977317,
+    "ci_high": 0.19926336949009252
+   },
+   "detected:R1": {
+    "value": 0.025210084033613446,
+    "ci_low": 0.015529719786548817,
+    "ci_high": 0.03633977731555121
+   },
+   "detected:R2": {
+    "value": 0.03081232492997199,
+    "ci_low": 0.020377680669800235,
+    "ci_high": 0.04280032431348074
+   },
+   "detected:R3": {
+    "value": 0.9971988795518207,
+    "ci_low": 0.9930829238933546,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.08543417366946779,
+    "ci_low": 0.06581271974665237,
+    "ci_high": 0.10417119565217392
+   },
+   "detected:R5": {
+    "value": 0.0784313725490196,
+    "ci_low": 0.06093396226415095,
+    "ci_high": 0.09696209010388789
+   },
+   "detected:R6": {
+    "value": 0.31512605042016806,
+    "ci_low": 0.2807948576779177,
+    "ci_high": 0.34942151585063663
+   },
+   "detected:R7": {
+    "value": 0.21708683473389356,
+    "ci_low": 0.18988177359890554,
+    "ci_high": 0.25134015271892657
+   },
+   "detected:R8": {
+    "value": 0.05042016806722689,
+    "ci_low": 0.03337492749871053,
+    "ci_high": 0.0662111453769345
+   },
+   "detected:R9": {
+    "value": 0.008403361344537815,
+    "ci_low": 0.002746691319579603,
+    "ci_high": 0.015474459107639825
+   },
+   "detected:R10": {
+    "value": 0.2969187675070028,
+    "ci_low": 0.2645476823708207,
+    "ci_high": 0.32884282970550577
+   },
+   "detected:J1": {
+    "value": 0.4579831932773109,
+    "ci_low": 0.4210222397025171,
+    "ci_high": 0.48970369397759106
+   },
+   "detected:J2": {
+    "value": 0.08683473389355742,
+    "ci_low": 0.0702401322185495,
+    "ci_high": 0.10797661665016377
+   },
+   "detected:J3": {
+    "value": 0.01680672268907563,
+    "ci_low": 0.008581262785996564,
+    "ci_high": 0.028948822332073278
+   },
+   "detected:J4": {
+    "value": 0.01680672268907563,
+    "ci_low": 0.008732360543228913,
+    "ci_high": 0.026175336137825106
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C0-SVM": {
+   "detection_recall": {
+    "value": 0.3758503401360544,
+    "ci_low": 0.3675097360061274,
+    "ci_high": 0.38555481546811265
+   },
+   "detection_precision": {
+    "value": 0.5038894849785408,
+    "ci_low": 0.494522982054658,
+    "ci_high": 0.5145714558588285
+   },
+   "detection_f1": {
+    "value": 0.4305523722209489,
+    "ci_low": 0.4230261582617556,
+    "ci_high": 0.43925808088454643
+   },
+   "detection_accuracy": {
+    "value": 0.980124,
+    "ci_low": 0.97974535,
+    "ci_high": 0.9804683
+   },
+   "flagged_share": {
+    "value": 0.014912,
+    "ci_low": 0.0146138,
+    "ci_high": 0.01529865
+   },
+   "prevalence": {
+    "value": 0.019992,
+    "ci_low": 0.01969125,
+    "ci_high": 0.02042445
+   },
+   "fpr": {
+    "value": 0.0075489179680165875,
+    "ci_low": 0.007280907415107429,
+    "ci_high": 0.007812670996341817
+   },
+   "fpr_ordinary": {
+    "value": 0.0067936004447314855,
+    "ci_low": 0.006555280174334376,
+    "ci_high": 0.007057641790777903
+   },
+   "fpr_hard_negative": {
+    "value": 0.5208333333333334,
+    "ci_low": 0.48778906708697967,
+    "ci_high": 0.5544708291498254
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.5039915394524651,
+    "ci_low": 0.495819203822402,
+    "ci_high": 0.5135318197524762
+   },
+   "detected:R1": {
+    "value": 0.39915966386554624,
+    "ci_low": 0.3641758685698896,
+    "ci_high": 0.43360073602667587
+   },
+   "detected:R2": {
+    "value": 0.7044817927170869,
+    "ci_low": 0.6704358657739151,
+    "ci_high": 0.7369306608744551
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.0056022408963585435,
+    "ci_low": 0.001373161053039102,
+    "ci_high": 0.011445276497695856
+   },
+   "detected:R5": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:R6": {
+    "value": 0.7717086834733894,
+    "ci_low": 0.7414730251928183,
+    "ci_high": 0.7991924804318792
+   },
+   "detected:R7": {
+    "value": 0.7002801120448179,
+    "ci_low": 0.6693571800789101,
+    "ci_high": 0.7325537579714702
+   },
+   "detected:R8": {
+    "value": 0.011204481792717087,
+    "ci_low": 0.0053964718055229234,
+    "ci_high": 0.0198098042562877
+   },
+   "detected:R9": {
+    "value": 0.0014005602240896359,
+    "ci_low": 0.0,
+    "ci_high": 0.005198618213172818
+   },
+   "detected:R10": {
+    "value": 0.5042016806722689,
+    "ci_low": 0.4602011827458256,
+    "ci_high": 0.5405170956354735
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.15406162464985995,
+    "ci_low": 0.13289403222503976,
+    "ci_high": 0.18121900192416152
+   },
+   "detected:J3": {
+    "value": 0.0028011204481792717,
+    "ci_low": 0.0,
+    "ci_high": 0.008223488839927197
+   },
+   "detected:J4": {
+    "value": 0.0070028011204481795,
+    "ci_low": 0.0013908205841446453,
+    "ci_high": 0.013300808299044594
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C1": {
+   "detection_recall": {
+    "value": 0.7142857142857143,
+    "ci_low": 0.7059507696883766,
+    "ci_high": 0.7218053954222174
+   },
+   "detection_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detection_f1": {
+    "value": 0.8333333333333334,
+    "ci_low": 0.8276332262505484,
+    "ci_high": 0.838428537733821
+   },
+   "detection_accuracy": {
+    "value": 0.994288,
+    "ci_low": 0.9940913,
+    "ci_high": 0.9944426500000001
+   },
+   "flagged_share": {
+    "value": 0.01428,
+    "ci_low": 0.01399735,
+    "ci_high": 0.0146384
+   },
+   "prevalence": {
+    "value": 0.019992,
+    "ci_low": 0.01969125,
+    "ci_high": 0.02042445
+   },
+   "fpr": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_ordinary": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_hard_negative": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:J1": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J2": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J3": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J4": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_f1_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_recall_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_f1_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_recall_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "citation_correctness": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "model_rule_precision": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "exact_match": {
+    "value": 0.994288,
+    "ci_low": 0.9940913,
+    "ci_high": 0.9944426500000001
+   },
+   "escalation_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "escalation_recall": {
+    "value": 0.7272727272727273,
+    "ci_low": 0.717424890381984,
+    "ci_high": 0.7369755805903354
+   },
+   "escalated_share": {
+    "value": 0.011424,
+    "ci_low": 0.011191900000000001,
+    "ci_high": 0.0117086
+   },
+   "sampled_share": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_count": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_true_anomalies": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "approved_share": {
+    "value": 0.988576,
+    "ci_low": 0.9882913999999999,
+    "ci_high": 0.9888081
+   },
+   "approved_high_anomalies": {
+    "value": 2142.0,
+    "ci_low": 2061.775,
+    "ci_high": 2239.0
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  }
+ },
+ "metrics_on_weighted_subset": {
+  "C0-IF": {
+   "detection_recall": {
+    "value": 0.1916766706682673,
+    "ci_low": 0.183968587434974,
+    "ci_high": 0.1993922569027611
+   },
+   "detection_precision": {
+    "value": 0.1718092881033725,
+    "ci_low": 0.11619700925107282,
+    "ci_high": 0.3064975656928802
+   },
+   "detection_f1": {
+    "value": 0.18120002458872983,
+    "ci_low": 0.1443224235883591,
+    "ci_high": 0.23559898365417764
+   },
+   "detection_accuracy": {
+    "value": 0.9653680614722459,
+    "ci_low": 0.9541072564290257,
+    "ci_high": 0.975128480513922
+   },
+   "flagged_share": {
+    "value": 0.022303889215556864,
+    "ci_low": 0.012504070016280067,
+    "ci_high": 0.03362039448157793
+   },
+   "prevalence": {
+    "value": 0.01999207996831987,
+    "ci_low": 0.01999207996831987,
+    "ci_high": 0.01999207996831987
+   },
+   "fpr": {
+    "value": 0.018848698576740507,
+    "ci_low": 0.008888963718515436,
+    "ci_high": 0.030429681919665632
+   },
+   "fpr_ordinary": {
+    "value": 0.018717017997800862,
+    "ci_low": 0.008734962659570557,
+    "ci_high": 0.03031907979447435
+   },
+   "fpr_hard_negative": {
+    "value": 0.10833333333333334,
+    "ci_low": 0.08604166666666668,
+    "ci_high": 0.12923611111111113
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.17186680423842668,
+    "ci_low": 0.11623852105831299,
+    "ci_high": 0.30658347971929045
+   },
+   "detected:R1": {
+    "value": 0.025210084033613446,
+    "ci_low": 0.013807450283770154,
+    "ci_high": 0.036629563150511225
+   },
+   "detected:R2": {
+    "value": 0.03081232492997199,
+    "ci_low": 0.018932648055383982,
+    "ci_high": 0.044945043296749886
+   },
+   "detected:R3": {
+    "value": 0.9971988795518207,
+    "ci_low": 0.9930708686133105,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.08543417366946779,
+    "ci_low": 0.06620200503680744,
+    "ci_high": 0.10600109689353636
+   },
+   "detected:R5": {
+    "value": 0.0784313725490196,
+    "ci_low": 0.05921568961502859,
+    "ci_high": 0.09817099567099569
+   },
+   "detected:R6": {
+    "value": 0.31512605042016806,
+    "ci_low": 0.28412861645575577,
+    "ci_high": 0.34683338834591915
+   },
+   "detected:R7": {
+    "value": 0.21708683473389356,
+    "ci_low": 0.19039033780200085,
+    "ci_high": 0.25037454434229456
+   },
+   "detected:R8": {
+    "value": 0.05042016806722689,
+    "ci_low": 0.034115941691505225,
+    "ci_high": 0.06758688604922915
+   },
+   "detected:R9": {
+    "value": 0.008403361344537815,
+    "ci_low": 0.0026906552094522066,
+    "ci_high": 0.015020618218516456
+   },
+   "detected:R10": {
+    "value": 0.2969187675070028,
+    "ci_low": 0.26164581696264866,
+    "ci_high": 0.32931412583182096
+   },
+   "detected:J1": {
+    "value": 0.4579831932773109,
+    "ci_low": 0.41869537936258494,
+    "ci_high": 0.4972372399612966
+   },
+   "detected:J2": {
+    "value": 0.08683473389355742,
+    "ci_low": 0.06764331027435677,
+    "ci_high": 0.10640328678101665
+   },
+   "detected:J3": {
+    "value": 0.01680672268907563,
+    "ci_low": 0.008126295972934634,
+    "ci_high": 0.02684092991296381
+   },
+   "detected:J4": {
+    "value": 0.01680672268907563,
+    "ci_low": 0.00681775617223634,
+    "ci_high": 0.02610891113767683
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C0-SVM": {
+   "detection_recall": {
+    "value": 0.3758503401360544,
+    "ci_low": 0.36414315726290514,
+    "ci_high": 0.38556922769107643
+   },
+   "detection_precision": {
+    "value": 0.5228090584983955,
+    "ci_low": 0.38917695524267426,
+    "ci_high": 0.6759799100202877
+   },
+   "detection_f1": {
+    "value": 0.43731354228625235,
+    "ci_low": 0.38047112096407104,
+    "ci_high": 0.48457718847123055
+   },
+   "detection_accuracy": {
+    "value": 0.9806635626542505,
+    "ci_low": 0.9757706530826122,
+    "ci_high": 0.983942235768943
+   },
+   "flagged_share": {
+    "value": 0.01437241748966996,
+    "ci_low": 0.011077094308377233,
+    "ci_high": 0.019117226468905877
+   },
+   "prevalence": {
+    "value": 0.01999207996831987,
+    "ci_low": 0.01999207996831987,
+    "ci_high": 0.01999207996831987
+   },
+   "fpr": {
+    "value": 0.0069982979661307515,
+    "ci_low": 0.003685546181444157,
+    "ci_high": 0.011991073505822425
+   },
+   "fpr_ordinary": {
+    "value": 0.006242167093823195,
+    "ci_low": 0.0029185623014948434,
+    "ci_high": 0.01122757428231572
+   },
+   "fpr_hard_negative": {
+    "value": 0.5208333333333334,
+    "ci_low": 0.48052083333333334,
+    "ci_high": 0.5555902777777778
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 0.5229098877125709,
+    "ci_low": 0.38927303610847575,
+    "ci_high": 0.6760684276809272
+   },
+   "detected:R1": {
+    "value": 0.39915966386554624,
+    "ci_low": 0.3637006952926806,
+    "ci_high": 0.4312684534594538
+   },
+   "detected:R2": {
+    "value": 0.7044817927170869,
+    "ci_low": 0.6666552197802198,
+    "ci_high": 0.7364757857214163
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 0.0056022408963585435,
+    "ci_low": 0.0014002202822876724,
+    "ci_high": 0.011453300901062852
+   },
+   "detected:R5": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:R6": {
+    "value": 0.7717086834733894,
+    "ci_low": 0.7424022019928651,
+    "ci_high": 0.8025320542205456
+   },
+   "detected:R7": {
+    "value": 0.7002801120448179,
+    "ci_low": 0.6683976919662672,
+    "ci_high": 0.7335248246585455
+   },
+   "detected:R8": {
+    "value": 0.011204481792717087,
+    "ci_low": 0.0053783652680087345,
+    "ci_high": 0.019753183572744464
+   },
+   "detected:R9": {
+    "value": 0.0014005602240896359,
+    "ci_low": 0.0,
+    "ci_high": 0.004237437968978496
+   },
+   "detected:R10": {
+    "value": 0.5042016806722689,
+    "ci_low": 0.4672741433021807,
+    "ci_high": 0.5401480592236895
+   },
+   "detected:J1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J2": {
+    "value": 0.15406162464985995,
+    "ci_low": 0.1242938645364333,
+    "ci_high": 0.17705395683453237
+   },
+   "detected:J3": {
+    "value": 0.0028011204481792717,
+    "ci_low": 0.0,
+    "ci_high": 0.007303264387869887
+   },
+   "detected:J4": {
+    "value": 0.0070028011204481795,
+    "ci_low": 0.0013986013986013986,
+    "ci_high": 0.01369150008610398
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  },
+  "C1": {
+   "detection_recall": {
+    "value": 0.7142857142857143,
+    "ci_low": 0.7065676270508203,
+    "ci_high": 0.7220013005202081
+   },
+   "detection_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detection_f1": {
+    "value": 0.8333333333333334,
+    "ci_low": 0.8280569874109684,
+    "ci_high": 0.8385606889448802
+   },
+   "detection_accuracy": {
+    "value": 0.9942879771519086,
+    "ci_low": 0.9941336765347062,
+    "ci_high": 0.9944422277689111
+   },
+   "flagged_share": {
+    "value": 0.01428005712022848,
+    "ci_low": 0.014125756503026011,
+    "ci_high": 0.014434307737230949
+   },
+   "prevalence": {
+    "value": 0.01999207996831987,
+    "ci_low": 0.01999207996831987,
+    "ci_high": 0.01999207996831987
+   },
+   "fpr": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_ordinary": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "fpr_hard_negative": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision_at_2pct_prevalence": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "detected:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "detected:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R1": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R2": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R3": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R4": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R5": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R6": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R7": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R8": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R9": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "recall:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "f1:R10": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "precision:J1": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J1": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J2": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J2": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J3": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J3": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "precision:J4": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "recall:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "f1:J4": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_f1_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_recall_rule": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "macro_f1_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "macro_recall_judgement": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "citation_correctness": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "model_rule_precision": {
+    "value": null,
+    "ci_low": null,
+    "ci_high": null
+   },
+   "exact_match": {
+    "value": 0.9942879771519086,
+    "ci_low": 0.9941336765347062,
+    "ci_high": 0.9944422277689111
+   },
+   "escalation_precision": {
+    "value": 1.0,
+    "ci_low": 1.0,
+    "ci_high": 1.0
+   },
+   "escalation_recall": {
+    "value": 0.7272727272727273,
+    "ci_low": 0.7188834111520724,
+    "ci_high": 0.7352291546628017
+   },
+   "escalated_share": {
+    "value": 0.011424045696182784,
+    "ci_low": 0.01125999503998016,
+    "ci_high": 0.011584146336585346
+   },
+   "sampled_share": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_count": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "sampled_true_anomalies": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "approved_share": {
+    "value": 0.9885759543038172,
+    "ci_low": 0.9884158536634147,
+    "ci_high": 0.9887400049600198
+   },
+   "approved_high_anomalies": {
+    "value": 2142.0,
+    "ci_low": 2068.775,
+    "ci_high": 2216.05
+   },
+   "llm_calls_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "tokens_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   },
+   "latency_ms_per_invoice": {
+    "value": 0.0,
+    "ci_low": 0.0,
+    "ci_high": 0.0
+   }
+  }
+ },
+ "construction_checks": {
+  "C1 reports every invoice of R1-R10 under the labelled clause": true,
+  "C1 reports no invoice of J1-J4": true,
+  "C1 raises no flag on ordinary clean invoices": true,
+  "C1 raises no flag on hard negatives": true,
+  "every clause cited by C1 on an anomalous invoice is the labelled clause": true,
+  "C1 routes no transaction to sampled review": true
+ },
+ "mcnemar_detection": {
+  "C1 vs C0-IF": {
+   "only_a_correct": 13730,
+   "only_b_correct": 413,
+   "p_value": 0.0,
+   "p_holm": 0.0,
+   "reject": true
+  },
+  "C1 vs C0-SVM": {
+   "only_a_correct": 7913,
+   "only_b_correct": 831,
+   "p_value": 0.0,
+   "p_holm": 0.0,
+   "reject": true
+  }
+ },
+ "seconds": 1053.7,
+ "produced": "2026-10-21 08:59",
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3"
+}

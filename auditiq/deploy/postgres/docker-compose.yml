@@ -1,6 +1,6 @@
 # PostgreSQL for AuditIQ in a container. An alternative to scripts/pg_local.py
-# for machines that have Docker. Not run on the machine this project was
-# developed on (it has no Docker); the application side is the same either way.
+# for machines that have Docker. CI starts it on every push and runs the tests
+# against it; the application side is the same either way.
 #
 #   set POSTGRES_PASSWORD in the environment, then:
 #   docker compose -f deploy/postgres/docker-compose.yml up -d

@@ -140,13 +140,61 @@ def step_application(dataset: Path, results: Path, work: Path) -> None:
     print(f"application: load {load_seconds} s, audit {result['seconds']['audit_before']} s")
 
 
-def step_size(dataset: Path, results: Path) -> None:
-    from evaluation.scalability import measure_size
+def step_size(dataset: Path, results: Path, reference: Path, repeats: int = 3) -> None:
+    """The control stage over the whole ledger, and over a reference ledger in the same process.
 
-    result = measure_size([dataset], repeats=1)
+    The two are timed in turn, `repeats` times each, and the medians compared: whatever else the machine
+    is doing affects both alike, so the ratio says whether the cost per invoice grows with the ledger.
+    """
+    import statistics
+
+    from auditiq.controls import run_controls
+    from auditiq.extraction import extract
+    from auditiq.policy import load_policy
+
+    clauses = load_policy("2.5").registry["clauses"]
+    ledgers = {"ledger": extract(dataset)}
+    if reference.exists():
+        ledgers["reference"] = extract(reference)
+    times, findings = {name: [] for name in ledgers}, {}
+    for _ in range(repeats):
+        for name, transactions in ledgers.items():
+            began = time.perf_counter()
+            findings[name] = sum(len(run_controls(t, clauses)) for t in transactions)
+            times[name].append(time.perf_counter() - began)
+
+    # Two controls (2.2.1, 4.1.1) read the vendor's other invoices, so the cost of an invoice grows with the
+    # length of that history: each invoice is timed alone, and the times fitted against the length.
+    by_history = {}
+    for name, transactions in ledgers.items():
+        lengths, each = [], []
+        for t in transactions:
+            began = time.perf_counter()
+            run_controls(t, clauses)
+            each.append(1e6 * (time.perf_counter() - began))
+            lengths.append(len(t.get("vendor_history") or []))
+        fit = statistics.linear_regression(lengths, each)
+        bins: dict[int, list[float]] = {}
+        for n, us in zip(lengths, each):
+            bins.setdefault(min(n // 25 * 25, 150), []).append(us)
+        by_history[name] = {"mean_history": round(statistics.mean(lengths), 1), "max_history": max(lengths),
+                            "intercept_us": round(fit.intercept, 1), "us_per_history_record": round(fit.slope, 3),
+                            "bins": [{"from": b, "invoices": len(v), "median_us": round(statistics.median(v), 1)}
+                                     for b, v in sorted(bins.items())]}
+
+    def row(name: str) -> dict:
+        n, seconds = len(ledgers[name]), statistics.median(times[name])
+        return {"invoices": n, "seconds": round(seconds, 3), "findings": findings[name],
+                "invoices_per_second": round(n / seconds), "microseconds_per_invoice": round(1e6 * seconds / n, 1),
+                "history": by_history[name]}
+    result = {**row("ledger"), "repeats": repeats}
+    if "reference" in ledgers:
+        result["reference"] = {"dataset": reference.name, **row("reference")}
+        result["ratio"] = round(result["microseconds_per_invoice"] / result["reference"]["microseconds_per_invoice"], 2)
     result.update(produced=time.strftime("%Y-%m-%d %H:%M"), machine=machine())
     write_json(out_dir(results) / "size.json", result)
-    print(f"size: {result['microseconds_per_invoice']} µs per invoice")
+    print(f"size: {result['microseconds_per_invoice']} µs per invoice"
+          + (f"; reference {result['reference']['microseconds_per_invoice']} µs" if "reference" in result else ""))
 
 
 # ------------------------------------------------------------------ report
@@ -218,8 +266,43 @@ def report(results: Path) -> Path:
         lines += ["## The control stage over the whole ledger", "",
                   f"{size['invoices']:,} invoices in {size['seconds']:.1f} s in one process: "
                   f"{size['microseconds_per_invoice']} µs per invoice ({size['invoices_per_second']:,} invoices per "
-                  f"second), {size['findings']:,} findings. On 5,000 to 40,000 invoices the same stage took 17.8 to 19.4 "
-                  "µs per invoice (`results/scalability.md`).", ""]
+                  f"second), {size['findings']:,} findings; median of {size.get('repeats', 1)} run(s)."]
+        if size.get("reference"):
+            ref = size["reference"]
+            lines += [f"In the same process, timed in turn with it, the {ref['invoices']:,}-invoice ledger "
+                      f"`{ref['dataset']}` took {ref['microseconds_per_invoice']} µs per invoice ({ref['findings']:,} "
+                      f"findings): the cost per invoice of the larger ledger is {size['ratio']} times that of the smaller."]
+        if size.get("history"):
+            hist, ref = size["history"], (size.get("reference") or {}).get("history")
+            lines += ["", "Two controls (2.2.1, exact duplicate; 4.1.1, invoices of the vendor on one day) read the "
+                      "vendor's other invoices, so an invoice costs more the longer its vendor's history. Each invoice "
+                      "timed alone (the timer adds a little to every figure):", ""]
+            head = "| Earlier invoices of the vendor | Invoices | Median µs per invoice |"
+            rule = "|---|---|---|"
+            if ref:
+                head, rule = (f"| Earlier invoices of the vendor | Invoices ({NAME}) | Median µs | "
+                              f"Invoices ({size['reference']['dataset']}) | Median µs |"), "|---|---|---|---|---|"
+            lines += [head, rule]
+            ref_bins = {b["from"]: b for b in ref["bins"]} if ref else {}
+            for b in hist["bins"]:
+                label = f"{b['from']} or more" if b["from"] == 150 else f"{b['from']} to {b['from'] + 24}"
+                cells = [label, f"{b['invoices']:,}", str(b["median_us"])]
+                if ref:
+                    r = ref_bins.get(b["from"])
+                    cells += [f"{r['invoices']:,}", str(r["median_us"])] if r else ["0", ""]
+                lines += ["| " + " | ".join(cells) + " |"]
+            fits = [f"{hist['intercept_us']} µs plus {hist['us_per_history_record']} µs per earlier invoice on "
+                    f"this ledger (mean history {hist['mean_history']})"]
+            if ref:
+                fits += [f"{ref['intercept_us']} µs plus {ref['us_per_history_record']} µs on "
+                         f"`{size['reference']['dataset']}` (mean history {ref['mean_history']})"]
+            lines += ["", "A straight line through the times of single invoices: " + "; ".join(fits) + "."]
+            if ref and hist["us_per_history_record"] > 1.5 * ref["us_per_history_record"]:
+                lines[-1] += (" Two things grow with this ledger: the histories are longer, and each earlier invoice "
+                              "costs more to read. The second is likely the ledger in memory outgrowing the "
+                              "processor's caches; that explanation has not been tested. The time of the stage is "
+                              "not linear in the number of invoices at this scale.")
+        lines += [""]
     stamps = [x["machine"] for x in (gen, det, pol, app, size) if x and x.get("machine")]
     if stamps:
         lines += [f"Machine: {stamps[0]}."]
@@ -236,6 +319,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--dataset", type=Path, help="another ledger instead of the huge one (for tests)")
     ap.add_argument("--results", type=Path, default=RESULTS)
     ap.add_argument("--resamples", type=int, default=200, help="bootstrap resamples of the detection step")
+    ap.add_argument("--reference", type=Path, default=PROJECT_ROOT / "data" / "large_seed_505",
+                    help="size step: the ledger timed alongside, for the cost per invoice at another size")
+    ap.add_argument("--repeats", type=int, default=3, help="size step: timings of each ledger (median reported)")
     ap.add_argument("--step", choices=STEPS, help=argparse.SUPPRESS)        # internal: run one step in this process
     args = ap.parse_args(argv)
     dataset = args.dataset or args.work / NAME
@@ -250,7 +336,7 @@ def main(argv: list[str] | None = None) -> int:
         elif args.step == "application":
             step_application(dataset, args.results, args.work)
         elif args.step == "size":
-            step_size(dataset, args.results)
+            step_size(dataset, args.results, args.reference, args.repeats)
         else:
             print(f"wrote {report(args.results)}")
         return 0
@@ -258,7 +344,8 @@ def main(argv: list[str] | None = None) -> int:
     for step in args.steps:
         began = time.time()
         command = [sys.executable, "-m", "evaluation.huge", "--step", step, "--work", str(args.work),
-                   "--results", str(args.results), "--resamples", str(args.resamples)]
+                   "--results", str(args.results), "--resamples", str(args.resamples),
+                   "--reference", str(args.reference), "--repeats", str(args.repeats)]
         if args.dataset:
             command += ["--dataset", str(args.dataset)]
         code = subprocess.run(command, cwd=PROJECT_ROOT).returncode

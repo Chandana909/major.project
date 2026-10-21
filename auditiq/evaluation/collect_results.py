@@ -263,7 +263,15 @@ def huge_ledger() -> dict:
                                         "needless_escalations": v["frozen"]["needless_escalations"]}
                                        for v in pol["variants"]]},
         "deployed_path": {"seconds": app["seconds"], "before": app["before"], "after": app["after"]},
-        "control_stage": {k: size[k] for k in ("invoices", "seconds", "microseconds_per_invoice", "findings")},
+        "control_stage": {**{k: size[k] for k in ("invoices", "seconds", "microseconds_per_invoice", "findings")},
+                          **({"reference": {k: size["reference"][k] for k in ("dataset", "invoices",
+                                                                             "microseconds_per_invoice")},
+                              "ratio": size["ratio"]} if size.get("reference") else {}),
+                          **({"history_fit": {name: {k: h[k] for k in ("mean_history", "intercept_us",
+                                                                       "us_per_history_record")}
+                                              for name, h in (("ledger", size["history"]),
+                                                              ("reference", size["reference"]["history"]))}}
+                             if size.get("history") and size.get("reference") else {})},
         "sources": [source(f"{folder}/{f}") for f in ("huge.md", "manifest.json", "metrics.json", "policy_change.json",
                                                       "application.json", "size.json")],
         "command": "python -m evaluation.huge"}}
