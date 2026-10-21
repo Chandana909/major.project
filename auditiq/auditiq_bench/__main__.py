@@ -78,8 +78,8 @@ PROFILES = [
 ]
 # Generated only when named (--only huge_seed_606): about 330 MB of CSV, too large for the repository. Its file
 # hashes are committed in results/huge_seed_606/manifest.json, so a regenerated copy can be checked.
-HUGE = Profile("huge_seed_606", "large", 606, 500_000, 25_000,
-               "The huge ledger: 500,000 invoices from 25,000 vendors at the anomaly rate of the large ledger "
+HUGE = Profile("huge_seed_606", "large", 606, 500_000, 15_000,
+               "The huge ledger: 500,000 invoices from 15,000 vendors at the anomaly rate of the large ledger "
                "(714 invoices of each of the fourteen classes, 2.0%), with 720 hard negatives. It measures the "
                "controls, the classical detectors, the policy change and the application at a scale 25 times the "
                "large ledger and 100 times a benchmark ledger.",

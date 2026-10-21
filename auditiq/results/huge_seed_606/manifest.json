@@ -1,0 +1,32 @@
+{
+  "dataset": "huge_seed_606",
+  "kind": "large",
+  "seed": 606,
+  "generator_version": "1.0",
+  "policy_version": "2.5",
+  "period": [
+    "2025-04-01",
+    "2026-03-31"
+  ],
+  "counts": {
+    "invoices": 500000,
+    "anomalous": 9996,
+    "hard_negative": 720,
+    "clean": 489284,
+    "purchase_orders": 498096,
+    "goods_receipts": 497858,
+    "approval_logs": 567123,
+    "vendors": 15000,
+    "ledger_records": 2078077,
+    "eval_subset": 12744
+  },
+  "sha256": {
+    "vendor_master.csv": "29e1da2f5c58aa2318f803ac9c16fbb403d7334d943bad0a296970fd7f70d65b",
+    "purchase_orders.csv": "45e49f3c719948e709cf51c3076451a97541103748f7b1dea502229b6847fcb4",
+    "goods_receipts.csv": "2c41f6f9595a8bfc6e358b29ead142c86d4be80a6ac133591b5c56739334dcfe",
+    "invoices.csv": "d38f6b8916c7fec01ed66b2fba85887f36aed3c3f3fa554452c388e3eeb87ea0",
+    "approval_logs.csv": "03b3da3aa535e6886fdaf0bd22671bcf422711de955b54edef4f0f836bb2492d",
+    "labels.csv": "40f543a5d18cac60ad2ee7bd8703fdce05dcbb99347d5460441a45fc2c1335b4",
+    "eval_subset.csv": "8b4b4d306c68afc1a2db0c93a6c72591dc8383540a28388f52c4dfe6d19b59b7"
+  }
+}

@@ -139,6 +139,10 @@ class Builder:
 
     # ------------------------------------------------------- master records
     def _make_vendors(self) -> list[Vendor]:
+        # Each vendor's invoice numbers start with its own three letters: 26**3 = 17,576 prefixes exist, and
+        # the search for a free one would never end beyond that. Keep a margin so the search stays short.
+        if self.n_vendors > 17_000:
+            raise ValueError(f"{self.n_vendors:,} vendors: at most 17,000 can have a three-letter prefix of their own")
         cats = list(cat.CATEGORIES)
         letters = string.ascii_uppercase
         alnum = string.ascii_uppercase + string.digits

@@ -261,17 +261,30 @@ were measured again after the correction of the policy dates and did not change.
 25. **A review decision is the last entry of the audit trail** of its result,
     with the reviewer as the actor.
 
-## 6. Open decisions
+## 6. Decisions that were open, and how they were settled (2026-10-20)
 
-1. **Which model runs C2 to C5.** See the measurements below. The client needs
-   a base URL, a model identifier and a key (`.env.example`). The paper says
-   "an open-weight LLM"; a hosted open-weight model satisfies that.
-2. **What to do about J1.** (a) Reclassify it as rule-defined: add a control for
-   2.2.2 and report eleven rule-defined and three judgement classes.
-   (b) Change the generator so that legitimate invoices can share a PO.
-   (c) Leave it and state the limitation. Recommended: (a).
+The team asked for the best option to be taken without waiting for them.
+
+1. **Which model runs C2 to C5.** Decided: the same open-weight model,
+   Qwen2.5-7B with the frozen prompts, on the laptop's integrated GPU (Intel
+   Iris Xe through Ollama's Vulkan backend, `OLLAMA_IGPU_ENABLE=1`), which
+   processes prompts at 63 to 79 tokens per second instead of 7 to 12 on the
+   CPU. That is still about 200 hours for the full protocol of B10, so the
+   measured step is a 90-invoice sample of ledger 202 (15 per judgement class);
+   the full run waits for a GPU or a hosted endpoint, with one command ready.
+2. **What to do about J1.** Decided: (c), keep 2.2.2 a judgement rule and state
+   the limitation. Rule 2.2.2 turns on whether an invoice number is a "re-keyed
+   form" of an earlier one, which the policy states as a judgement; every
+   measured result, the two papers and the comparison with the detectors are
+   built on twelve controls and four judgement rules; and the detectors' success
+   on J1 is already reported. (a), a control for 2.2.2, remains the natural next
+   step and would change every table.
 3. **Rotate the database password** of the hackathon prototype: it is written
-   in 43 files of the reference folder.
+   in 43 files of the reference folder. Not something the project can do: the
+   password belongs to the team's old Neon account, which this work must not
+   touch. The folder is excluded from git, so the password is not in the
+   repository; rotating it in the Neon console is the team's one remaining
+   action.
 
 ### Smoke test on a real model (2026-10-12)
 

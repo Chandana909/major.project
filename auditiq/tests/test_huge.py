@@ -57,3 +57,14 @@ def test_a_ledger_whose_files_differ_from_the_committed_hashes_is_refused(small_
     with pytest.raises(SystemExit, match="differ from"):
         huge.main(["--step", "generate", *common])
     assert manifest["counts"]["invoices"] == 1200
+
+
+def test_the_generator_refuses_more_vendors_than_it_has_invoice_number_prefixes():
+    from datetime import date
+
+    from auditiq_bench.__main__ import load_policy
+    from auditiq_bench.generator import Builder
+
+    assert HUGE.n_vendors <= 17_000
+    with pytest.raises(ValueError, match="three-letter prefix"):
+        Builder(1, load_policy("2.5"), date(2025, 4, 1), date(2026, 3, 31), n_vendors=17_001)

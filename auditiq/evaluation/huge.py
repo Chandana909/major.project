@@ -1,4 +1,4 @@
-"""The huge ledger: 500,000 invoices from 25,000 vendors, at the anomaly rate of the large ledger (2.0%).
+"""The huge ledger: 500,000 invoices from 15,000 vendors, at the anomaly rate of the large ledger (2.0%).
 
     python -m evaluation.huge                                  # every step; about two hours on a laptop
     python -m evaluation.huge --work D:/auditiq-huge           # keep the 2 GB of working files elsewhere
@@ -160,7 +160,7 @@ def report(results: Path) -> Path:
     gen, det, pol, app, size = (load(n) for n in ("generate.json", "metrics.json", "policy_change.json",
                                                   "application.json", "size.json"))
     lines = [f"# The huge ledger (`{NAME}`)", "",
-             "Produced by `python -m evaluation.huge`. 500,000 invoices from 25,000 vendors at the anomaly rate of the "
+             "Produced by `python -m evaluation.huge`. 500,000 invoices from 15,000 vendors at the anomaly rate of the "
              "large ledger; generated from its seed into a work folder (not committed) and checked against the file "
              f"hashes in `results/{NAME}/manifest.json`. No language model is used.", ""]
     if gen:

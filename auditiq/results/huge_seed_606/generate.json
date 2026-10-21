@@ -1,0 +1,19 @@
+{
+ "produced": "2026-10-21 08:42",
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3",
+ "seconds": 51203.2,
+ "files": 7,
+ "status": "hashes recorded",
+ "counts": {
+  "invoices": 500000,
+  "anomalous": 9996,
+  "hard_negative": 720,
+  "clean": 489284,
+  "purchase_orders": 498096,
+  "goods_receipts": 497858,
+  "approval_logs": 567123,
+  "vendors": 15000,
+  "ledger_records": 2078077,
+  "eval_subset": 12744
+ }
+}

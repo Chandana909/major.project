@@ -97,6 +97,7 @@ jobs:
 
   compose:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: auditiq
@@ -114,7 +115,13 @@ jobs:
       - run: pip install -e ".[dev]"
       - name: PostgreSQL from the compose file, with its init.sql
         run: docker compose -f deploy/postgres/docker-compose.yml up -d --wait
-      - run: python -m pytest
+      - name: The tests against the compose database (the last tests run are shown as annotations)
+        run: |
+          code=0
+          timeout 900 python -m pytest -v -p no:cacheprovider > pytest.log 2>&1 || code=$?
+          tail -n 4 pytest.log | while IFS= read -r line; do echo "::notice title=pytest::$line"; done
+          grep -E "PASSED|FAILED|ERROR" pytest.log | tail -n 3 | while IFS= read -r line; do echo "::notice title=last tests::$line"; done
+          exit $code
       - name: A ledger set up and audited in the compose database
         run: |
           python -m auditiq --db postgresql://auditiq:ci-only@localhost:5544/auditiq setup --dataset data/bench_seed_101
