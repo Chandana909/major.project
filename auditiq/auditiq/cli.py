@@ -57,8 +57,13 @@ def make_client(use_cache: bool = True) -> OpenAIChatClient:
     return OpenAIChatClient(LLMSettings.from_env(), ResponseCache() if use_cache else None)
 
 
+_opened: list[db.Database] = []     # closed by main() when the command ends
+
+
 def open_db(args: argparse.Namespace):
-    return db.connect(getattr(args, "db", None))
+    conn = db.connect(getattr(args, "db", None))
+    _opened.append(conn)
+    return conn
 
 
 def table(rows: list[dict], columns: list[str]) -> str:
@@ -533,6 +538,11 @@ def main(argv: list[str] | None = None) -> int:
     except (db.DatabaseUnavailable, LLMError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
+    finally:
+        # A connection left open would hold its transaction, and its locks, until the garbage collector
+        # finds it; a command run in a longer process (the tests) must not leave one behind.
+        while _opened:
+            _opened.pop().close()
 
 
 if __name__ == "__main__":

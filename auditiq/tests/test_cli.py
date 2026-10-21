@@ -96,6 +96,25 @@ def test_the_policy_swap_from_the_command_line(cli, boundary_dataset):
     assert "0 invoice(s) waiting for review" in cli("queue")[1]
 
 
+def test_every_connection_a_command_opens_is_closed_when_it_ends(cli, boundary_dataset, monkeypatch):
+    """An open connection keeps its transaction, and on PostgreSQL its locks, until the garbage collector runs."""
+    opened, closed, connect, close = [], set(), db.connect, db.Database.close
+
+    def recording_connect(*args, **kwargs):
+        opened.append(connect(*args, **kwargs))
+        return opened[-1]
+
+    def recording_close(self):
+        closed.add(id(self))
+        close(self)
+    monkeypatch.setattr(db, "connect", recording_connect)
+    monkeypatch.setattr(db.Database, "close", recording_close)
+    for command in (["setup", "--dataset", str(boundary_dataset)], ["run", "--config", "C1"], ["queue"],
+                    ["policy", "activate", "2.6"], ["status"], ["show", "--invoice", "INV00000"]):
+        cli(*command)
+        assert opened and {id(conn) for conn in opened} <= closed, command
+
+
 def test_commands_that_need_a_model_say_so(cli, boundary_dataset):
     cli("setup", "--dataset", str(boundary_dataset))
     with pytest.raises(RuntimeError, match="No model is configured"):
