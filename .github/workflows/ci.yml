@@ -121,10 +121,11 @@ jobs:
         run: |
           pip install pytest-timeout
           code=0
-          timeout 1200 python -m pytest -o addopts="-p no:cacheprovider" -v --timeout=240 --timeout-method=thread > pytest.log 2>&1 || code=$?
+          timeout 1200 python -m pytest -o addopts="-p no:cacheprovider" -v --maxfail=3 --timeout=240 --timeout-method=thread > pytest.log 2>&1 || code=$?
           tail -n 2 pytest.log | while IFS= read -r line; do echo "::notice title=pytest::$line"; done
           grep -E "FAILED|ERROR|Timeout" pytest.log | head -n 4 | while IFS= read -r line; do echo "::notice title=failed::$line"; done
           grep -E 'auditiq/(auditiq|evaluation|tests)/' pytest.log | grep -E '^ +File' | tail -n 4 | while IFS= read -r line; do echo "::notice title=stack::$line"; done
+          grep -E '^E  ' pytest.log | head -n 6 | while IFS= read -r line; do echo "::notice title=error::${line:0:900}"; done
           exit $code
       - name: A ledger set up and audited in the compose database
         run: |

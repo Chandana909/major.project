@@ -105,8 +105,15 @@ def make_store(tmp_path):
     if schemas:
         import psycopg
         with psycopg.connect(postgres_url(), autocommit=True) as admin:
+            admin.execute("SET lock_timeout = '60s'")      # a connection left open fails the test, not the run
             for schema in schemas:
-                admin.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+                try:
+                    admin.execute(f"DROP SCHEMA IF EXISTS {schema} CASCADE")
+                except psycopg.errors.LockNotAvailable:
+                    others = admin.execute(
+                        "SELECT pid, state, backend_start, xact_start, left(query, 160) FROM pg_stat_activity "
+                        "WHERE datname = current_database() AND pid <> pg_backend_pid()").fetchall()
+                    raise RuntimeError(f"schema {schema} is still locked; other sessions: {others}") from None
 
 
 @pytest.fixture(params=["sqlite", "postgres"])
