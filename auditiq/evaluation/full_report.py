@@ -316,7 +316,8 @@ def protocols_section() -> list[str]:
         s90 = labels("bench_seed_202").loc[[i.strip() for i in (PROJECT_ROOT / "evaluation" / "bench202_sample_ids.txt")
                                             .read_text(encoding="utf-8").splitlines() if i.strip()]]
     meta = json.loads((RESULTS / "bench_seed_101" / "C5-sample34.meta.json").read_text(encoding="utf-8"))
-    hashes = {json.loads(p.read_text(encoding="utf-8"))["prompt_hash"] for p in RESULTS.glob("*/C*-*.meta.json")}
+    hashes = {json.loads(p.read_text(encoding="utf-8"))["prompt_hash"] for p in RESULTS.glob("*/C*-*.meta.json")
+              if finished(p)}
     change, held, scal = load("policy_change.json"), load("policy_heldout.json"), load("scalability.json")
     rows = [
         ["Controls against detectors (10)", "C1, C0-IF, C0-SVM on the three benchmark ledgers and the large ledger, whole ledgers and the weighted 1,200-invoice subset", "`python -m evaluation.run_all`"],
@@ -885,9 +886,16 @@ def threats_section() -> list[str]:
     ]
 
 
+def finished(path: Path) -> bool:
+    """False for a file of a model run that is still going: `C3-<tag>.jsonl` counts once `<tag>.md` exists."""
+    match = re.fullmatch(r"C[1-5]-([a-z0-9_]+)\.(jsonl|meta\.json)", path.name)
+    return match is None or (path.parent / f"{match.group(1)}.md").exists()
+
+
 def sources_section() -> list[str]:
     files = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*")
-                   if p.is_file() and p.suffix in (".json", ".jsonl", ".md") and "figures" not in p.parts)
+                   if p.is_file() and p.suffix in (".json", ".jsonl", ".md") and "figures" not in p.parts
+                   and finished(p))
     return ["## 25. Source files", "",
             "The result files of the repository, with their public raw addresses (`.jsonl` files hold one record per "
             "audited invoice):", "",
