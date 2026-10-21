@@ -301,6 +301,22 @@ def full_runs() -> dict:
     return out
 
 
+IGPU_SAMPLE = "bench_seed_202/igpu90.md"
+
+
+def igpu_sample() -> dict:
+    """The 90-invoice sample of ledger 202 run on the integrated GPU, once its report exists."""
+    if not (RESULTS / IGPU_SAMPLE).exists():
+        return {}
+    return {"llm_stages_sample_90_invoices": model_runs(
+        IGPU_SAMPLE, "sample", "The five configurations with a local 7B model on the laptop's integrated GPU and "
+        "frozen prompts on 90 invoices of benchmark ledger 202 (15 of each judgement class, 4 of each hard-negative "
+        "type, 10 ordinary).", "python -m evaluation.run_full --ledgers bench_seed_202 --ids-file "
+        "evaluation/bench202_sample_ids.txt --tag igpu90",
+        "A stratified sample of the evaluation subset, not the full run; read differences between configurations "
+        "from the McNemar tests of the source.")}
+
+
 def build() -> dict:
     return {
         "title": "AuditIQ: every measured result, machine-readable",
@@ -311,7 +327,8 @@ def build() -> dict:
         "paper": {"path": "paper/auditiq_paper.pdf", "url": f"{REPOSITORY}/blob/main/paper/auditiq_paper.pdf"},
         "labels": {"measured": "a script of the repository produced it on the data stated",
                    "pilot": "measured on 20 invoices of the development ledger; shows that the stages work",
-                   "sample": "measured on 34 invoices of benchmark ledger 101; too small to compare configurations",
+                   "sample": "measured on a sample of a benchmark ledger (34 invoices of ledger 101; 90 of ledger "
+                             "202); too small to estimate the benchmark",
                    "expected": "targets fixed before measurement; not results (RESULTS.md, Section 10)"},
         "data": "Synthetic ledgers of AuditIQ-Bench (auditiq/data/): three benchmark ledgers of 5,000 invoices "
                 "(8.4% anomalous), a policy-swap ledger, a development ledger and a large ledger of 20,000 invoices.",
@@ -334,6 +351,7 @@ def build() -> dict:
                 "bench_seed_101/sample34.md", "sample", "The five configurations with a local 7B model and frozen "
                 "prompts on 34 invoices of benchmark ledger 101.", "python -m evaluation.run_pilot --dataset "
                 "data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34"),
+            **igpu_sample(),
             **full_runs(),
             **huge_ledger(),
         }),

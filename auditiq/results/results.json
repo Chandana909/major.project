@@ -17,7 +17,7 @@
  "labels": {
   "measured": "a script of the repository produced it on the data stated",
   "pilot": "measured on 20 invoices of the development ledger; shows that the stages work",
-  "sample": "measured on 34 invoices of benchmark ledger 101; too small to compare configurations",
+  "sample": "measured on a sample of a benchmark ledger (34 invoices of ledger 101; 90 of ledger 202); too small to estimate the benchmark",
   "expected": "targets fixed before measurement; not results (RESULTS.md, Section 10)"
  },
  "data": "Synthetic ledgers of AuditIQ-Bench (auditiq/data/): three benchmark ledgers of 5,000 invoices (8.4% anomalous), a policy-swap ledger, a development ledger and a large ledger of 20,000 invoices.",

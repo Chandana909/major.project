@@ -27,7 +27,7 @@ from auditiq_bench import overview
 from auditiq_bench.taxonomy import CLASSES, HARD_NEGATIVE_TYPES
 
 from . import collect_results
-from .collect_results import RAW, REPOSITORY, load, metric_table, table
+from .collect_results import IGPU_SAMPLE, RAW, REPOSITORY, load, metric_table, table
 
 OUT = PROJECT_ROOT.parent / "REPORT.md"
 DATA = PROJECT_ROOT / "data"
@@ -311,6 +311,10 @@ def protocols_section() -> list[str]:
         parts.append(f"{int((frame['label'] == 'clean').sum())} ordinary")
         return ", ".join(parts)
 
+    s90 = None
+    if (RESULTS / IGPU_SAMPLE).exists():
+        s90 = labels("bench_seed_202").loc[[i.strip() for i in (PROJECT_ROOT / "evaluation" / "bench202_sample_ids.txt")
+                                            .read_text(encoding="utf-8").splitlines() if i.strip()]]
     meta = json.loads((RESULTS / "bench_seed_101" / "C5-sample34.meta.json").read_text(encoding="utf-8"))
     hashes = {json.loads(p.read_text(encoding="utf-8"))["prompt_hash"] for p in RESULTS.glob("*/C*-*.meta.json")}
     change, held, scal = load("policy_change.json"), load("policy_heldout.json"), load("scalability.json")
@@ -325,6 +329,8 @@ def protocols_section() -> list[str]:
         ["Policies in their own wording (17)", "Six documents (three memoranda, three handbooks) none in the template's wording; one model call per document at temperature 0; code verification; outcome per value", "`python -m evaluation.policy_llm_eval`"],
         ["Pilot (18)", f"20 invoices of the development ledger: {composition(s20)}", "`python -m evaluation.run_pilot ... --tag pilot20`"],
         ["Benchmark sample (18)", f"34 invoices of `bench_seed_101`, drawn with seed 0 by `evaluation/sample_ids.py`: {composition(s34)}", "`python -m evaluation.run_pilot ... --tag sample34`"],
+        *([["Benchmark sample on the integrated GPU (18.5)", f"90 invoices of `bench_seed_202`, drawn with seed 0 by `evaluation/sample_ids.py`: {composition(s90)}", "`python -m evaluation.run_full ... --tag igpu90`"]]
+          if s90 is not None else []),
         ["Policy search (19)", "48 fixed questions over 27 passages: 16 in the policy's wording, 16 paraphrases used to choose the default ranker (dev), 16 never used for a choice (test)", "`python -m evaluation.retrieval_eval --rewrite`"],
         ["History cap (20)", "Every labelled invoice whose vendor history exceeds the cap: are the invoices its case depends on still shown?", "`python -m evaluation.history_cap`"],
     ]
@@ -638,21 +644,33 @@ def per_invoice(dataset: str, tag: str) -> list[str]:
     return md(["Invoice", "Truth", "Violated rule(s)", "C1", "C2", "C3", "C4", "C5"], rows)
 
 
+def model_run_block(title: str, path: str, dataset: str, tag: str) -> list[str]:
+    t = metric_table(path)
+    configs = ["C1", "C2", "C3", "C4", "C5"]
+    rows = [[metric] + [ci(t[metric].get(c)) for c in configs] for metric in t]
+    tests = table(path, "Comparison")
+    return [f"### {title}", "", src(path, f"{dataset}/C1-{tag}.jsonl"), "",
+            *md(["Metric (value [95% interval])"] + configs, rows),
+            *md(["Comparison", "Only first correct", "Only second correct", "p", "Holm-adjusted p"],
+                [[x["Comparison"], x["Only first correct"], x["Only second correct"], x["p"], x["Holm-adjusted p"]] for x in tests]),
+            "Per invoice: route (E escalate, S sampled review, A approve), then each cited rule marked ✓ if the "
+            "invoice violates it and ✗ if not; (−k) is the number of findings the challenger removed, ⚠ a failed "
+            "stage.", "", *per_invoice(dataset, tag)]
+
+
+def igpu_section() -> list[str]:
+    """18.5: the 90-invoice sample of ledger 202 on the integrated GPU, once its report exists."""
+    if not (RESULTS / IGPU_SAMPLE).exists():
+        return []
+    return model_run_block("18.5 Benchmark sample on the integrated GPU: 90 invoices of ledger 202 (sample)",
+                           IGPU_SAMPLE, "bench_seed_202", "igpu90")
+
+
 def llm_section() -> list[str]:
     out = ["## 18. The language-model stages", ""]
     for title, path, dataset, tag in (("18.1 Pilot: 20 invoices of the development ledger (pilot)", "pilot_seed_909/pilot20.md", "pilot_seed_909", "pilot20"),
                                       ("18.2 Benchmark sample: 34 invoices of ledger 101 (sample)", "bench_seed_101/sample34.md", "bench_seed_101", "sample34")):
-        t = metric_table(path)
-        configs = ["C1", "C2", "C3", "C4", "C5"]
-        rows = [[metric] + [ci(t[metric].get(c)) for c in configs] for metric in t]
-        tests = table(path, "Comparison")
-        out += [f"### {title}", "", src(path, f"{dataset}/C1-{tag}.jsonl"), "",
-                *md(["Metric (value [95% interval])"] + configs, rows),
-                *md(["Comparison", "Only first correct", "Only second correct", "p", "Holm-adjusted p"],
-                    [[x["Comparison"], x["Only first correct"], x["Only second correct"], x["p"], x["Holm-adjusted p"]] for x in tests]),
-                "Per invoice: route (E escalate, S sampled review, A approve), then each cited rule marked ✓ if the "
-                "invoice violates it and ✗ if not; (−k) is the number of findings the challenger removed, ⚠ a failed "
-                "stage.", "", *per_invoice(dataset, tag)]
+        out += model_run_block(title, path, dataset, tag)
     s = metric_table("bench_seed_101/sample34.md")
     j = {k: s[f"Recall, {name}"] for k, name in (("J1", "J1 near-duplicate"), ("J2", "J2 structuring across days"),
                                                   ("J3", "J3 description against the PO"), ("J4", "J4 goods-receipt remark"))}
@@ -685,7 +703,7 @@ def llm_section() -> list[str]:
             "ledger needs a GPU or a hosted endpoint.",
             "- **No difference between configurations is significant** on 34 invoices (table above); these are "
             "observations on a sample, not estimates for the benchmark.", ""]
-    return out + full_run_section()
+    return out + full_run_section() + igpu_section()
 
 
 def full_run_section() -> list[str]:
