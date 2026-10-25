@@ -19,6 +19,8 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from .history import number_key
+
 DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
@@ -134,11 +136,15 @@ def exact_duplicate(txn: dict, clauses: dict) -> list[dict]:
     if "2.2.1" not in clauses:
         return []
     inv = txn["invoice"]
-    num = str(inv.get("invoice_number") or "").strip()
+    num = number_key(inv.get("invoice_number"))
     if num == "":
         return []
-    earlier = [h for h in txn.get("vendor_history") or []
-               if str(h.get("invoice_number") or "").strip() == num and is_earlier(h, inv)]
+    history = txn.get("vendor_history") or []
+    index = getattr(history, "vendor_index", None)
+    # With the vendor's index only the invoices of the same number are read (the invoice itself among them,
+    # which is not earlier than itself); without it, the whole history.
+    candidates = index.by_number.get(num, ()) if index is not None else history
+    earlier = [h for h in candidates if number_key(h.get("invoice_number")) == num and is_earlier(h, inv)]
     if not earlier:
         return []
     original = min(earlier, key=lambda h: (h["date"], h["invoice_id"]))
@@ -194,7 +200,13 @@ def same_day_splitting(txn: dict, clauses: dict) -> list[dict]:
     if clause is None:
         return []
     day = txn["invoice"]["date"]
-    same_day = [h for h in txn.get("vendor_history") or [] if h["date"] == day]
+    history = txn.get("vendor_history") or []
+    index = getattr(history, "vendor_index", None)
+    if index is not None:                       # the vendor's invoices of that day, without this one
+        own = txn["invoice"]["invoice_id"]
+        same_day = [h for h in index.by_date.get(day, ()) if h["invoice_id"] != own]
+    else:
+        same_day = [h for h in history if h["date"] == day]
     count, limit = len(same_day) + 1, clause["params"]["max_invoices_per_vendor_per_day"]
     if count <= limit:
         return []

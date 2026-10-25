@@ -314,7 +314,15 @@ audits. Tests that use a database run on SQLite and, when
 PostgreSQL test works in its own schema and removes it. The tests never read
 the application's settings from `.env`, so they cannot touch the working
 database. `.github/workflows/ci.yml` (at the root of the repository) runs lint and
-tests on both backends on every push.
+tests on both backends on every push, and audits the Python dependencies for
+known vulnerabilities:
+
+```bash
+pip-audit --skip-editable
+```
+
+(Pillow's advisories are expected while Streamlit holds it below version 13;
+SECURITY.md, Section 4, says why they are ignored.)
 
 The frontend has its own checks, run from `frontend/`:
 
@@ -362,10 +370,15 @@ The server ignores `.env`, so the run is the same on every machine; CI runs it
 in a third job.
 
 After changing the schema or a column's meaning, regenerate the data
-dictionary; after regenerating datasets, the overview:
+dictionary; after changing an endpoint, the API reference; after regenerating
+datasets, the overview:
 
 ```bash
 python -m auditiq.datadict
+```
+
+```bash
+python -m auditiq.apidoc
 ```
 
 ```bash

@@ -117,6 +117,19 @@ class Job:
                 "result": self.result, "error": self.error, "seconds": round((self.finished or time.time()) - self.started, 1)}
 
 
+class JobConflict(RuntimeError):
+    """A job that would work on the ledger while another job changes it."""
+
+
+# The jobs a job of each kind may not run beside. Loading a ledger deletes the ledger and every result, so
+# nothing that audits may run with it; two audits of the whole ledger would interleave their results.
+CONFLICTS = {
+    "load-ledger": {"load-ledger", "apply-policy", "audit"},
+    "apply-policy": {"load-ledger", "apply-policy"},
+    "audit": {"load-ledger"},
+}
+
+
 class Jobs:
     """Background jobs, each on its own thread with its own database connection."""
 
@@ -128,8 +141,13 @@ class Jobs:
     def start(self, kind: str, work: Callable[[Job], Any]) -> Job:
         job = Job(id=uuid.uuid4().hex[:12], kind=kind)
         with self._lock:
+            busy = [j for j in self._jobs.values() if j.status in ("queued", "running")]
+            clash = next((j for j in busy if j.kind in CONFLICTS.get(kind, ())), None)
+            if clash is not None:
+                raise JobConflict(f"the {clash.kind} job {clash.id} is still running; wait for it to finish")
             self._jobs[job.id] = job
-            for old in list(self._jobs)[:-self._keep]:
+            finished = [i for i, j in self._jobs.items() if j.status in ("done", "failed")]
+            for old in finished[:max(0, len(self._jobs) - self._keep)]:     # a running job is never forgotten
                 self._jobs.pop(old, None)
 
         def run() -> None:
@@ -217,9 +235,23 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
 
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next):
+        """Every answer, the API's and the web application's: no type sniffing, no framing by another site,
+        no address sent on to other sites."""
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        return response
+
     @app.exception_handler(db.DatabaseUnavailable)
     def unavailable(_: Request, error: db.DatabaseUnavailable) -> JSONResponse:
         return JSONResponse({"detail": str(error)}, status_code=503)
+
+    @app.exception_handler(JobConflict)
+    def conflict(_: Request, error: JobConflict) -> JSONResponse:
+        return JSONResponse({"detail": str(error)}, status_code=409)
 
     def authorised(request: Request) -> None:
         expected = request.app.state.token
@@ -240,6 +272,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     # -- status --------------------------------------------------------------
     @app.get("/api/health", tags=["status"])
     def health(conn: db.Database = Depends(connection)) -> dict:
+        """Version, backend, ledger, active policy and model; open without a token, for monitoring."""
         return {"status": "ok", "version": __version__, "backend": conn.backend,
                 "ledger": conn.scalar("SELECT value FROM meta WHERE key = 'dataset'"),
                 "policy_version": conn.scalar("SELECT version FROM company_policies WHERE is_active = 1"),
@@ -247,6 +280,8 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.get("/api/overview", tags=["status"], dependencies=protected)
     def overview(conn: db.Database = Depends(connection)) -> dict:
+        """Counts by state, route and risk level; findings by rule; recent runs; the vendors with most invoices
+        waiting."""
         states = {r[0]: int(r[1]) for r in conn.execute(
             "SELECT workflow_status, COUNT(*) FROM v_latest_results GROUP BY workflow_status")}
         routes = {r[0]: int(r[1]) for r in conn.execute("SELECT route, COUNT(*) FROM v_latest_results GROUP BY route")}
@@ -322,6 +357,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     # -- review --------------------------------------------------------------
     @app.get("/api/queue", tags=["review"], dependencies=protected)
     def queue(limit: int = 200, conn: db.Database = Depends(connection)) -> dict:
+        """Invoices waiting for review, highest weighted risk first (at most 2,000)."""
         limit = max(1, min(limit, 2000))
         items = rows(conn.execute(f"SELECT * FROM v_review_queue ORDER BY rc DESC, invoice_id LIMIT {limit}"))
         return {"total": int(conn.scalar("SELECT COUNT(*) FROM v_review_queue") or 0), "items": items}
@@ -340,6 +376,8 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.get("/api/invoices/{invoice_id}", tags=["review"], dependencies=protected)
     def invoice(invoice_id: str, with_label: bool = False, conn: db.Database = Depends(connection)) -> dict:
+        """The records of an invoice, its vendor's last 40 other invoices, and its latest result with the audit
+        pack and trail; with_label adds the benchmark label."""
         invoice_id = invoice_id.strip().upper()
         if not INVOICE_ID.match(invoice_id):
             raise HTTPException(400, "not an invoice id")
@@ -364,6 +402,8 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/results/{result_id}/decision", tags=["review"], dependencies=protected)
     def decide(result_id: int, body: DecisionIn, conn: db.Database = Depends(connection)) -> dict:
+        """Record a reviewer's decision on a result: approve, reject or override (an override needs a
+        justification)."""
         try:
             db.record_decision(conn, result_id, body.decision, body.reviewer, body.justification)
         except KeyError as error:
@@ -376,6 +416,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/invoices/{invoice_id}/audit", tags=["review"], dependencies=protected, status_code=202)
     def audit(invoice_id: str, body: AuditIn, request: Request) -> dict:
+        """Audit one invoice again under a configuration (a background job); C2 to C5 need a model."""
         invoice_id = invoice_id.strip().upper()
         config = PRESETS[body.config]
         client = chat_client() if config.agents != "none" else None
@@ -403,6 +444,8 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     # -- policy --------------------------------------------------------------
     @app.get("/api/policy", tags=["policy"], dependencies=protected)
     def policy(conn: db.Database = Depends(connection)) -> dict:
+        """The stored policy versions and how each was adopted, the rules of the active one, the ingested
+        documents."""
         versions = []
         for r in conn.execute("SELECT version, policy_name, effective_date, is_active, registry FROM company_policies "
                               "ORDER BY version").fetchall():
@@ -426,6 +469,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/policy/activate", tags=["policy"], dependencies=protected)
     def activate(body: VersionIn, conn: db.Database = Depends(connection)) -> dict:
+        """Make a stored policy version the active one; later audits use it."""
         try:
             db.set_active_policy(conn, body.version)
         except KeyError as error:
@@ -453,6 +497,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/policy/adopt", tags=["policy"], dependencies=protected)
     def adopt(body: AdoptIn, conn: db.Database = Depends(connection)) -> dict:
+        """Adopt a previewed policy document as a new version; refused with the problems if it cannot be executed."""
         report = policy_extract.adopt(conn, upload_path(body.upload_id), activate=body.activate, replace=body.replace)
         if not report["adopted"]:
             raise HTTPException(422, {"message": "the document was not adopted", "problems": report["problems"]})
@@ -480,6 +525,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/policy/confirm", tags=["policy"], dependencies=protected)
     def confirm(body: ConfirmIn, request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """Adopt a model's proposal after the reviewer's confirmation, corrections and quoted passages."""
         path = upload_path(body.upload_id)
         proposal = request.app.state.proposals.get(body.upload_id)
         if proposal is None:
@@ -564,6 +610,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.get("/api/search", tags=["policy"], dependencies=protected)
     def search(q: str, k: int = 4, conn: db.Database = Depends(connection)) -> dict:
+        """Search the policy documents: hybrid when an embedding model is configured, lexical otherwise."""
         if not q.strip():
             raise HTTPException(400, "empty question")
         try:
@@ -576,6 +623,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     # -- copilot -------------------------------------------------------------
     @app.post("/api/copilot/ask", tags=["copilot"], dependencies=protected, status_code=202)
     def ask(body: AskIn, request: Request) -> dict:
+        """A question about the policy or an audited invoice, answered from the passages with citations (a job)."""
         target, client = request.app.state.target, chat_client()
 
         def work(job: Job) -> dict:
@@ -593,6 +641,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     @app.post("/api/copilot/data", tags=["copilot"], dependencies=protected, status_code=202)
     def data_question(body: DataQuestionIn, request: Request) -> dict:
+        """A question about the data, answered by one checked, read-only SELECT the model writes (a job)."""
         client = chat_client()
         if client is None:
             raise HTTPException(400, "data questions need a model; configure one")
@@ -607,6 +656,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     # -- jobs and results ----------------------------------------------------
     @app.get("/api/jobs/{job_id}", tags=["status"], dependencies=protected)
     def job(job_id: str, request: Request) -> dict:
+        """The state of a background job: queued, running, done (with its result) or failed (with the reason)."""
         found = request.app.state.jobs.get(job_id)
         if found is None:
             raise HTTPException(404, "no such job")

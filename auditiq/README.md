@@ -29,6 +29,10 @@ policy PDFs       -> ingestion  -> clause store -> citations, policy search, cop
 | Document | Content |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The design: principles, pipeline, agents, scoring, storage, retrieval, copilot, evaluation |
+| [docs/DEVELOPER.md](docs/DEVELOPER.md) | For changing the code: the map of every module, how an invoice, a policy and a request pass through it, the contracts between the parts, how to add a control, an endpoint, a page or a table, the conventions and the checks |
+| [docs/API.md](docs/API.md) | Every endpoint of the REST API: parameters, body, token, answers (generated from the code) |
+| [docs/SECURITY.md](docs/SECURITY.md) | What is protected and how, the copilot's SQL guards, what is not protected, a checklist before a deployment |
+| [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) | The code review of 21 October 2026: how the code was examined, eleven findings and their fixes, what was found sound |
 | [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | Every table and column, with types on both backends and who reads it (generated) |
 | [docs/DATASETS.md](docs/DATASETS.md) | The six datasets: sizes, how a ledger is built, how each anomaly is injected, limits (generated) |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Install, configure, run, reproduce the evaluation, troubleshoot |

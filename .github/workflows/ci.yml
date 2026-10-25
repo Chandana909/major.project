@@ -1,5 +1,6 @@
 # Lint and tests on every push and pull request. The Python tests run on SQLite and,
-# through the service container, on PostgreSQL; no test calls a model. The frontend
+# through the service container, on PostgreSQL; no test calls a model; the Python
+# dependencies are audited for known vulnerabilities (pip-audit). The frontend
 # job lints, type-checks, tests and builds the web application. The e2e job runs the
 # whole application in a browser: the API on a new store, serving the built web
 # application, driven by Playwright (auditiq/frontend/e2e). The compose job starts
@@ -39,6 +40,15 @@ jobs:
           cache-dependency-path: auditiq/pyproject.toml
       - run: pip install -e ".[dev]"
       - run: ruff check .
+      - name: Known vulnerabilities in the Python dependencies
+        # Pillow is held below 13 by Streamlit, and its fixes are in 13. AuditIQ decodes no uploaded image with it
+        # (docs/SECURITY.md, Section 4), so these advisories are ignored by name; any other one fails the job.
+        run: >-
+          pip install --upgrade setuptools pip-audit &&
+          pip-audit --skip-editable --progress-spinner off
+          --ignore-vuln CVE-2026-112395 --ignore-vuln CVE-2026-112397 --ignore-vuln CVE-2026-112400
+          --ignore-vuln CVE-2026-112404 --ignore-vuln CVE-2026-112895 --ignore-vuln CVE-2026-112896
+          --ignore-vuln CVE-2026-112897 --ignore-vuln CVE-2026-112899
       - name: Create the copilot's read-only role
         run: PGPASSWORD=ci-only psql -h localhost -U auditiq -d auditiq_test -c "CREATE ROLE auditiq_reader NOLOGIN"
       - run: python -m pytest

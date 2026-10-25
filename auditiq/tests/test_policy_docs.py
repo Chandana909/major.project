@@ -252,6 +252,30 @@ def test_a_checked_select_runs_read_only_and_cannot_see_the_labels(library):
             copilot.run_select(library, forbidden)
 
 
+@pytest.mark.parametrize("sql", [
+    # Read the labels on PostgreSQL before these functions were refused: the role is reset to the session's
+    # user, and the query is a string, so the name check never sees the table.
+    "SELECT set_config('role', session_user, false), "
+    "query_to_xml('select label from bench' || 'mark_labels limit 2', true, false, '')",
+    "SELECT SET_CONFIG ('role', 'auditiq', false)", "SELECT current_setting('data_directory')",
+    "SELECT query_to_xml('select 1', true, false, '')", "SELECT table_to_xml('invoices', true, false, '')",
+    "SELECT * FROM ts_stat('select to_tsvector(description) from invoices')",
+    'SELECT COUNT(*) FROM U&"invoices"', "SELECT lo_import('/etc/passwd')",
+])
+def test_a_select_cannot_change_its_role_or_run_a_query_given_as_text(library, sql):
+    with pytest.raises(copilot.UnsafeQuery, match="may not call"):
+        copilot.run_select(library, sql)
+
+
+def test_on_postgresql_a_data_question_without_the_reader_role_is_refused(library, monkeypatch):
+    """The application's own user can read every table, so the copilot does not run as it."""
+    if not library.startswith("postgresql"):
+        pytest.skip("a PostgreSQL role")
+    monkeypatch.setattr(db, "READER_ROLE", "auditiq_no_such_role")
+    with pytest.raises(copilot.UnsafeQuery, match="auditiq_no_such_role"):
+        copilot.run_select(library, "SELECT COUNT(*) FROM invoices")
+
+
 def test_the_reader_role_enforces_the_allow_list_inside_postgresql(library):
     """Without the name check, PostgreSQL itself must still refuse the labels table."""
     conn = db.connect(library, read_only=True)

@@ -106,6 +106,26 @@ def test_rate_limit_is_retried_and_a_bad_request_is_not():
     assert len(seen) == 1
 
 
+def test_a_200_reply_that_is_not_a_completion_is_a_failed_attempt_not_a_crash():
+    """A proxy's error page, or a body without choices, is retried and then reported as an LLMError."""
+    bodies = iter([httpx.Response(200, text="<html>gateway</html>"), httpx.Response(200, json={"error": "x"}),
+                   httpx.Response(200, json={"choices": [{"message": {"content": "ok"}}]})])
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return next(bodies)
+    c = OpenAIChatClient(LLMSettings(base_url="http://test/v1", model="m-1", max_retries=2), None,
+                         transport=httpx.MockTransport(handler), sleep=lambda s: None)
+    assert c.complete(MESSAGES).text == "ok" and len(seen) == 3
+
+    broken = OpenAIChatClient(LLMSettings(base_url="http://test/v1", model="m-1", max_retries=1), None,
+                              transport=httpx.MockTransport(lambda r: httpx.Response(200, text="not json")),
+                              sleep=lambda s: None)
+    with pytest.raises(LLMError, match="failed after 2 attempts .HTTP 200 without a completion"):
+        broken.complete(MESSAGES)
+
+
 def test_a_prompt_that_would_not_fit_the_context_is_refused_before_it_is_sent():
     seen = []
     c = client(["ok"], seen, context_tokens=1000, max_tokens=700)
