@@ -170,6 +170,11 @@ jobs:
           curl -fsS http://127.0.0.1:8000/review | grep -q 'id="root"'
           curl -fsSI http://127.0.0.1:8000/review | grep -qi "content-security-policy: default-src 'self'"
       - if: failure()
-        run: docker compose -f deploy/docker-compose.yml logs --tail 200
+        # The last lines of each container as annotations, which can be read without signing in.
+        run: |
+          docker compose -f deploy/docker-compose.yml ps -a
+          for service in app postgres; do
+            docker compose -f deploy/docker-compose.yml logs --no-color --tail 15 $service 2>&1 | tail -n 15 | while IFS= read -r line; do echo "::notice title=$service::${line:0:400}"; done
+          done
       - if: always()
         run: docker compose -f deploy/docker-compose.yml down -v

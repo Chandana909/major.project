@@ -6,7 +6,8 @@
 #
 # The project is installed where it is copied (/app), because the application reads its policy files, its
 # datasets and the built frontend from there. It runs as an unprivileged user that can write only .auditiq/
-# (the SQLite store, uploads and the model's response cache). Settings come from the environment, never .env.
+# (the SQLite store, uploads and the model's response cache) and policy/pdf/ (setup renders the sample policy
+# documents there). Settings come from the environment, never .env.
 
 FROM node:20-slim AS frontend
 WORKDIR /build
@@ -32,7 +33,7 @@ COPY results/ results/
 RUN pip install --no-cache-dir -e . \
  && useradd --create-home --uid 1000 auditiq \
  && mkdir -p /app/.auditiq \
- && chown auditiq /app/.auditiq
+ && chown -R auditiq /app/.auditiq /app/policy/pdf
 COPY --from=frontend /build/dist frontend/dist
 USER auditiq
 EXPOSE 8000
