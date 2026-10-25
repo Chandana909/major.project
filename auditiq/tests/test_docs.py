@@ -45,11 +45,14 @@ def test_the_generated_api_reference_is_up_to_date_and_documents_every_endpoint(
 
     assert apidoc.DOC.read_text(encoding="utf-8") == apidoc.render(), "run: python -m auditiq.apidoc"
     found = apidoc.endpoints()
-    assert len(found) == 22 and all(e["doc"] for e in found), [e["path"] for e in found if not e["doc"]]
+    assert len(found) == 24 and all(e["doc"] for e in found), [e["path"] for e in found if not e["doc"]]
     open_ = {e["path"] for e in found if not e["protected"]}
     assert open_ == {"/api/health", "/api/pipeline"}           # everything else needs the token
     ledger = next(e for e in found if e["path"] == "/api/ledger")
     assert {202, 409, 413, 415}.issubset(ledger["codes"]) and [f["name"] for f in ledger["form"]] == ["file", "replace"]
+    roles = {e["path"]: e["role"] for e in found}
+    assert roles["/api/ledger"] == roles["/api/policy/adopt"] == "admin" and 403 in ledger["codes"]
+    assert roles["/api/results/{result_id}/decision"] == "reviewer" and roles["/api/queue"] == "viewer"
 
 
 def test_every_anomaly_class_has_an_injection_note():

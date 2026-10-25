@@ -14,8 +14,10 @@ at once, and GET /api/jobs/{id} reports progress and the result.
 
 Settings (environment or .env):
 
-    AUDITIQ_API_TOKEN     when set, every /api request except /api/health needs
-                          the header "Authorization: Bearer <token>"
+    AUDITIQ_API_TOKEN     a shared token that acts as an admin; with it, or with users
+                          (python -m auditiq user add), every /api request except
+                          /api/health and /api/pipeline needs "Authorization: Bearer
+                          <token>", and each endpoint needs a role: viewer, reviewer or admin
     AUDITIQ_CORS_ORIGINS  comma-separated origins allowed to call the API from a
                           browser (default: the Vite development server)
 """
@@ -41,7 +43,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import __version__, copilot, db, ledger_import, policy_extract, policy_llm, service
+from . import __version__, copilot, db, ledger_import, policy_extract, policy_llm, service, simulation
 from .config import load_env
 from .graph import PRESETS
 from .llm import LLMSettings, OpenAIChatClient, ResponseCache
@@ -54,6 +56,12 @@ UPLOADS = PROJECT_ROOT / ".auditiq" / "uploads"
 RESULTS = PROJECT_ROOT / "results"
 MAX_UPLOAD = 20 * 1024 * 1024
 MAX_LEDGER = 100 * 1024 * 1024
+# The web application loads nothing from another site. Style attributes are allowed: the labels of the 3D
+# views are placed with them. Everything else, scripts above all, comes from this server only.
+CONTENT_SECURITY_POLICY = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                           "img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; "
+                           "worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; "
+                           "frame-ancestors 'none'")
 UPLOAD_ID = re.compile(r"^[0-9a-f]{16}$")
 INVOICE_ID = re.compile(r"^[A-Z0-9_-]{1,40}$")
 
@@ -65,7 +73,7 @@ class AuditIn(BaseModel):
 
 class DecisionIn(BaseModel):
     decision: Literal["approve", "reject", "override"]
-    reviewer: str = Field(min_length=1, max_length=120)
+    reviewer: str = Field(default="", max_length=120, description="taken from the account when signed in as a user")
     justification: str = Field(default="", max_length=4000)
 
 
@@ -124,9 +132,10 @@ class JobConflict(RuntimeError):
 # The jobs a job of each kind may not run beside. Loading a ledger deletes the ledger and every result, so
 # nothing that audits may run with it; two audits of the whole ledger would interleave their results.
 CONFLICTS = {
-    "load-ledger": {"load-ledger", "apply-policy", "audit"},
+    "load-ledger": {"load-ledger", "apply-policy", "audit", "simulate"},
     "apply-policy": {"load-ledger", "apply-policy"},
     "audit": {"load-ledger"},
+    "simulate": {"load-ledger"},
 }
 
 
@@ -243,6 +252,8 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "no-referrer")
+        if not request.url.path.startswith("/api/"):       # the web application (the API docs load a viewer from a CDN)
+            response.headers.setdefault("Content-Security-Policy", CONTENT_SECURITY_POLICY)
         return response
 
     @app.exception_handler(db.DatabaseUnavailable)
@@ -253,12 +264,35 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     def conflict(_: Request, error: JobConflict) -> JSONResponse:
         return JSONResponse({"detail": str(error)}, status_code=409)
 
-    def authorised(request: Request) -> None:
+    def principal(request: Request) -> dict:
+        """Who is asking: a user (api_users) by the user's token, an admin by the shared token
+        (AUDITIQ_API_TOKEN), or anyone, as an admin, while the server has neither."""
         expected = request.app.state.token
         supplied = request.headers.get("authorization", "")
         # compared in constant time, so that the time of a refusal says nothing about the token
-        if expected and not hmac.compare_digest(supplied.encode(), f"Bearer {expected}".encode()):
-            raise HTTPException(401, "a valid API token is required", headers={"WWW-Authenticate": "Bearer"})
+        if expected and hmac.compare_digest(supplied.encode(), f"Bearer {expected}".encode()):
+            return {"name": None, "role": "admin", "via": "shared token"}
+        conn = db.connect(request.app.state.target)
+        try:
+            user = db.user_for_token(conn, supplied[7:].strip()) if supplied.startswith("Bearer ") else None
+            if user:
+                return {**user, "via": "account"}
+            if not expected and not db.has_users(conn):
+                return {"name": None, "role": "admin", "via": "open"}
+        finally:
+            conn.close()
+        raise HTTPException(401, "a valid API token is required", headers={"WWW-Authenticate": "Bearer"})
+
+    def require(role: str) -> Callable[[Request], dict]:
+        """A dependency that lets through whoever has at least ``role``."""
+        def allowed(request: Request) -> dict:
+            who = principal(request)
+            if db.ROLES.index(who["role"]) < db.ROLES.index(role):
+                raise HTTPException(403, f"this needs the role {role}; {who['name']} has the role {who['role']}")
+            request.state.principal = who
+            return who
+        allowed.required_role = role            # read by apidoc
+        return allowed
 
     def connection(request: Request) -> Iterator[db.Database]:
         conn = db.connect(request.app.state.target)
@@ -267,7 +301,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         finally:
             conn.close()
 
-    protected = [Depends(authorised)]
+    viewer, reviewer, admin = ([Depends(require(role))] for role in db.ROLES)
 
     # -- status --------------------------------------------------------------
     @app.get("/api/health", tags=["status"])
@@ -276,9 +310,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return {"status": "ok", "version": __version__, "backend": conn.backend,
                 "ledger": conn.scalar("SELECT value FROM meta WHERE key = 'dataset'"),
                 "policy_version": conn.scalar("SELECT version FROM company_policies WHERE is_active = 1"),
-                "model": model_name(), "auth": bool(app.state.token)}
+                "model": model_name(), "auth": bool(app.state.token) or db.has_users(conn)}
 
-    @app.get("/api/overview", tags=["status"], dependencies=protected)
+    @app.get("/api/me", tags=["status"], dependencies=viewer)
+    def me(request: Request) -> dict:
+        """Who the request is from: the user's name and role, or the shared token, or an open server."""
+        return request.state.principal
+
+    @app.get("/api/overview", tags=["status"], dependencies=viewer)
     def overview(conn: db.Database = Depends(connection)) -> dict:
         """Counts by state, route and risk level; findings by rule; recent runs; the vendors with most invoices
         waiting."""
@@ -314,7 +353,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
                 "reviewed": sum(n for s, n in states.items() if s.startswith("REVIEW_")),
                 "findings_by_rule": findings, "runs": runs, "vendors_waiting": vendors}
 
-    @app.get("/api/risk-map", tags=["status"], dependencies=protected)
+    @app.get("/api/risk-map", tags=["status"], dependencies=viewer)
     def risk_map(conn: db.Database = Depends(connection)) -> dict:
         """One point per vendor: its invoices, amount, findings and the highest risk among its latest results."""
         # The invoices of each vendor and the latest results of each vendor, counted apart and joined on the
@@ -361,14 +400,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return {"stages": stages, "configurations": configs}
 
     # -- review --------------------------------------------------------------
-    @app.get("/api/queue", tags=["review"], dependencies=protected)
+    @app.get("/api/queue", tags=["review"], dependencies=viewer)
     def queue(limit: int = 200, conn: db.Database = Depends(connection)) -> dict:
         """Invoices waiting for review, highest weighted risk first (at most 2,000)."""
         limit = max(1, min(limit, 2000))
         items = rows(conn.execute(f"SELECT * FROM v_review_queue ORDER BY rc DESC, invoice_id LIMIT {limit}"))
         return {"total": int(conn.scalar("SELECT COUNT(*) FROM v_review_queue") or 0), "items": items}
 
-    @app.get("/api/invoices", tags=["review"], dependencies=protected)
+    @app.get("/api/invoices", tags=["review"], dependencies=viewer)
     def invoices(q: str = "", limit: int = 50, conn: db.Database = Depends(connection)) -> dict:
         """Search invoices by id or vendor name, with their latest audit outcome."""
         limit = max(1, min(limit, 500))
@@ -383,7 +422,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             "LEFT JOIN audit_results r ON r.result_id = m.result_id ORDER BY i.invoice_id", (like, like)))
         return {"items": items}
 
-    @app.get("/api/invoices/{invoice_id}", tags=["review"], dependencies=protected)
+    @app.get("/api/invoices/{invoice_id}", tags=["review"], dependencies=viewer)
     def invoice(invoice_id: str, with_label: bool = False, conn: db.Database = Depends(connection)) -> dict:
         """The records of an invoice, its vendor's last 40 other invoices, and its latest result with the audit
         pack and trail; with_label adds the benchmark label."""
@@ -409,12 +448,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             out["benchmark_label"] = dict(zip(label.keys(), label)) if label else None
         return out
 
-    @app.post("/api/results/{result_id}/decision", tags=["review"], dependencies=protected)
-    def decide(result_id: int, body: DecisionIn, conn: db.Database = Depends(connection)) -> dict:
+    @app.post("/api/results/{result_id}/decision", tags=["review"], dependencies=reviewer)
+    def decide(result_id: int, body: DecisionIn, request: Request, conn: db.Database = Depends(connection)) -> dict:
         """Record a reviewer's decision on a result: approve, reject or override (an override needs a
-        justification)."""
+        justification). Signed in with a user's token, the decision carries that user's name."""
+        who = request.state.principal
+        reviewer_name = who["name"] if who["via"] == "account" else body.reviewer
         try:
-            db.record_decision(conn, result_id, body.decision, body.reviewer, body.justification)
+            db.record_decision(conn, result_id, body.decision, reviewer_name, body.justification)
         except KeyError as error:
             raise HTTPException(404, str(error).strip("'")) from None
         except ValueError as error:
@@ -423,7 +464,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
                            (result_id,)).fetchone()
         return {"result_id": result_id, "invoice_id": row["invoice_id"], "workflow_status": row["workflow_status"]}
 
-    @app.post("/api/invoices/{invoice_id}/audit", tags=["review"], dependencies=protected, status_code=202)
+    @app.post("/api/invoices/{invoice_id}/audit", tags=["review"], dependencies=reviewer, status_code=202)
     def audit(invoice_id: str, body: AuditIn, request: Request) -> dict:
         """Audit one invoice again under a configuration (a background job); C2 to C5 need a model."""
         invoice_id = invoice_id.strip().upper()
@@ -451,7 +492,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return request.app.state.jobs.start("audit", work).public()
 
     # -- policy --------------------------------------------------------------
-    @app.get("/api/policy", tags=["policy"], dependencies=protected)
+    @app.get("/api/policy", tags=["policy"], dependencies=viewer)
     def policy(conn: db.Database = Depends(connection)) -> dict:
         """The stored policy versions and how each was adopted, the rules of the active one, the ingested
         documents."""
@@ -476,7 +517,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return {"active": active, "versions": versions, "rules": rules, "documents": documents,
                 "results_under_other_versions": int(stale or 0)}
 
-    @app.post("/api/policy/activate", tags=["policy"], dependencies=protected)
+    @app.post("/api/policy/activate", tags=["policy"], dependencies=admin)
     def activate(body: VersionIn, conn: db.Database = Depends(connection)) -> dict:
         """Make a stored policy version the active one; later audits use it."""
         try:
@@ -485,7 +526,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             raise HTTPException(404, str(error).strip("'")) from None
         return {"active": body.version}
 
-    @app.post("/api/policy/preview", tags=["policy"], dependencies=protected)
+    @app.post("/api/policy/preview", tags=["policy"], dependencies=admin)
     async def preview(file: UploadFile = File(...), conn: db.Database = Depends(connection)) -> dict:
         """Read a policy PDF without storing anything: what it states and how it differs from the active version."""
         data = await file.read(MAX_UPLOAD + 1)
@@ -504,7 +545,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return {"upload_id": upload_id, "file": name, "title": found.title, "version": found.version,
                 "pages": found.pages, "usable": found.usable, "problems": found.problems, "changes": found.changes}
 
-    @app.post("/api/policy/adopt", tags=["policy"], dependencies=protected)
+    @app.post("/api/policy/adopt", tags=["policy"], dependencies=admin)
     def adopt(body: AdoptIn, conn: db.Database = Depends(connection)) -> dict:
         """Adopt a previewed policy document as a new version; refused with the problems if it cannot be executed."""
         report = policy_extract.adopt(conn, upload_path(body.upload_id), activate=body.activate, replace=body.replace)
@@ -512,7 +553,25 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             raise HTTPException(422, {"message": "the document was not adopted", "problems": report["problems"]})
         return report
 
-    @app.post("/api/policy/propose", tags=["policy"], dependencies=protected, status_code=202)
+    @app.post("/api/policy/simulate", tags=["policy"], dependencies=admin, status_code=202)
+    def simulate(body: AdoptIn, request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """What a previewed policy document would do to the ledger before it is adopted: every invoice audited by
+        the controls under the active policy and under the document, in memory (a job); nothing is stored."""
+        found = policy_extract.build(upload_path(body.upload_id), db.read_policy(conn).registry)
+        if not found.usable:
+            raise HTTPException(422, {"message": "the document cannot be executed", "problems": found.problems})
+        target, registry = request.app.state.target, found.registry
+
+        def work(job: Job) -> dict:
+            store = db.connect(target)
+            try:
+                return simulation.simulate(store, registry)
+            finally:
+                store.close()
+
+        return request.app.state.jobs.start("simulate", work).public()
+
+    @app.post("/api/policy/propose", tags=["policy"], dependencies=admin, status_code=202)
     def propose(body: AdoptIn, request: Request) -> dict:
         """Let the model read a policy in its own wording (a background job); the result waits for confirmation."""
         path = upload_path(body.upload_id)
@@ -532,7 +591,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
         return request.app.state.jobs.start("policy-reading", work).public()
 
-    @app.post("/api/policy/confirm", tags=["policy"], dependencies=protected)
+    @app.post("/api/policy/confirm", tags=["policy"], dependencies=admin)
     def confirm(body: ConfirmIn, request: Request, conn: db.Database = Depends(connection)) -> dict:
         """Adopt a model's proposal after the reviewer's confirmation, corrections and quoted passages."""
         path = upload_path(body.upload_id)
@@ -556,7 +615,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         request.app.state.proposals.pop(body.upload_id, None)
         return report
 
-    @app.post("/api/policy/apply", tags=["policy"], dependencies=protected, status_code=202)
+    @app.post("/api/policy/apply", tags=["policy"], dependencies=admin, status_code=202)
     def apply(request: Request) -> dict:
         """Audit every invoice again with the controls under the active policy (a background job)."""
         target = request.app.state.target
@@ -580,7 +639,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return request.app.state.jobs.start("apply-policy", work).public()
 
     # -- ledger --------------------------------------------------------------
-    @app.post("/api/ledger", tags=["ledger"], dependencies=protected, status_code=202)
+    @app.post("/api/ledger", tags=["ledger"], dependencies=admin, status_code=202)
     async def load_ledger(request: Request, file: UploadFile = File(...), replace: bool = Form(False)) -> dict:
         """Replace the ledger with an uploaded one: an .xlsx workbook with one sheet per table, or a .zip
         archive of the CSV files (a background job). The ledger is checked first; with any problem nothing is
@@ -617,7 +676,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
         return request.app.state.jobs.start("load-ledger", work).public()
 
-    @app.get("/api/search", tags=["policy"], dependencies=protected)
+    @app.get("/api/search", tags=["policy"], dependencies=viewer)
     def search(q: str, k: int = 4, conn: db.Database = Depends(connection)) -> dict:
         """Search the policy documents: hybrid when an embedding model is configured, lexical otherwise."""
         if not q.strip():
@@ -630,7 +689,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return {"mode": mode, "hits": [hit_dict(h) for h in index.search(q.strip(), k=max(1, min(k, 10)))]}
 
     # -- copilot -------------------------------------------------------------
-    @app.post("/api/copilot/ask", tags=["copilot"], dependencies=protected, status_code=202)
+    @app.post("/api/copilot/ask", tags=["copilot"], dependencies=viewer, status_code=202)
     def ask(body: AskIn, request: Request) -> dict:
         """A question about the policy or an audited invoice, answered from the passages with citations (a job)."""
         target, client = request.app.state.target, chat_client()
@@ -648,7 +707,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
         return request.app.state.jobs.start("copilot", work).public()
 
-    @app.post("/api/copilot/data", tags=["copilot"], dependencies=protected, status_code=202)
+    @app.post("/api/copilot/data", tags=["copilot"], dependencies=viewer, status_code=202)
     def data_question(body: DataQuestionIn, request: Request) -> dict:
         """A question about the data, answered by one checked, read-only SELECT the model writes (a job)."""
         client = chat_client()
@@ -663,7 +722,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         return request.app.state.jobs.start("data-question", work).public()
 
     # -- jobs and results ----------------------------------------------------
-    @app.get("/api/jobs/{job_id}", tags=["status"], dependencies=protected)
+    @app.get("/api/jobs/{job_id}", tags=["status"], dependencies=viewer)
     def job(job_id: str, request: Request) -> dict:
         """The state of a background job: queued, running, done (with its result) or failed (with the reason)."""
         found = request.app.state.jobs.get(job_id)
@@ -671,7 +730,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             raise HTTPException(404, "no such job")
         return found.public()
 
-    @app.get("/api/results", tags=["results"], dependencies=protected)
+    @app.get("/api/results", tags=["results"], dependencies=viewer)
     def results() -> dict:
         """The measured results of the evaluation, as the scripts wrote them."""
         benchmark, policy_swap = {}, None

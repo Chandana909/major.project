@@ -64,6 +64,7 @@ def steps(tmp: Path) -> dict[str, list[list[str]]]:
                          "--out", str(out)]],
         "history": [[py, "-m", "evaluation.history_cap", "--out", str(out / "history_cap.md")]],
         "ledgers": [[py, "-m", "evaluation.ledger_runs", "--out", str(out)]],
+        "revisions": [[py, "-m", "evaluation.revisions", "--out", str(out)]],
     }
 
 

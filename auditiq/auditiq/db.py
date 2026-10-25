@@ -273,6 +273,14 @@ CREATE TABLE IF NOT EXISTS benchmark_labels (
   note               TEXT
 );
 CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+CREATE TABLE IF NOT EXISTS api_users (
+  user_id        {pk},
+  name           TEXT NOT NULL UNIQUE,
+  role           TEXT NOT NULL,
+  token_hash     TEXT NOT NULL UNIQUE,
+  created_at     {timestamp},
+  disabled       {flag} NOT NULL DEFAULT 0
+);
 
 {view} v_latest_results AS
 SELECT r.*, u.configuration, u.policy_version, u.model
@@ -292,7 +300,7 @@ WHERE l.workflow_status = 'PENDING_REVIEW';
 LEDGER_TABLES = ["vendor_master", "purchase_orders", "goods_receipts", "invoices", "approval_logs"]
 ALL_TABLES = LEDGER_TABLES + ["company_policies", "policy_clauses", "policy_parameters", "policy_documents",
                               "policy_chunks", "audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail",
-                              "review_decisions", "benchmark_labels", "meta"]
+                              "review_decisions", "benchmark_labels", "meta", "api_users"]
 VIEWS = ["v_latest_results", "v_review_queue"]
 BOOLEAN_COLUMNS = {"is_active", "blacklisted", "blacklist_status"}
 NULLABLE_REFERENCES = {"po_id", "grn_id"}
@@ -796,6 +804,57 @@ def record_decision(db: Database, result_id: int, decision: str, reviewer: str, 
     detail = decision + (f": {justification.strip()}" if justification.strip() else "")
     db.execute("INSERT INTO audit_trail (result_id, seq, stage, actor, detail) VALUES (?, ?, ?, ?, ?)",
                (result_id, seq, "review", reviewer.strip(), detail))
+    db.commit()
+
+
+# ------------------------------------------------------------------ users
+# A role includes the ones before it: a reviewer can do what a viewer can, an admin what a reviewer can.
+ROLES = ("viewer", "reviewer", "admin")
+
+
+def _token_hash(token: str) -> str:
+    # The tokens are 256 random bits, so a plain hash is enough to keep them out of the database.
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def add_user(db: Database, name: str, role: str) -> str:
+    """Create a user and return the user's token. It is shown once: only its hash is stored."""
+    import secrets
+
+    name = name.strip()
+    if not name:
+        raise ValueError("a user needs a name")
+    if role not in ROLES:
+        raise ValueError(f"role must be one of {', '.join(ROLES)}")
+    if db.scalar("SELECT 1 FROM api_users WHERE name = ?", (name,)):
+        raise ValueError(f"there is already a user {name}")
+    token = secrets.token_urlsafe(32)
+    db.execute("INSERT INTO api_users (name, role, token_hash, created_at, disabled) VALUES (?, ?, ?, ?, 0)",
+               (name, role, _token_hash(token), now()))
+    db.commit()
+    return token
+
+
+def user_for_token(db: Database, token: str) -> dict | None:
+    """The enabled user a token belongs to."""
+    row = db.execute("SELECT name, role FROM api_users WHERE token_hash = ? AND disabled = 0",
+                     (_token_hash(token),)).fetchone()
+    return {"name": row["name"], "role": row["role"]} if row else None
+
+
+def has_users(db: Database) -> bool:
+    return bool(db.scalar("SELECT 1 FROM api_users WHERE disabled = 0 LIMIT 1"))
+
+
+def list_users(db: Database) -> list[dict]:
+    return [{"name": r["name"], "role": r["role"], "created_at": r["created_at"], "disabled": bool(r["disabled"])}
+            for r in db.execute("SELECT name, role, created_at, disabled FROM api_users ORDER BY name")]
+
+
+def disable_user(db: Database, name: str) -> None:
+    if not db.scalar("SELECT 1 FROM api_users WHERE name = ?", (name,)):
+        raise KeyError(f"no user {name}")
+    db.execute("UPDATE api_users SET disabled = 1 WHERE name = ?", (name,))
     db.commit()
 
 

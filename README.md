@@ -38,6 +38,13 @@ python -m auditiq serve
 The web application is then at http://127.0.0.1:8000 and the API description
 at http://127.0.0.1:8000/api/docs ([`auditiq/docs/WEB.md`](auditiq/docs/WEB.md)).
 
+Or, with Docker, the whole application and PostgreSQL in containers (from
+`auditiq/`, with `POSTGRES_PASSWORD` set; `auditiq/docs/OPERATIONS.md`, Section 7):
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build --wait
+```
+
 End to end, from `auditiq/`: the whole application in a browser (Playwright;
 once, `npx playwright install chromium` in `frontend/`), and every result that
 needs no model reproduced in a temporary folder and compared with the committed

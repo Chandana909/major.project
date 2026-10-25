@@ -37,6 +37,9 @@ GROUPS = [
               "closes its audit trail.",
      ["audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail", "review_decisions"]),
     ("Other", "", ["benchmark_labels", "meta"]),
+    ("Access", "Who may use the REST API, and with which role (docs/SECURITY.md). Created with "
+               "`python -m auditiq user add`; the application never reads a token, only its hash.",
+     ["api_users"]),
 ]
 
 TABLES: dict[str, dict] = {
@@ -391,6 +394,21 @@ TABLES: dict[str, dict] = {
                    "of the schema the database has (on PostgreSQL also whether the copilot's read-only role has "
                    "its grants), so that a connection to an up-to-date database changes nothing.",
             "value": "Its value.",
+        },
+    },
+    "api_users": {
+        "summary": "One row per user of the REST API.",
+        "source": "`python -m auditiq user add`",
+        "used": "The API: every request with a user's token is allowed what the user's role allows, and a review "
+                "decision records the user's name.",
+        "columns": {
+            "user_id": "Identifier of the user.",
+            "name": "The user's name, as it appears on the review decisions the user records.",
+            "role": "`viewer` (reads), `reviewer` (also records decisions and audits invoices again) or `admin` "
+                    "(also changes the policy and loads ledgers).",
+            "token_hash": "SHA-256 of the user's token. The token itself is shown once, when the user is created.",
+            "created_at": "When the user was created.",
+            "disabled": "1 if the user may no longer use the API.",
         },
     },
 }

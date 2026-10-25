@@ -225,7 +225,9 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | `python -m auditiq queue` | results waiting for review |
 | `python -m auditiq decide --result 17 --decision approve --reviewer "A. Auditor"` | record a decision; `override` needs `--justification` |
 | `python -m auditiq policy search "bill raised on the weekend"` | passages with document and page |
+| `python -m auditiq policy simulate company_policy.pdf` | what the document would change on the stored ledger, before it is adopted; nothing is stored |
 | `python -m auditiq policy activate 2.6` | switch the policy the next audit applies |
+| `python -m auditiq user add "A. Auditor" --role reviewer` | a user of the web application and the API; the token is printed once. `user list`, `user disable "A. Auditor"` |
 | `python -m auditiq policy ingest my_policy.pdf` | add a policy PDF for search and citation |
 | `python -m auditiq policy adopt company_policy.pdf --activate` | read the thresholds from a policy PDF in the template's wording and make it the policy the audit applies |
 | `python -m auditiq policy adopt company_policy.pdf --llm` | a policy in its own wording: the model proposes rules and thresholds, code verifies them against the document, and the command shows what it found |
@@ -252,6 +254,28 @@ python -m auditiq --db C:/Users/Chandana/auditiq_huge/huge.db serve --port 8010
 Every page answers within about 5.5 s on a laptop (RESULTS.md, Section 5.1).
 For PostgreSQL, set the store up with `setup --dataset <folder>/huge_seed_606`
 and audit it with `run --config C1`.
+
+### The whole application in containers
+
+`Dockerfile` builds the whole application into one image (the web frontend
+with Node, served by the Python API, run as an unprivileged user), and
+`deploy/docker-compose.yml` runs it with PostgreSQL. From `auditiq/`, with
+`POSTGRES_PASSWORD` set in the environment:
+
+```bash
+docker compose -f deploy/docker-compose.yml up -d --build --wait
+```
+
+```bash
+docker compose -f deploy/docker-compose.yml exec app python -m auditiq setup --dataset data/large_seed_505
+```
+
+```bash
+docker compose -f deploy/docker-compose.yml exec app python -m auditiq user add "A. Auditor" --role reviewer
+```
+
+The application is then at http://127.0.0.1:8000. CI builds and starts it on
+every push and audits a ledger in it (the `container` job).
 
 ## 8. Reproducing the evaluation
 

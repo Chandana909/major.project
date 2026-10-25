@@ -148,6 +148,8 @@ describe("an invoice", () => {
     expect(await screen.findByText("Rule 5.1.1")).toBeInTheDocument();
     expect(screen.getByText("Invoice amount exceeds the Senior Manager approval limit of 500000.")).toBeInTheDocument();
     expect(screen.getByText("Procurement_Audit_SOP_v2.5.pdf, page 2")).toBeInTheDocument();
+    expect(screen.getByText("Revision · reapprove")).toBeInTheDocument();
+    expect(screen.getByText("Obtain approval from a Director (limit 2500000) before payment.")).toBeInTheDocument();
     expect(screen.getByText("invoice.amount")).toBeInTheDocument();
     expect(screen.getByText("1 flags")).toBeInTheDocument();
     // Without a model only C1 can be run again.
@@ -212,6 +214,32 @@ describe("the policy page", () => {
     expect(adopted).toEqual({ upload_id: "0123456789abcdef", activate: true, replace: false });
   });
 
+  it("simulates a document on the ledger before it is adopted", async () => {
+    const impact = {
+      active_version: "2.5", new_version: "3.06", invoices: 20000, decisions_moved: 1540, newly_flagged: 1540, cleared: 0,
+      routes: { before: { approve: 19760, escalate: 240 }, after: { approve: 18220, escalate: 1780 } },
+      route_changes: { "approve -> escalate": 1540 },
+      findings_by_rule: [{ rule: "5.1.1", before: 30, after: 1570 }, { rule: "2.1.1", before: 30, after: 30 }],
+      amount_newly_held: 104000000, examples: [],
+    };
+    mockApi([
+      ["/api/policy/preview", () => preview],
+      ["/api/policy/simulate", () => ({ id: "sim1", kind: "simulate", status: "done", done: 0, total: 0, result: impact, error: null, seconds: 4 })],
+      ["/api/policy", () => policy],
+      ["/api/health", () => health],
+    ]);
+    renderAt("/policy", "/policy", <PolicyPage />);
+    await screen.findByText("Amount match");
+    await userEvent.upload(screen.getByLabelText("Policy PDF"), new File(["%PDF-1.4"], "Company_Policy_v3.06.pdf", { type: "application/pdf" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Simulate it on the ledger" }));
+    const panel = await screen.findByLabelText("Simulated impact");
+    expect(within(panel).getByText("1,540")).toBeInTheDocument();
+    expect(within(panel).getByText(/₹10,40,00,000 would newly wait for review/)).toBeInTheDocument();
+    expect(within(panel).getByText("approve → escalate: 1,540")).toBeInTheDocument();
+    expect(within(panel).getByText("1,570")).toBeInTheDocument();          // rule 5.1.1 under the document
+    expect(within(panel).queryByText("2.1.1")).not.toBeInTheDocument();    // unchanged rules are not listed
+  });
+
   it("lists the problems of a document the patterns cannot read", async () => {
     mockApi([
       ["/api/policy/preview", () => ({ ...preview, usable: false, changes: [], problems: ["Rule 4.3.1: the review threshold is not stated"] })],
@@ -248,7 +276,7 @@ describe("the results page", () => {
 describe("the application shell", () => {
   it("asks for the API token when the server requires one", async () => {
     mockApi([
-      ["/api/overview", (_url, init) => (new Headers(init?.headers).get("Authorization") === "Bearer t0ken" ? overview : error(401, "a valid API token is required"))],
+      ["/api/me", (_url, init) => (new Headers(init?.headers).get("Authorization") === "Bearer t0ken" ? { name: "A. Auditor", role: "reviewer", via: "account" } : error(401, "a valid API token is required"))],
       ["/api/health", () => ({ ...health, auth: true })],
     ]);
     render(
@@ -266,6 +294,7 @@ describe("the application shell", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save token" }));
     expect(await screen.findByText("the page")).toBeInTheDocument();
     expect(getToken()).toBe("t0ken");
+    expect(await screen.findByLabelText("Signed in")).toHaveTextContent("A. Auditor · reviewer");
   });
 
   it("routes an unknown address to a page that says so", async () => {

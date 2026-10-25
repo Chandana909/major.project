@@ -8,11 +8,13 @@ import type {
   InvoiceRow,
   Job,
   LedgerLoad,
+  Me,
   Overview,
   Pipeline,
   PolicyOverview,
   Preview,
   Proposal,
+  Simulation,
   QueueItem,
   Results,
   VendorPoint,
@@ -92,6 +94,7 @@ const json = (value: unknown): RequestInit => ({ method: "POST", body: JSON.stri
 
 export const api = {
   health: () => request<Health>("/api/health"),
+  me: () => request<Me>("/api/me"),
   overview: () => request<Overview>("/api/overview"),
   riskMap: () => request<{ vendors: VendorPoint[] }>("/api/risk-map"),
   pipeline: () => request<Pipeline>("/api/pipeline"),
@@ -129,6 +132,7 @@ export const api = {
       json({ upload_id: uploadId, activate, replace }),
     ),
   propose: (uploadId: string) => request<Job<Proposal>>("/api/policy/propose", json({ upload_id: uploadId })),
+  simulate: (uploadId: string) => request<Job<Simulation>>("/api/policy/simulate", json({ upload_id: uploadId })),
   confirm: (body: {
     upload_id: string;
     reviewer: string;

@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { api, waitForJob } from "../api/client";
-import type { Hit, Job, Preview, Proposal } from "../api/types";
+import type { Hit, Job, Preview, Proposal, Simulation } from "../api/types";
 import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, SeverityBadge } from "../components/ui";
-import { count } from "../lib/format";
+import { count, inr } from "../lib/format";
 import { changeRows } from "../lib/policy";
 import { notifyStoreChanged, useApi } from "../lib/useApi";
 
@@ -106,6 +106,49 @@ function ProposalForm({ proposal, uploadId, onAdopted }: { proposal: Proposal; u
   );
 }
 
+/** The dry run of a policy document: what would change on the ledger if it were adopted. */
+function Impact({ impact }: { impact: Simulation }) {
+  const changed = impact.findings_by_rule.filter((r) => r.before !== r.after);
+  return (
+    <div className="impact" aria-label="Simulated impact">
+      <p>
+        Under version {impact.new_version ?? "–"} instead of {impact.active_version}, <strong>{count(impact.decisions_moved)}</strong> of{" "}
+        {count(impact.invoices)} decisions would change: {count(impact.newly_flagged)} invoices newly flagged, {count(impact.cleared)} cleared.
+        {impact.amount_newly_held > 0 && <> ₹{inr(impact.amount_newly_held)} would newly wait for review.</>} Nothing has been stored.
+      </p>
+      {Object.keys(impact.route_changes).length > 0 && (
+        <ul className="evidence">
+          {Object.entries(impact.route_changes).map(([change, n]) => (
+            <li key={change}>
+              {change.replace("->", "→")}: {count(n)}
+            </li>
+          ))}
+        </ul>
+      )}
+      {changed.length > 0 && (
+        <table className="table compact">
+          <thead>
+            <tr>
+              <th>Rule</th>
+              <th>Findings now</th>
+              <th>Under this document</th>
+            </tr>
+          </thead>
+          <tbody>
+            {changed.map((r) => (
+              <tr key={r.rule}>
+                <td>{r.rule}</td>
+                <td className="mono">{count(r.before)}</td>
+                <td className="mono strong">{count(r.after)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function AdoptDocument({ hasModel, onChanged }: { hasModel: boolean; onChanged: (message: string) => void }) {
   const [preview, setPreview] = useState<Preview | null>(null);
   const [activate, setActivate] = useState(true);
@@ -114,10 +157,12 @@ function AdoptDocument({ hasModel, onChanged }: { hasModel: boolean; onChanged: 
   const [busy, setBusy] = useState(false);
   const [job, setJob] = useState<Job | null>(null);
   const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [impact, setImpact] = useState<Simulation | null>(null);
 
   const choose = async (file: File | undefined) => {
     setPreview(null);
     setProposal(null);
+    setImpact(null);
     setError(null);
     if (!file) return;
     setBusy(true);
@@ -139,6 +184,18 @@ function AdoptDocument({ hasModel, onChanged }: { hasModel: boolean; onChanged: 
       setPreview(null);
     } catch (err) {
       setError(err as Error);
+    }
+  };
+
+  const simulate = async () => {
+    if (!preview) return;
+    setError(null);
+    try {
+      setImpact(await waitForJob<Simulation>(await api.simulate(preview.upload_id), setJob as (j: Job<Simulation>) => void, 1000));
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setJob(null);
     }
   };
 
@@ -201,9 +258,16 @@ function AdoptDocument({ hasModel, onChanged }: { hasModel: boolean; onChanged: 
                   <input type="checkbox" checked={replace} onChange={(e) => setReplace(e.target.checked)} /> Replace a stored version of the same number
                 </label>
               </div>
-              <button className="btn btn-primary" onClick={adopt}>
-                Adopt version {preview.version}
-              </button>
+              <div className="row">
+                <button className="btn" onClick={simulate} disabled={Boolean(job)}>
+                  Simulate it on the ledger
+                </button>
+                <button className="btn btn-primary" onClick={adopt}>
+                  Adopt version {preview.version}
+                </button>
+              </div>
+              <JobProgress job={job} />
+              {impact && <Impact impact={impact} />}
             </>
           ) : (
             <>

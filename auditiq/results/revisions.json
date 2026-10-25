@@ -1,0 +1,435 @@
+{
+ "produced": "2026-10-25 23:32",
+ "policy_version": "2.5",
+ "ledgers": [
+  {
+   "ledger": "bench_seed_101",
+   "findings": 300,
+   "changes_checked": 150,
+   "resolved_without_new_finding": 150,
+   "by_rule": {
+    "2.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.2": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.3": {
+     "findings": 30,
+     "kind:obtain": 30,
+     "with action": 30
+    },
+    "2.2.1": {
+     "findings": 30,
+     "kind:reject": 30,
+     "with action": 30
+    },
+    "3.1.1": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.2": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.3": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "4.1.1": {
+     "findings": 30,
+     "kind:consolidate": 30,
+     "with action": 30
+    },
+    "4.2.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.3.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.4.1": {
+     "findings": 30,
+     "kind:hold": 30,
+     "with action": 30
+    },
+    "5.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:reapprove": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    }
+   }
+  },
+  {
+   "ledger": "bench_seed_202",
+   "findings": 300,
+   "changes_checked": 150,
+   "resolved_without_new_finding": 150,
+   "by_rule": {
+    "2.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.2": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.3": {
+     "findings": 30,
+     "kind:obtain": 30,
+     "with action": 30
+    },
+    "2.2.1": {
+     "findings": 30,
+     "kind:reject": 30,
+     "with action": 30
+    },
+    "3.1.1": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.2": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.3": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "4.1.1": {
+     "findings": 30,
+     "kind:consolidate": 30,
+     "with action": 30
+    },
+    "4.2.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.3.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.4.1": {
+     "findings": 30,
+     "kind:hold": 30,
+     "with action": 30
+    },
+    "5.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:reapprove": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    }
+   }
+  },
+  {
+   "ledger": "bench_seed_303",
+   "findings": 300,
+   "changes_checked": 150,
+   "resolved_without_new_finding": 150,
+   "by_rule": {
+    "2.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.2": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.3": {
+     "findings": 30,
+     "kind:obtain": 30,
+     "with action": 30
+    },
+    "2.2.1": {
+     "findings": 30,
+     "kind:reject": 30,
+     "with action": 30
+    },
+    "3.1.1": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.2": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.3": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "4.1.1": {
+     "findings": 30,
+     "kind:consolidate": 30,
+     "with action": 30
+    },
+    "4.2.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.3.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.4.1": {
+     "findings": 30,
+     "kind:hold": 30,
+     "with action": 30
+    },
+    "5.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:reapprove": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    }
+   }
+  },
+  {
+   "ledger": "large_seed_505",
+   "findings": 300,
+   "changes_checked": 150,
+   "resolved_without_new_finding": 150,
+   "by_rule": {
+    "2.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.2": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "2.1.3": {
+     "findings": 30,
+     "kind:obtain": 30,
+     "with action": 30
+    },
+    "2.2.1": {
+     "findings": 30,
+     "kind:reject": 30,
+     "with action": 30
+    },
+    "3.1.1": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.2": {
+     "changes checked": 15,
+     "findings": 15,
+     "kind:amend": 15,
+     "new finding": 0,
+     "resolved": 15,
+     "with action": 15
+    },
+    "3.1.3": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:amend": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    },
+    "4.1.1": {
+     "findings": 30,
+     "kind:consolidate": 30,
+     "with action": 30
+    },
+    "4.2.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.3.1": {
+     "findings": 15,
+     "kind:verify": 15,
+     "with action": 15
+    },
+    "4.4.1": {
+     "findings": 30,
+     "kind:hold": 30,
+     "with action": 30
+    },
+    "5.1.1": {
+     "changes checked": 30,
+     "findings": 30,
+     "kind:reapprove": 30,
+     "new finding": 0,
+     "resolved": 30,
+     "with action": 30
+    }
+   }
+  }
+ ],
+ "total": {
+  "findings": 1200,
+  "changes_checked": 600,
+  "resolved_without_new_finding": 600
+ },
+ "by_rule": {
+  "2.1.1": {
+   "changes checked": 120,
+   "findings": 120,
+   "kind:amend": 120,
+   "new finding": 0,
+   "resolved": 120,
+   "with action": 120
+  },
+  "2.1.2": {
+   "changes checked": 120,
+   "findings": 120,
+   "kind:amend": 120,
+   "new finding": 0,
+   "resolved": 120,
+   "with action": 120
+  },
+  "2.1.3": {
+   "findings": 120,
+   "kind:obtain": 120,
+   "with action": 120
+  },
+  "2.2.1": {
+   "findings": 120,
+   "kind:reject": 120,
+   "with action": 120
+  },
+  "3.1.1": {
+   "changes checked": 60,
+   "findings": 60,
+   "kind:amend": 60,
+   "new finding": 0,
+   "resolved": 60,
+   "with action": 60
+  },
+  "3.1.2": {
+   "changes checked": 60,
+   "findings": 60,
+   "kind:amend": 60,
+   "new finding": 0,
+   "resolved": 60,
+   "with action": 60
+  },
+  "3.1.3": {
+   "changes checked": 120,
+   "findings": 120,
+   "kind:amend": 120,
+   "new finding": 0,
+   "resolved": 120,
+   "with action": 120
+  },
+  "4.1.1": {
+   "findings": 120,
+   "kind:consolidate": 120,
+   "with action": 120
+  },
+  "4.2.1": {
+   "findings": 60,
+   "kind:verify": 60,
+   "with action": 60
+  },
+  "4.3.1": {
+   "findings": 60,
+   "kind:verify": 60,
+   "with action": 60
+  },
+  "4.4.1": {
+   "findings": 120,
+   "kind:hold": 120,
+   "with action": 120
+  },
+  "5.1.1": {
+   "changes checked": 120,
+   "findings": 120,
+   "kind:reapprove": 120,
+   "new finding": 0,
+   "resolved": 120,
+   "with action": 120
+  }
+ }
+}

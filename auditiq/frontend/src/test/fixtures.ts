@@ -44,6 +44,10 @@ export const invoice: InvoiceDetail = {
         clause: "5.1.1", title: "Approval limit", severity: "critical", source: "control", confidence: 1,
         evidence: [{ field: "invoice.amount", value: 694181.12 }], message: "Invoice amount exceeds the Senior Manager approval limit of 500000.",
         citation: { document: "Procurement_Audit_SOP_v2.5.pdf", page: 2 },
+        revision: {
+          clause: "5.1.1", kind: "reapprove", action: "Obtain approval from a Director (limit 2500000) before payment.",
+          changes: [{ field: "approval.approver_role", from: "Senior Manager", to: "Director" }], amount_at_issue: null,
+        },
       }],
       removed_by_challenger: [], review: null, recommended_action: "Escalated to a human reviewer.",
     },

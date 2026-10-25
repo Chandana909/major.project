@@ -93,6 +93,8 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 | 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
 | 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage takes 18.4 µs per invoice (31.7 before the vendor index of the code review), and the web application serves the ledger with every page answering within 5.5 s. | Measured | 5.1 |
+| 14 | Does the system make the revisions the findings require? (AuditBench) | Every one of 1,200 control findings on four ledgers gets a computed revision; 600 of 600 amendments and re-approvals resolve their finding without raising another. | Measured | 3.7 |
+| 15 | Can a policy be evaluated before it is adopted? (Liu et al.) | A dry run over the ledger predicts what a document would change: for the strict policy 6,353 invoices for review, the number its adoption then produces. | Measured | 3.8 |
 
 ## 2. Data
 
@@ -295,6 +297,53 @@ finding / invoices of each kind):
 - The judgement anomalies get no finding from the controls; they are the task of the language-model agents (Section 7).
 - The counts agree with the evaluation harness (Section 4): 300 invoices flagged on each ledger of 5,000 (a flagged share of 0.060), recall 0.714 of the 420 anomalous invoices at precision 1.000.
 - Loading took 12.8 to 16.9 s for a workbook of 5,000 invoices and the stored audit 20.2 to 24.6 s on the laptop.
+
+### 3.7 Revisions of the findings (Measured)
+
+Source: `results/revisions.md`, `python -m evaluation.revisions`. AuditBench
+reports that models struggle to make the revisions the errors require. For the
+twelve rules the controls decide, `auditiq/corrections.py` computes the revision
+of every finding from its evidence and the policy (no model): amend the amount
+to the PO amount, bill only the received quantity, carry the registered GSTIN,
+re-approve by the lowest role whose limit covers the amount, reject a
+duplicate, hold payment to a blocked vendor, obtain a missing document, verify
+a weekend date or a round amount, treat a day's invoices as one purchase. The
+audit pack, the invoice page and `auditiq show` carry it. An invoice amended or
+re-approved as the revision says is audited again with all twelve controls.
+
+| Ledger | Findings | Revisions that change the invoice | Resolved, no new finding |
+|---|---|---|---|
+| `bench_seed_101`, `_202`, `_303` | 300 each | 150 each | 150 each |
+| `large_seed_505` | 300 | 150 | 150 |
+| All four | 1,200 | 600 | **600** |
+
+Every finding has a revision with an action. The first version of the
+revisions resolved 598 of the 600: two invoices billed below their PO, once
+raised to the PO amount, exceeded their approver's limit. The revision of an
+amount now also names the role the corrected amount needs, and all 600 pass.
+
+### 3.8 Simulating a policy before it is adopted (Measured)
+
+Liu et al. name policy evaluation among the uses of multi-agent systems in
+finance. `auditiq/simulation.py` audits every invoice of the stored ledger
+under the active policy and under a new document, in memory, and reports the
+difference: decisions moved, invoices newly flagged and cleared, route changes,
+findings by rule and the money newly held for review. Nothing is stored. It is
+in the API (`POST /api/policy/simulate`, a job), the command line
+(`auditiq policy simulate <pdf>`) and the policy page of the web application.
+
+On the 20,000-invoice ledger under version 2.5, in 4.6 s:
+
+| Document | Decisions moved | Newly flagged | Cleared | Route changes | Held for review after |
+|---|---|---|---|---|---|
+| Strict policy (3.12) | 6,171 | 6,095 | 0 | 6,113 approve to escalate | 6,353 |
+| Lenient policy (3.13) | 56 | 0 | 56 | 40 escalate to approve | 200 |
+
+The strict policy's prediction, 6,353 invoices waiting for review and 13,647
+approved, is what adopting the document and auditing the ledger then produce
+(Section 3.5). A test checks on both backends that the predicted routes and the
+findings per rule equal those of the audit under the new policy
+(`tests/test_simulation.py`).
 
 ## 4. Controls against classical anomaly detectors
 
@@ -727,11 +776,12 @@ experimental results.
 |---|---|
 | Pipeline | LangGraph state graph; configurations C1 to C5 are subsets of its stages |
 | Store | SQLite or PostgreSQL 17, same schema; every result, finding (with evidence), challenger removal and trail entry is stored; results are never replaced |
-| REST API | FastAPI, 22 endpoints, background jobs, optional bearer token (constant-time comparison), checks on every upload |
+| REST API | FastAPI, 24 endpoints, background jobs, users with roles (viewer, reviewer, admin) or a shared token, a Content-Security-Policy for the web pages, checks on every upload |
 | Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
 | Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | 345 Python tests on SQLite and PostgreSQL (342 pass, 3 skipped on the laptop); 28 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
-| Continuous integration | GitHub Actions, four jobs on every push: Python (ruff, tests on both backends); frontend (lint, types, tests, build, dependency audit); the browser tests; and PostgreSQL started from the compose file, with every test run against it and a ledger set up and audited in it |
+| Tests | 395 Python tests on SQLite and PostgreSQL (391 pass, 4 skipped on the laptop: a time-zone test Windows cannot run and SQLite runs of PostgreSQL-only checks); 30 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
+| Deployment | `Dockerfile` (the application in one image) and `deploy/docker-compose.yml` (with PostgreSQL), built and run in CI |
+| Continuous integration | GitHub Actions, five jobs on every push (the fifth builds the container image, starts it with PostgreSQL and audits a ledger in it); the first four: Python (ruff, tests on both backends); frontend (lint, types, tests, build, dependency audit); the browser tests; and PostgreSQL started from the compose file, with every test run against it and a ledger set up and audited in it |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 
 A concurrency defect found during testing (simultaneous web requests could
@@ -803,7 +853,7 @@ a model audits.
 - Confidence measures stability, not correctness.
 - Everything ran on one laptop; the services are separable, but a multi-machine deployment has not been measured.
 - The scalability figures of Section 5 were measured on one laptop; at 500,000 invoices an invoice costs 1.26 times as much as at 20,000 (Section 5.1).
-- The web application has one shared token and no user accounts.
+- Users of the web application have tokens and roles, not passwords or single sign-on.
 - The two base papers were described from their abstracts.
 
 ## 12. Figures
@@ -822,7 +872,7 @@ The paper draws its own figures in TikZ and pgfplots from the same numbers
 
 ## 13. How to reproduce every number
 
-From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 15 need no model.
+From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 16 need no model.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -841,6 +891,7 @@ From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 15 need
 | 13 | `python -m evaluation.ledger_runs` | `results/ledger_runs.*` |
 | 14 | `python -m evaluation.collect_results` (after the others) | `results/results.json` |
 | 15 | `python -m evaluation.huge --work <folder outside OneDrive>` (generation takes hours; about 330 MB) | `results/huge_seed_606/` |
+| 16 | `python -m evaluation.revisions` | `results/revisions.*` |
 
 Model replies are cached (`.auditiq/`), so re-running step 10 or 11 on the same
 machine reuses them; on another machine the model must be configured

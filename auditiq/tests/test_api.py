@@ -16,6 +16,7 @@ from test_policy_llm import client_for, right_reply
 from auditiq import api, db, ledger_import, service
 from auditiq.graph import PRESETS
 from auditiq.policy import POLICY_DIR, load_policy
+from auditiq.policy_pdf import make_sample_pdfs
 from evaluation import policy_llm_eval as study
 
 
@@ -225,6 +226,42 @@ def test_a_token_protects_everything_but_the_health_check(library, monkeypatch):
     assert guarded.get("/api/overview", headers={"Authorization": "Bearer s3cret"}).status_code == 200
 
 
+def test_users_get_what_their_role_allows_and_a_decision_carries_the_users_name(client, library):
+    conn = db.connect(library)
+    tokens = {role: db.add_user(conn, f"{role.title()} One", role) for role in db.ROLES}
+    leaver = db.add_user(conn, "Left Already", "admin")
+    db.disable_user(conn, "Left Already")
+    conn.close()
+    auth = {role: {"Authorization": f"Bearer {token}"} for role, token in tokens.items()}
+    assert client.get("/api/health").json()["auth"] is True              # users exist: the server is no longer open
+    assert client.get("/api/overview").status_code == 401
+    assert client.get("/api/overview", headers={"Authorization": f"Bearer {leaver}"}).status_code == 401
+    assert client.get("/api/me", headers=auth["viewer"]).json() == {"name": "Viewer One", "role": "viewer",
+                                                                   "via": "account"}
+    result_id = client.get("/api/queue", headers=auth["viewer"]).json()["items"][0]["result_id"]
+    decide = lambda who, body: client.post(f"/api/results/{result_id}/decision", json=body, headers=auth[who])  # noqa: E731
+    refused = decide("viewer", {"decision": "approve"})
+    assert refused.status_code == 403 and "needs the role reviewer" in refused.json()["detail"]
+    assert client.post("/api/policy/activate", json={"version": "2.6"}, headers=auth["reviewer"]).status_code == 403
+    assert decide("reviewer", {"decision": "approve", "reviewer": "Someone Else"}).status_code == 200
+    conn = db.connect(library)
+    assert conn.scalar("SELECT reviewer FROM review_decisions WHERE result_id = ?", (result_id,)) == "Reviewer One"
+    conn.close()
+    assert client.post("/api/policy/activate", json={"version": "2.6"}, headers=auth["admin"]).status_code == 200
+
+
+def test_the_shared_token_acts_as_an_admin_beside_the_users(library, monkeypatch):
+    monkeypatch.setattr(api, "model_name", lambda: None)
+    conn = db.connect(library)
+    viewer = db.add_user(conn, "Read Only", "viewer")
+    conn.close()
+    guarded = TestClient(api.create_app(library, token="s3cret", frontend=None))
+    assert guarded.get("/api/me", headers={"Authorization": "Bearer s3cret"}).json()["role"] == "admin"
+    assert guarded.get("/api/me", headers={"Authorization": f"Bearer {viewer}"}).json()["role"] == "viewer"
+    assert guarded.post("/api/policy/activate", json={"version": "2.6"},
+                        headers={"Authorization": f"Bearer {viewer}"}).status_code == 403
+
+
 def test_an_unreachable_database_answers_503(monkeypatch):
     monkeypatch.setattr(api, "model_name", lambda: None)
     broken = TestClient(api.create_app("postgresql://nobody:x@127.0.0.1:1/none", token="", frontend=None))
@@ -286,3 +323,23 @@ def test_every_answer_carries_the_security_headers(client):
         headers = client.get(path).headers
         assert headers["x-content-type-options"] == "nosniff" and headers["x-frame-options"] == "DENY"
         assert headers["referrer-policy"] == "no-referrer"
+    page = client.get("/review").headers                     # the web application, not the API
+    assert "script-src 'self'" in page["content-security-policy"] and "frame-ancestors 'none'" in page["content-security-policy"]
+    assert "content-security-policy" not in client.get("/api/health").headers      # /api/docs loads its viewer from a CDN
+
+
+def test_the_api_simulates_a_previewed_document_as_a_job(client, tmp_path):
+    pdf = next(p for p in make_sample_pdfs(tmp_path) if "v2.6" in p.name)
+    upload = client.post("/api/policy/preview", files={"file": (pdf.name, pdf.read_bytes(), "application/pdf")}).json()
+    job = client.post("/api/policy/simulate", json={"upload_id": upload["upload_id"]})
+    assert job.status_code == 202 and job.json()["kind"] == "simulate"
+    for _ in range(200):
+        state = client.get(f"/api/jobs/{job.json()['id']}").json()
+        if state["status"] in ("done", "failed"):
+            break
+        time.sleep(0.05)
+    assert state["status"] == "done", state["error"]
+    assert state["result"]["new_version"] == "2.6" and state["result"]["invoices"] == 1200
+    refused = client.post("/api/policy/simulate", json={"upload_id": "not-an-id"})
+    assert refused.status_code == 400
+

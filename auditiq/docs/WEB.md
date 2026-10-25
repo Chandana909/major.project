@@ -88,6 +88,7 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | Method | Path | What it does | Answer |
 |---|---|---|---|
 | GET | `/api/health` | Version, backend, ledger, active policy, model; open without a token | 200 |
+| GET | `/api/me` | Who the request is from: the user's name and role, the shared token, or an open server | 200, 401 |
 | GET | `/api/overview` | Counts by state, route and risk level; findings by rule; recent runs; vendors with most invoices waiting | 200 |
 | GET | `/api/risk-map` | Every vendor with category, invoices, amount, invoices waiting, highest risk, blacklisting | 200 |
 | GET | `/api/pipeline` | The stages and the stages of each configuration C1 to C5; open without a token | 200 |
@@ -100,6 +101,7 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | POST | `/api/policy/activate` | Make a stored version the active one | 200, 404 |
 | POST | `/api/policy/preview` | Upload a policy PDF (multipart); answers its thresholds, the changes against the active version, and whether it can be adopted | 200, 413, 415 |
 | POST | `/api/policy/adopt` | Adopt a previewed document as a new policy version | 200, 422 |
+| POST | `/api/policy/simulate` | What a previewed document would do to the ledger before it is adopted: decisions moved, invoices newly flagged and cleared, route changes, findings by rule, money newly held (a dry run; nothing is stored) | 202 job, 400, 422 |
 | POST | `/api/policy/propose` | Let the model read a document in its own wording; answers the proposal with every value, its quote and its verification status | 202 job, 400 |
 | POST | `/api/policy/confirm` | Adopt a proposal after the reviewer's confirmation, corrections and passages | 200, 400, 404, 422 |
 | POST | `/api/policy/apply` | Audit the whole ledger again under the active version, with progress | 202 job |
@@ -231,6 +233,7 @@ browser tests).
 - One server process: background jobs live in its memory and are lost on a
   restart. A deployment for many users would put them in a queue (for example
   a database table polled by workers).
-- One shared token and no user accounts or roles; the reviewer's name is not
-  an authenticated identity.
+- Users have tokens and roles (viewer, reviewer, admin), not passwords or a
+  single sign-on service; on an open server or with the shared token the
+  reviewer's name is typed (SECURITY.md).
 - The 3D views need WebGL; without it the pages show the tables only.

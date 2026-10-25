@@ -258,3 +258,14 @@ details summary { cursor: pointer; color: var(--muted); margin-top: 8px; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 .scene-label.stage { white-space: normal; width: 92px; text-align: center; line-height: 1.15; font-size: 10px; }
+
+.revision {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--teal);
+  background: rgba(45, 212, 191, 0.08);
+  border-radius: 6px;
+}
+.revision p {
+  margin: 4px 0;
+}

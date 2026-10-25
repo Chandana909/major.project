@@ -1,0 +1,14 @@
+# What the image does not need: local state, secrets, builds made on the host, the huge ledger.
+.env
+.auditiq/
+data_huge/
+exports/
+.venv/
+**/__pycache__/
+**/*.pyc
+*.egg-info/
+.pytest_cache/
+frontend/node_modules/
+frontend/dist/
+frontend/test-results/
+frontend/playwright-report/

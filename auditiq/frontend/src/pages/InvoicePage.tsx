@@ -79,13 +79,31 @@ function FindingCard({ flag }: { flag: PackFlag }) {
           ))}
         </ul>
       )}
+      {flag.revision && (
+        <div className="revision">
+          <strong>Revision · {flag.revision.kind}</strong>
+          <p>{flag.revision.action}</p>
+          {flag.revision.changes.length > 0 && (
+            <ul className="evidence">
+              {flag.revision.changes.map((c, i) => (
+                <li key={i}>
+                  <code>{c.field}</code>: {cell(c.from)} → {cell(c.to)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </article>
   );
 }
 
 function DecisionForm({ resultId, onDone }: { resultId: number; onDone: () => void }) {
   const [decision, setDecision] = useState<"approve" | "reject" | "override">("approve");
-  const [reviewer, setReviewer] = useState("");
+  const me = useApi(() => api.me(), []).data;
+  const account = me?.via === "account" ? me.name : null;      // signed in as a user: the decision carries the name
+  const [typed, setTyped] = useState("");
+  const reviewer = account ?? typed;
   const [justification, setJustification] = useState("");
   const [error, setError] = useState<Error | null>(null);
   const [busy, setBusy] = useState(false);
@@ -126,7 +144,7 @@ function DecisionForm({ resultId, onDone }: { resultId: number; onDone: () => vo
       </fieldset>
       <label>
         Reviewer
-        <input value={reviewer} onChange={(e) => setReviewer(e.target.value)} placeholder="Your name" />
+        <input value={reviewer} onChange={(e) => setTyped(e.target.value)} placeholder="Your name" readOnly={Boolean(account)} />
       </label>
       <label>
         Justification

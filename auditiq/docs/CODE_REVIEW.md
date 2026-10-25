@@ -6,7 +6,7 @@ generator, the evaluation, the dashboard, the scripts and the tests) and 4,000
 of TypeScript (the web application and its tests). Each finding below says
 what was wrong, what it could cause, what was changed and which test now
 checks it. Findings 12 to 14 were added on 25 October, when the application
-was served from the 500,000-invoice ledger. Section 3 lists what was examined
+was served from the 500,000-invoice ledger, and 15 to 17 later the same day. Section 3 lists what was examined
 and found sound, and Section 4 what is left.
 
 ## 1. How the code was examined
@@ -154,6 +154,27 @@ above 250 vendors points and stems shrink with the square root of the number of
 vendors (`frontend/src/three/layout.ts`, `RiskConstellation.tsx`). *Test:*
 `scenes.test.tsx`.
 
+**15. One shared token, no user accounts** (security; done 25 October).
+Anyone with the token could do everything, and a reviewer's name was typed.
+*Changed:* users with roles (`api_users`, `python -m auditiq user add`), each
+endpoint requiring viewer, reviewer or admin (403 below it), a decision recording
+the signed-in user's name, `GET /api/me`, and the web application showing who
+is signed in and filling in the reviewer. The shared token remains, as an admin.
+*Tests:* `tests/test_api.py` (each role allowed and refused, disabled user,
+the decision's name, the shared token beside users), `tests/test_docs.py`.
+
+**16. No Content-Security-Policy** (security; done 25 October). *Changed:* the
+web application's pages carry a policy that allows scripts, connections and
+fonts from the server only; checked in a browser on every page, with the 3D
+views, without a violation. *Test:* `tests/test_api.py`.
+
+**17. No container image of the application** (deployment; done 25 October).
+*Changed:* `Dockerfile` (the frontend built with Node, served by the Python
+API, run as an unprivileged user, with a health check) and
+`deploy/docker-compose.yml` (the application with PostgreSQL). CI builds the
+image, starts both, sets up and audits a ledger inside it and reads the result
+through the API with a token (the `container` job).
+
 ## 3. Examined and found sound
 
 - **SQL built from strings.** The eight places `ruff` flags (S608) put
@@ -190,8 +211,6 @@ vendors (`frontend/src/three/layout.ts`, `RiskConstellation.tsx`). *Test:*
 
 | Item | Why it stays |
 |---|---|
-| One shared token, no user accounts or roles | A larger change across the API and the web application; stated in SECURITY.md and RESULTS.md |
-| No Content-Security-Policy header | The 3D views' needs (workers, inline styles) must be checked in a browser first |
 | No rate limit or body limit in the server | The job of the reverse proxy in front of it (SECURITY.md, Section 5) |
 | Type checking is not in CI | The 49 reports are not bugs; making the checker pass needs annotations through the dictionaries the stages pass, without changing behaviour |
 | The model stages are not faster | Their time is the model's; on this laptop's integrated GPU a 7B model's prompt is processed 6 to 8 times faster than on its CPU (OPERATIONS.md, Section 5) |

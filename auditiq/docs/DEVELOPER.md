@@ -53,6 +53,7 @@ auditiq/                  the Python project (run every command from here)
 | `graph.py` | The LangGraph state graph; configurations C1 to C5 are subsets of its stages | `PRESETS`, `build_graph()` |
 | `scoring.py` | Confidence from re-runs, the risk scores R0 and Rc, and the route (approve, sample, escalate) | `route()` |
 | `audit_pack.py` | The record of one audited transaction, as stored and as shown | `render_markdown()` |
+| `corrections.py` | The revision each control finding requires (amend, re-approve, reject, hold, obtain, verify), computed from its evidence and the policy | `correct()`, `apply()` |
 | `service.py` | Batch audit over the store: extract, run the graph, store every result, set the workflow status | `audit_invoices()` |
 
 **The policy.** A document in, an executable policy out.
@@ -64,6 +65,7 @@ auditiq/                  the Python project (run every command from here)
 | `policy_ingest.py` | Reads a PDF into pages and passages, with clause numbers and page numbers, for search and citations |
 | `policy_extract.py` | Reads the thresholds of a document in the template's wording (patterns, no model); refuses a document it cannot execute |
 | `policy_llm.py` | Reads a document in its own wording: the model proposes values with quotes, the code verifies each quote, a person confirms |
+| `simulation.py` | What a policy document would do to the stored ledger before it is adopted: a dry run of the controls under both policies |
 | `retrieval.py` | Policy search: lexical ranking, question rewriting by the model, embeddings, and the hybrid of the two |
 
 **The store and the data.**
@@ -78,8 +80,8 @@ auditiq/                  the Python project (run every command from here)
 
 | Module | Responsibility |
 |---|---|
-| `cli.py` | The `auditiq` command: `setup`, `ledger`, `policy`, `run`, `audit`, `show`, `queue`, `decide`, `ask`, `ask-data`, `serve`, `export`, `status`, `graph`, `check-llm` |
-| `api.py` | The REST API (FastAPI), its background jobs and the rules that keep them apart; serves the built web application |
+| `cli.py` | The `auditiq` command: `setup`, `ledger`, `policy`, `run`, `audit`, `show`, `queue`, `decide`, `ask`, `ask-data`, `serve`, `export`, `status`, `user`, `graph`, `check-llm` |
+| `api.py` | The REST API (FastAPI): who is asking and what each role may do (`principal`, `require`), its background jobs and the rules that keep them apart, the security headers; serves the built web application |
 | `apidoc.py` | Writes `docs/API.md` from the application |
 | `copilot.py` | Questions about the policy (answered from passages, with citations) and about the data (one checked, read-only SELECT) |
 | `app/dashboard.py` | The Streamlit dashboard |
@@ -253,6 +255,7 @@ with its label (measured, pilot or sample) and its command.
 | Browser tests against the real server | `cd frontend && npm run e2e` | e2e job |
 | Python dependencies | `pip-audit --skip-editable` | test job |
 | PostgreSQL from the compose file | `docker compose -f deploy/postgres/docker-compose.yml up -d --wait`, then the tests and a ledger set up and audited | compose job |
+| The container image with PostgreSQL | `docker compose -f deploy/docker-compose.yml up -d --build --wait`, then a ledger set up and audited in it and read through the API | container job |
 | Every result without a model | `python scripts/reproduce.py` (about an hour) | not in CI |
 | Generated documents current | part of the tests (`tests/test_docs.py`, `tests/test_results.py`) | test job |
 
@@ -261,6 +264,8 @@ with its label (measured, pilot or sample) and its command.
 | File | Covers |
 |---|---|
 | `test_controls.py` | every control: clean, violating, the threshold read from the registry; the vendor index against the plain list |
+| `test_corrections.py` | every kind of revision; an amended or re-approved invoice passes the rule it failed |
+| `test_simulation.py` | the dry run of a policy predicts the routes and findings of the audit under it |
 | `test_scoring.py` | confidence, R0 and Rc, routing |
 | `test_pipeline.py` | the model stages with a scripted model, the LangGraph configurations, human review |
 | `test_db.py` | loading, extraction from the store, the policy store, results, the review queue, 32 connections at once |
@@ -269,7 +274,7 @@ with its label (measured, pilot or sample) and its command.
 | `test_policy_docs.py` | PDFs, ingestion, search, the copilot and every guard of its SQL |
 | `test_policy_llm.py` | reading a policy in its own wording, with a scripted model |
 | `test_llm.py` | the model client: cache, retries, a reply that is not a completion, the context guard |
-| `test_api.py` | every endpoint on both backends, the token, uploads, jobs and their conflicts, the security headers |
+| `test_api.py` | every endpoint on both backends, users and roles, the shared token, uploads, jobs and their conflicts, the security headers and the Content-Security-Policy |
 | `test_cli.py` | the command line end to end; every connection a command opens is closed |
 | `test_dashboard.py` | the Streamlit pages, headless |
 | `test_generator.py` | the generator and its validator |

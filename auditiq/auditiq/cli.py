@@ -42,7 +42,7 @@ from pathlib import Path
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from . import copilot, db, ledger_import, policy_extract, policy_ingest, policy_llm, service
+from . import copilot, db, ledger_import, policy_extract, policy_ingest, policy_llm, service, simulation
 from .audit_pack import render_markdown
 from .config import configure_logging
 from .extraction import extract
@@ -162,6 +162,26 @@ def cmd_policy(args: argparse.Namespace) -> int:
         print(f"adopted as policy version {report['version']} ({report['rules']} rules)"
               + ("; now the active version" if report.get("active") else "; activate it with: policy activate "
                  + str(report["version"])))
+    elif args.action == "simulate":
+        # What the document would do to the stored ledger, before it is adopted; nothing is stored.
+        if len(args.arguments) != 1:
+            print("give one policy PDF", file=sys.stderr)
+            return 2
+        found = policy_extract.build(Path(args.arguments[0]), db.read_policy(conn).registry)
+        if not found.usable:
+            for problem in found.problems:
+                print(f"  problem: {problem}", file=sys.stderr)
+            print("the document cannot be executed", file=sys.stderr)
+            return 1
+        out = simulation.simulate(conn, found.registry)
+        print(f"{found.file}: version {found.version} against the active version {out['active_version']}, "
+              f"on {out['invoices']:,} invoices (dry run: nothing is stored)")
+        print(f"  decisions moved: {out['decisions_moved']:,} (newly flagged {out['newly_flagged']:,}, cleared "
+              f"{out['cleared']:,})")
+        for change, n in out["route_changes"].items():
+            print(f"  {change}: {n:,}")
+        print(f"  amount newly held for review: {out['amount_newly_held']:,.2f}")
+        print(table([r for r in out["findings_by_rule"] if r["before"] != r["after"]], ["rule", "before", "after"]))
     elif args.action == "embed":
         embedder = EndpointEmbedder.from_env()
         if embedder is None:
@@ -385,6 +405,31 @@ def cmd_export(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_user(args: argparse.Namespace) -> int:
+    """Users of the REST API: add one (its token is printed once), list them, disable one."""
+    conn = open_db(args)
+    if args.action == "add":
+        if not args.name:
+            print("give the user's name", file=sys.stderr)
+            return 2
+        try:
+            token = db.add_user(conn, args.name, args.role)
+        except ValueError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+        print(f"user {args.name.strip()} added with the role {args.role}. Their token, shown only now:\n{token}")
+    elif args.action == "list":
+        print(table(db.list_users(conn), ["name", "role", "created_at", "disabled"]))
+    else:
+        try:
+            db.disable_user(conn, args.name or "")
+        except KeyError as error:
+            print(f"error: {str(error).strip(chr(39))}", file=sys.stderr)
+            return 2
+        print(f"user {args.name} disabled")
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     conn = open_db(args)
     where = conn.target if conn.backend == "sqlite" else conn.target.split("@")[-1]     # never print a password
@@ -437,9 +482,9 @@ def main(argv: list[str] | None = None) -> int:
                                                   "the workbook to write")
     led.set_defaults(run=cmd_ledger)
 
-    pol = sub.add_parser("policy", help="policy documents: make-pdfs, ingest, adopt, embed, activate, search")
-    pol.add_argument("action", choices=["make-pdfs", "ingest", "adopt", "embed", "activate", "search"])
-    pol.add_argument("arguments", nargs="*", help="files to ingest, the PDF to adopt, the version to activate, "
+    pol = sub.add_parser("policy", help="policy documents: make-pdfs, ingest, adopt, simulate, embed, activate, search")
+    pol.add_argument("action", choices=["make-pdfs", "ingest", "adopt", "simulate", "embed", "activate", "search"])
+    pol.add_argument("arguments", nargs="*", help="files to ingest, the PDF to adopt or simulate, the version to activate, "
                                                   "or the search text")
     pol.add_argument("--activate", action="store_true", help="adopt: make the adopted version the active one")
     pol.add_argument("--replace", action="store_true", help="adopt: replace a stored version of the same number")
@@ -521,6 +566,14 @@ def main(argv: list[str] | None = None) -> int:
 
     status = sub.add_parser("status", help="show the backend, the loaded ledger and the row count of every table")
     status.set_defaults(run=cmd_status)
+
+    user = sub.add_parser("user", help="users of the REST API and their roles: add (prints the token once), list, "
+                                       "disable")
+    user.add_argument("action", choices=["add", "list", "disable"])
+    user.add_argument("name", nargs="?", default="")
+    user.add_argument("--role", choices=list(db.ROLES), default="reviewer",
+                      help="viewer reads; reviewer also decides and audits again; admin also changes policy and ledger")
+    user.set_defaults(run=cmd_user)
 
     graph = sub.add_parser("graph", help="print the pipeline of a configuration as a Mermaid diagram")
     graph.add_argument("--config", choices=list(PRESETS), default="C5")

@@ -327,6 +327,36 @@ Each ledger has an evaluation subset of 1,200 invoices with weights; a configura
 | C1 under v2.5 | 1.000 [1.000, 1.000] | 150 | 0 |
 | C1 under v2.6 | 1.000 [1.000, 1.000] | 0 | 0 |
 
+### 10.9 Revisions of the findings
+
+Source: [`revisions.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.json), [`revisions.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.md).
+
+AuditBench reports that models struggle to make the revisions the errors require. For the twelve rules the controls decide, `auditiq/corrections.py` computes it from the finding's evidence and the policy, and the audit pack carries it. An invoice amended or re-approved as the revision says is audited again with all twelve controls.
+
+| Ledger | Findings | Revisions that change the invoice | Resolved, no new finding |
+|---|---|---|---|
+| `bench_seed_101` | 300 | 150 | 150 |
+| `bench_seed_202` | 300 | 150 | 150 |
+| `bench_seed_303` | 300 | 150 | 150 |
+| `large_seed_505` | 300 | 150 | 150 |
+
+| Rule | Findings | Kind of revision | Resolved | New finding |
+|---|---|---|---|---|
+| 2.1.1 | 120 | amend 120 | 120 | 0 |
+| 2.1.2 | 120 | amend 120 | 120 | 0 |
+| 2.1.3 | 120 | obtain 120 | 0 | 0 |
+| 2.2.1 | 120 | reject 120 | 0 | 0 |
+| 3.1.1 | 60 | amend 60 | 60 | 0 |
+| 3.1.2 | 60 | amend 60 | 60 | 0 |
+| 3.1.3 | 120 | amend 120 | 120 | 0 |
+| 4.1.1 | 120 | consolidate 120 | 0 | 0 |
+| 4.2.1 | 60 | verify 60 | 0 | 0 |
+| 4.3.1 | 60 | verify 60 | 0 | 0 |
+| 4.4.1 | 120 | hold 120 | 0 | 0 |
+| 5.1.1 | 120 | reapprove 120 | 120 | 0 |
+
+Every one of the 1,200 findings has a revision with an action; 600 of the 600 that change the invoice resolve their finding without raising another.
+
 ## 11. Policy change: fourteen policy documents
 
 Source: [`policy_change.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_change.json), [`policy_change.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_change.md).
@@ -1108,6 +1138,8 @@ The result files of the repository, with their public raw addresses (`.jsonl` fi
 - [`auditiq/results/policy_robustness.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/policy_robustness.md)
 - [`auditiq/results/results.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/results.json)
 - [`auditiq/results/retrieval.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/retrieval.md)
+- [`auditiq/results/revisions.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.json)
+- [`auditiq/results/revisions.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.md)
 - [`auditiq/results/scalability.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/scalability.json)
 - [`auditiq/results/scalability.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/scalability.md)
 - [`auditiq/results/summary.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/summary.md)

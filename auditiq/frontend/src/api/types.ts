@@ -5,6 +5,13 @@ export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type Severity = "low" | "medium" | "high" | "critical";
 export type ConfigName = "C1" | "C2" | "C3" | "C4" | "C5";
 
+/** Who the API sees: a user's account, the shared token, or anyone on an open server (GET /api/me). */
+export interface Me {
+  name: string | null;
+  role: "viewer" | "reviewer" | "admin";
+  via: "account" | "shared token" | "open";
+}
+
 export interface Health {
   status: string;
   version: string;
@@ -126,6 +133,31 @@ export interface PackFlag {
   message: string;
   confidence_terms?: { g: number | null; p: number | null; a: number | null };
   citation?: { document: string; page: number };
+  revision?: Revision;
+}
+
+/** What a control finding requires, computed from its evidence and the policy (auditiq/corrections.py). */
+export interface Revision {
+  clause: string;
+  kind: "amend" | "reapprove" | "consolidate" | "reject" | "hold" | "obtain" | "verify";
+  action: string;
+  changes: { field: string; from: unknown; to: unknown }[];
+  amount_at_issue: number | null;
+}
+
+/** What a policy document would do to the ledger before it is adopted (POST /api/policy/simulate). */
+export interface Simulation {
+  active_version: string;
+  new_version: string | null;
+  invoices: number;
+  decisions_moved: number;
+  newly_flagged: number;
+  cleared: number;
+  routes: { before: Record<string, number>; after: Record<string, number> };
+  route_changes: Record<string, number>;
+  findings_by_rule: { rule: string; before: number; after: number }[];
+  amount_newly_held: number;
+  examples: { invoice_id: string; amount: number; before: string[]; after: string[]; route_before: string; route_after: string }[];
 }
 
 export interface AuditPack {

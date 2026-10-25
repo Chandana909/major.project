@@ -5,7 +5,8 @@
 # whole application in a browser: the API on a new store, serving the built web
 # application, driven by Playwright (auditiq/frontend/e2e). The compose job starts
 # PostgreSQL from deploy/postgres/docker-compose.yml, as a team with Docker would,
-# and runs the tests and an audit against it.
+# and runs the tests and an audit against it. The container job builds the image of auditiq/Dockerfile,
+# starts it with PostgreSQL (auditiq/deploy/docker-compose.yml) and audits a ledger in it.
 name: ci
 on:
   push:
@@ -143,3 +144,32 @@ jobs:
           python -m auditiq --db postgresql://auditiq:ci-only@localhost:5544/auditiq run --config C1
       - if: always()
         run: docker compose -f deploy/postgres/docker-compose.yml down -v
+
+  container:
+    # The image of auditiq/Dockerfile with PostgreSQL, from auditiq/deploy/docker-compose.yml: built, started,
+    # a ledger set up and audited inside it, and read back through the API with a token.
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: auditiq
+    env:
+      POSTGRES_PASSWORD: ci-only
+      AUDITIQ_API_TOKEN: ci-token
+    steps:
+      - uses: actions/checkout@v4
+      - name: The application and PostgreSQL from the compose file
+        run: docker compose -f deploy/docker-compose.yml up -d --build --wait
+      - name: A ledger set up and audited in the container, then read through the API
+        run: |
+          docker compose -f deploy/docker-compose.yml exec -T app python -m auditiq setup --dataset data/bench_seed_101
+          docker compose -f deploy/docker-compose.yml exec -T app python -m auditiq run --config C1
+          curl -fsS http://127.0.0.1:8000/api/health
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/overview)" = 401
+          curl -fsS -H "Authorization: Bearer ci-token" http://127.0.0.1:8000/api/overview | python3 -c "import json, sys; d = json.load(sys.stdin); assert (d['audited'], d['findings'], d['backend']) == (5000, 300, 'postgres'), d; print('audited', d['audited'], 'findings', d['findings'], 'on', d['backend'])"
+          curl -fsS http://127.0.0.1:8000/review | grep -q 'id="root"'
+          curl -fsSI http://127.0.0.1:8000/review | grep -qi "content-security-policy: default-src 'self'"
+      - if: failure()
+        run: docker compose -f deploy/docker-compose.yml logs --tail 200
+      - if: always()
+        run: docker compose -f deploy/docker-compose.yml down -v

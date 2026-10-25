@@ -237,6 +237,16 @@ def history_cap() -> dict:
             "sources": [source("history_cap.md")], "command": "python -m evaluation.history_cap"}
 
 
+def revisions() -> dict:
+    r = load("revisions.json")
+    return {"label": "measured",
+            "question": "For every finding of the controls, is the computed revision right: does an invoice amended or "
+                        "re-approved as it says pass the rule it failed, with no new finding? (The revision stage of "
+                        "AuditBench, for the rules the controls decide.)",
+            "total": r["total"], "by_ledger": r["ledgers"], "by_rule": r["by_rule"],
+            "sources": [source("revisions.json"), source("revisions.md")], "command": "python -m evaluation.revisions"}
+
+
 def huge_ledger() -> dict:
     """The 500,000-invoice ledger (evaluation.huge), once its report exists."""
     folder = "huge_seed_606"
@@ -348,6 +358,7 @@ def build() -> dict:
             "policies_in_their_own_wording": own_wording(),
             "policy_search": retrieval(),
             "vendor_history_cap": history_cap(),
+            "revisions_of_control_findings": revisions(),
             "llm_stages_pilot_20_invoices": model_runs(
                 "pilot_seed_909/pilot20.md", "pilot", "The five configurations with a local 7B model on 20 invoices "
                 "of the development ledger.", "python -m evaluation.run_pilot --dataset data/pilot_seed_909 "

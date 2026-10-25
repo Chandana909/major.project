@@ -1,0 +1,47 @@
+# The whole application in containers: the API with the web frontend (the image of ../Dockerfile) and
+# PostgreSQL 17 with the copilot's read-only role (postgres/init.sql). From auditiq/:
+#
+#   set POSTGRES_PASSWORD (and, to require tokens, AUDITIQ_API_TOKEN) in the environment, then
+#   docker compose -f deploy/docker-compose.yml up -d --build --wait
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq setup --dataset data/large_seed_505
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq run --config C1
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq user add "A. Auditor" --role reviewer
+#
+# The application is then at http://127.0.0.1:8000. A model is optional: set AUDITIQ_LLM_BASE_URL and
+# AUDITIQ_LLM_MODEL to an OpenAI-compatible endpoint the container can reach. Put a reverse proxy with HTTPS
+# in front of it before anyone else uses it (docs/SECURITY.md, Section 5). CI starts this file on every push.
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: auditiq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: auditiq
+    volumes:
+      - auditiq_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auditiq -d auditiq"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      AUDITIQ_DATABASE_URL: postgresql://auditiq:${POSTGRES_PASSWORD}@postgres:5432/auditiq
+      AUDITIQ_API_TOKEN: ${AUDITIQ_API_TOKEN:-}
+      AUDITIQ_CORS_ORIGINS: ${AUDITIQ_CORS_ORIGINS:-http://127.0.0.1:8000}
+      AUDITIQ_LLM_BASE_URL: ${AUDITIQ_LLM_BASE_URL:-}
+      AUDITIQ_LLM_MODEL: ${AUDITIQ_LLM_MODEL:-}
+      AUDITIQ_LLM_API_KEY: ${AUDITIQ_LLM_API_KEY:-}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  auditiq_data:

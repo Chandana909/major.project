@@ -97,6 +97,8 @@ flowchart LR
 | Confidence, score, route | `auditiq/scoring.py` | re-runs only |
 | Batch audit, workflow status | `auditiq/service.py` | as configured |
 | Audit pack | `auditiq/audit_pack.py` | no |
+| The revision each control finding requires | `auditiq/corrections.py` | no |
+| A policy document simulated on the ledger before adoption | `auditiq/simulation.py` | no |
 | Model client and response cache | `auditiq/llm.py` | |
 | Policy PDFs and ingestion | `auditiq/policy_pdf.py`, `auditiq/policy_ingest.py` | no |
 | The policy store's object; reading a document's thresholds | `auditiq/policy.py`, `auditiq/policy_extract.py` | no |
@@ -363,5 +365,5 @@ own label.
 - The system audits; it does not block payments, post to an ERP or notify
   anyone. The review queue is where its output meets a person.
 - The API runs as one process; its background jobs live in that process's
-  memory, and it has one shared token, not user accounts (SECURITY.md lists
-  what is and is not protected).
+  memory. Users have tokens and roles, not passwords or single sign-on
+  (SECURITY.md lists what is and is not protected).

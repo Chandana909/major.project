@@ -38,8 +38,9 @@ export function Layout() {
     window.addEventListener(STORE_CHANGED, reloadHealth);
     return () => window.removeEventListener(STORE_CHANGED, reloadHealth);
   }, [reloadHealth]);
-  const auth = useApi(() => api.overview().then(() => true), []);
+  const auth = useApi(() => api.me(), []);
   const needsToken = (auth.error as { status?: number } | null)?.status === 401;
+  const me = auth.data;
   return (
     <div className="app">
       <aside className="sidebar">
@@ -69,6 +70,11 @@ export function Layout() {
               <div className="muted">Ledger {health.data.ledger ?? "none"}</div>
               <div className="muted">Policy v{health.data.policy_version ?? "–"}</div>
               <div className="muted">{health.data.model ? `Model ${health.data.model}` : "No model configured"}</div>
+              {me && me.via !== "open" && (
+                <div className="muted" aria-label="Signed in">
+                  {me.via === "account" ? `${me.name} · ${me.role}` : `shared token · ${me.role}`}
+                </div>
+              )}
             </>
           ) : health.error ? (
             <div>

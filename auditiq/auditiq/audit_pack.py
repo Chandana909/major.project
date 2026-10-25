@@ -5,6 +5,8 @@ cannot state anything the pipeline did not establish.
 """
 from __future__ import annotations
 
+from .corrections import correct
+
 ACTIONS = {
     "approve": "Approved automatically. No human review required.",
     "sample": "Sampled-review queue: escalated only by weakly supported findings. Not approved automatically.",
@@ -27,6 +29,9 @@ def build_pack(txn: dict, flags: list[dict], removed: list[dict], score: dict, r
         }
         if flag["source"] != "D":
             out["confidence_terms"] = {k: flag.get(k) for k in ("g", "p", "a")}
+        revision = correct(flag, txn, clauses) if known else None
+        if revision is not None:
+            out["revision"] = revision
         return out
 
     return {
@@ -77,6 +82,8 @@ def render_markdown(pack: dict) -> str:
             lines.append(f"   {f['message']}")
         if f.get("citation"):
             lines.append(f"   Source: {f['citation']['document']}, page {f['citation']['page']}")
+        if f.get("revision"):
+            lines.append(f"   Revision ({f['revision']['kind']}): {f['revision']['action']}")
         for e in f["evidence"]:
             if isinstance(e, dict):
                 lines.append(f"   - `{e.get('field')}` = `{e.get('value')}`")

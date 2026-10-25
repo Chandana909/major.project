@@ -31,7 +31,8 @@ ANSWERS = {
     200: "the answer, as JSON",
     202: "a background job was started: poll `GET /api/jobs/{id}` until `status` is `done` or `failed`",
     400: "the request was refused; `detail` says why",
-    401: "the server requires the token, and the request has none or a wrong one",
+    401: "the server requires a token, and the request has none or a wrong one",
+    403: "the token's user does not have the role the endpoint needs",
     404: "no such record",
     409: "the request conflicts with the state of the server; `detail` says with what",
     413: "the upload is too large",
@@ -111,20 +112,24 @@ def endpoint(route: APIRoute) -> dict:
             continue
         params.append({"name": name, "in": "path" if name in path_names else "query", "type": type_name(annotation),
                        "default": "required" if name in path_names else default_text(p.default)})
-    protected = any(getattr(d.dependency, "__name__", "") == "authorised" for d in route.dependencies)
+    role = next((d.dependency.required_role for d in route.dependencies
+                 if hasattr(d.dependency, "required_role")), None)
+    protected = role is not None
     codes = {route.status_code or 200}
     codes |= {int(c) for c in re.findall(r"HTTPException\(\s*(\d{3})", source)}
     kinds = re.findall(r'jobs\.start\("([\w-]+)"', source)
     if any(api.CONFLICTS.get(k) for k in kinds):
         codes.add(409)
     if protected:
-        codes.add(401)
+        codes |= {401, 503}                  # the role is read from the store
+    if role in ("reviewer", "admin"):
+        codes.add(403)
     if params or body or form:
         codes.add(422)
     if uses_store:
         codes.add(503)
     return {"method": ", ".join(sorted(route.methods)), "path": route.path, "tag": (route.tags or ["other"])[0],
-            "doc": " ".join((inspect.getdoc(route.endpoint) or "").split()), "protected": protected,
+            "doc": " ".join((inspect.getdoc(route.endpoint) or "").split()), "protected": protected, "role": role,
             "params": params, "body": body, "form": form, "codes": sorted(codes), "jobs": kinds}
 
 
@@ -142,23 +147,27 @@ def render() -> str:
            "[`WEB.md`](WEB.md), Section 4; the interactive version of this reference is at `/api/docs` on a "
            "running server.", "",
            "**Common to every endpoint.** Requests and answers are JSON, except the two uploads (multipart). An "
-           "error answer carries `detail`: a message, or `{\"message\", \"problems\"}`. When the server has a token "
-           "(`AUDITIQ_API_TOKEN`), every endpoint marked *token* needs the header `Authorization: Bearer <token>`. "
+           "error answer carries `detail`: a message, or `{\"message\", \"problems\"}`. When the server has users "
+           "(`python -m auditiq user add`) or a shared token (`AUDITIQ_API_TOKEN`), every endpoint but the open ones "
+           "needs the header `Authorization: Bearer <token>`, and the token's role must be at least the one listed: "
+           "a `viewer` reads, a `reviewer` also records decisions and audits invoices again, an `admin` also changes "
+           "the policy and the ledger. The shared token acts as an admin; a server with neither is open. "
            "Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and "
            "`Referrer-Policy: no-referrer`.", "",
            "**Background jobs.** An endpoint that answers 202 has started a job; `GET /api/jobs/{id}` reports it. "
            "Jobs that would change the ledger under one another are refused with 409 while the other runs: "
            + "; ".join(f"`{kind}` waits for {', '.join(f'`{c}`' for c in sorted(conflicts))}"
                        for kind, conflicts in api.CONFLICTS.items()) + ".", "",
-           "| Method | Path | Token | Answers |", "|---|---|---|---|"]
-    out += [f"| {e['method']} | [`{e['path']}`](#{anchor(e)}) | {'token' if e['protected'] else 'open'} | "
+           "| Method | Path | Role | Answers |", "|---|---|---|---|"]
+    out += [f"| {e['method']} | [`{e['path']}`](#{anchor(e)}) | {e['role'] or 'open'} | "
             f"{', '.join(map(str, e['codes']))} |" for e in found]
     out.append("")
     for tag in dict.fromkeys(e["tag"] for e in found):
         out += [f"## {TAG_TITLES.get(tag, tag.title())}", ""]
         for e in (e for e in found if e["tag"] == tag):
             out += [f"### {e['method']} `{e['path']}`", "", e["doc"] or "(no description)", "",
-                    f"Token: {'required when the server has one' if e['protected'] else 'not needed'}."
+                    (f"Role: at least `{e['role']}` when the server has users or a token." if e["protected"]
+                     else "Role: none; open to everyone.")
                     + (f" Starts a background job of kind `{e['jobs'][0]}`." if e["jobs"] else ""), ""]
             if e["params"]:
                 out += ["| Parameter | In | Type | Default |", "|---|---|---|---|"]

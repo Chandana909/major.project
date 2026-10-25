@@ -749,6 +749,25 @@ def history_section() -> list[str]:
             f"Cases that lose an invoice they depend on: {lost}.", ""]
 
 
+def revisions_section() -> list[str]:
+    """10.9: the revision each control finding requires, and whether it resolves the finding."""
+    r = load("revisions.json")
+    rows = [[f"`{x['ledger']}`", n(x["findings"]), n(x["changes_checked"]), n(x["resolved_without_new_finding"])]
+            for x in r["ledgers"]]
+    kinds = [[rule, n(c["findings"]), ", ".join(f"{k.split(':')[1]} {n(v)}" for k, v in c.items() if k.startswith("kind:")),
+              n(c.get("resolved", 0)), n(c.get("new finding", 0))] for rule, c in r["by_rule"].items()]
+    t = r["total"]
+    return ["### 10.9 Revisions of the findings", "", src("revisions.json", "revisions.md"), "",
+            "AuditBench reports that models struggle to make the revisions the errors require. For "
+            "the twelve rules the controls decide, `auditiq/corrections.py` computes it from the finding's evidence "
+            "and the policy, and the audit pack carries it. An invoice amended or re-approved as the revision says is "
+            "audited again with all twelve controls.", "",
+            *md(["Ledger", "Findings", "Revisions that change the invoice", "Resolved, no new finding"], rows),
+            *md(["Rule", "Findings", "Kind of revision", "Resolved", "New finding"], kinds),
+            f"Every one of the {n(t['findings'])} findings has a revision with an action; {n(t['resolved_without_new_finding'])} "
+            f"of the {n(t['changes_checked'])} that change the invoice resolve their finding without raising another.", ""]
+
+
 # ======================================================== part III: analysis
 def answers_section() -> list[str]:
     pc, ho, rb = load("policy_change.json"), load("policy_heldout.json"), load("policy_robustness.json")["documents"]
@@ -929,7 +948,7 @@ def render() -> str:
     body = (research_questions() + system() + policy_section() + scoring_section() + data_section() + metrics_section()
             + stats_section() + protocols_section() + environment_section()
             + ["# Part II. Results", ""]
-            + detection_section() + policy_change_section() + heldout_section() + robustness_section()
+            + detection_section() + revisions_section() + policy_change_section() + heldout_section() + robustness_section()
             + application_section() + ledger_runs_section() + scalability_section() + own_wording_section()
             + llm_section() + retrieval_section() + history_section()
             + answers_section() + errors_section() + threats_section() + sources_section())

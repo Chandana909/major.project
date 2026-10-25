@@ -32,9 +32,10 @@ checks it. The review that added the last of them is
 
 | Guard | How |
 |---|---|
-| Token | With `AUDITIQ_API_TOKEN` set, every endpoint but `/api/health` and `/api/pipeline` needs `Authorization: Bearer <token>`, compared in constant time (`hmac.compare_digest`) |
+| Users and roles | `python -m auditiq user add <name> --role viewer\|reviewer\|admin` creates a user and prints the user's token once; only its SHA-256 is stored (`api_users`). A viewer reads, a reviewer also records decisions and audits invoices again, an admin also changes the policy and the ledger; every endpoint states the role it needs (API.md) and answers 403 below it. A decision records the signed-in user's name, not a typed one. A user can be disabled |
+| Shared token | `AUDITIQ_API_TOKEN` acts as an admin, compared in constant time (`hmac.compare_digest`). With users or a shared token, every endpoint but `/api/health` and `/api/pipeline` needs `Authorization: Bearer <token>`; with neither, the server is open (development) |
 | Origins | CORS only for the origins in `AUDITIQ_CORS_ORIGINS` (default: the development server) |
-| Headers | Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer` |
+| Headers | Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer`; the web application's pages also a Content-Security-Policy that allows scripts, connections and fonts from the server only (`api.CONTENT_SECURITY_POLICY`; style attributes are allowed for the 3D views' labels) |
 | Uploads | A policy PDF at most 20 MB and starting with `%PDF`; a ledger at most 100 MB, `.xlsx` or `.zip`, starting with `PK`; file names reduced to `[A-Za-z0-9._-]`; an upload is referred to by a hash id that is matched against a fixed pattern before it becomes a path |
 | Archives that expand | A zip archive and a workbook (which is a zip container) are refused when their parts would unpack to more than 300 MB, before anything is unpacked (`ledger_import.py`) |
 | A ledger replaced by mistake | Loading a ledger needs `replace=true`, and the ledger is checked first; with any problem nothing is replaced |
@@ -106,9 +107,11 @@ with published vulnerabilities.
 
 ## 4. What is not protected
 
-- **One shared token, no user accounts.** Anyone with the token can do
-  everything, and a reviewer's name is typed, not taken from a login. A
-  deployment for several people needs accounts and roles in front of the API.
+- **Tokens, not a sign-in service.** Users have tokens and roles, but there
+  is no single sign-on, no expiry and no password: a token is a secret to keep
+  like one, and a user who leaves must be disabled (`user disable`). With no
+  users and no shared token the server is open, which is meant for development
+  only. On an open server or with the shared token, a reviewer's name is typed.
 - **No TLS, rate limit or body-size limit of its own.** Run the server behind
   a reverse proxy that terminates HTTPS, limits request rates and refuses
   bodies above the upload limits. The framework writes an upload to a
@@ -123,16 +126,19 @@ with published vulnerabilities.
   AuditIQ decodes no uploaded image with it (PDFs are read by PyMuPDF; pandas
   opens workbooks read-only, which loads no embedded image), so the risk is
   low, but `pip-audit` reports it; CI ignores those advisories by name.
-- **No Content-Security-Policy header** yet; the 3D views' needs must be
-  checked in a browser before one is set.
+- **The policy allows inline styles** (`style-src 'unsafe-inline'`), which
+  the 3D views' labels need; scripts are allowed from the server only. The
+  interactive API documentation (`/api/docs`) loads its viewer from a CDN and
+  is not under the policy.
 - **Jobs live in memory.** A restart forgets running jobs (their stored work
   remains).
 - **The SQLite file** is protected only by the file system's permissions.
 
 ## 5. Before a deployment
 
-1. Set `AUDITIQ_API_TOKEN` to a long random value and `AUDITIQ_CORS_ORIGINS`
-   to the application's address.
+1. Create a user for every person (`python -m auditiq user add`), with the
+   least role each needs, and set `AUDITIQ_CORS_ORIGINS` to the application's
+   address. A shared token (`AUDITIQ_API_TOKEN`) is for automation only.
 2. Put the server behind a reverse proxy with HTTPS, a request-rate limit and a
    body limit of 100 MB.
 3. On PostgreSQL, create the role `auditiq_reader` (`deploy/postgres/init.sql`

@@ -415,6 +415,26 @@ Facts about the database itself.
 | `key` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Name of the fact. `dataset` is the name of the loaded ledger; `schema` identifies the version of the schema the database has (on PostgreSQL also whether the copilot's read-only role has its grants), so that a connection to an up-to-date database changes nothing. |
 | `value` | TEXT | TEXT | Its value. |
 
+## Access
+
+Who may use the REST API, and with which role (docs/SECURITY.md). Created with `python -m auditiq user add`; the application never reads a token, only its hash.
+
+### `api_users`
+
+One row per user of the REST API.
+
+- **Written by:** `python -m auditiq user add`
+- **Used by:** The API: every request with a user's token is allowed what the user's role allows, and a review decision records the user's name.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `user_id` | INTEGER autoincrement, PRIMARY KEY | BIGINT identity, PRIMARY KEY | Identifier of the user. |
+| `name` | TEXT NOT NULL UNIQUE | TEXT NOT NULL UNIQUE | The user's name, as it appears on the review decisions the user records. |
+| `role` | TEXT NOT NULL | TEXT NOT NULL | `viewer` (reads), `reviewer` (also records decisions and audits invoices again) or `admin` (also changes the policy and loads ledgers). |
+| `token_hash` | TEXT NOT NULL UNIQUE | TEXT NOT NULL UNIQUE | SHA-256 of the user's token. The token itself is shown once, when the user is created. |
+| `created_at` | TEXT | TIMESTAMP | When the user was created. |
+| `disabled` | INTEGER NOT NULL DEFAULT 0 | SMALLINT NOT NULL DEFAULT 0 | 1 if the user may no longer use the API. |
+
 ## Views
 
 Views are read-only. The copilot's generated SQL may read `invoices`, `vendor_master`, `purchase_orders`, `goods_receipts`, `approval_logs`, `v_latest_results`, `v_review_queue`, `audit_flags`, `review_decisions`, `policy_clauses` (`audit_results` and `audit_runs` and `latest_results` through the views) and nothing else: not `benchmark_labels`, the audit trail, the policy documents or the store's own tables (`auditiq/copilot.py`).
