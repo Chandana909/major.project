@@ -499,9 +499,14 @@ def render() -> str:
             if constraints[name]:
                 out += ["", "Also: " + "; ".join(f"`{c}`" for c in constraints[name]) + "."]
             out.append("")
+    from .copilot import READABLE, UNDERLYING
+
+    readable = ", ".join(f"`{name}`" for name in READABLE)
+    underlying = " and ".join(f"`{name}`" for name in UNDERLYING)
     out += ["## Views", "",
-            "Views are read-only. The copilot's generated SQL may read the ledger tables, the policy tables, "
-            "the audit tables and these views; it may not read `benchmark_labels`.", ""]
+            f"Views are read-only. The copilot's generated SQL may read {readable} ({underlying} through the "
+            "views) and nothing else: not `benchmark_labels`, the audit trail, the policy documents or the "
+            "store's own tables (`auditiq/copilot.py`).", ""]
     for name, columns in view_columns().items():
         note = VIEW_NOTES[name]
         out += [f"### `{name}`", "", note["summary"], "", "| Column | Meaning |", "|---|---|"]

@@ -259,3 +259,33 @@ def test_controls_do_not_change_the_transaction():
     before = json.dumps(t, sort_keys=True)
     run_controls(t, V25)
     assert json.dumps(t, sort_keys=True) == before
+
+
+@pytest.mark.parametrize("daily_limit", [None, 1])
+def test_the_vendor_index_gives_the_findings_of_reading_the_whole_history(small_dataset, daily_limit):
+    """Controls 2.2.1 and 4.1.1 look into the vendor's index; on a plain list they read it all. Same findings."""
+    from auditiq.extraction import extract
+    from auditiq.history import History
+
+    clauses = copy.deepcopy(V25)
+    if daily_limit is not None:                 # one invoice a day: control 4.1.1 fires on every shared day
+        clauses["4.1.1"]["params"]["max_invoices_per_vendor_per_day"] = daily_limit
+    transactions = extract(small_dataset)
+    assert all(isinstance(t["vendor_history"], History) for t in transactions)
+    indexed = [run_controls(t, clauses) for t in transactions]
+    plain = [run_controls({**t, "vendor_history": list(t["vendor_history"])}, clauses) for t in transactions]
+    assert indexed == plain
+    fired = {f["clause"] for flags in indexed for f in flags}
+    assert {"2.2.1", "4.1.1"} <= fired
+
+
+def test_a_history_is_a_list_to_everything_else(small_dataset):
+    import pickle
+
+    from auditiq.extraction import extract
+
+    t = next(t for t in extract(small_dataset) if len(t["vendor_history"]) > 3)
+    history = t["vendor_history"]
+    assert json.loads(json.dumps(history)) == [dict(h) for h in history] and type(history[1:3]) is list
+    again = pickle.loads(pickle.dumps(history))
+    assert again == history and again.vendor_index.by_date.keys() == history.vendor_index.by_date.keys()

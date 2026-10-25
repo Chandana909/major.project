@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 dependencies = [
     "langgraph>=1.0",
     "httpx>=0.27",
-    "python-dotenv>=1.0",
+    "python-dotenv>=1.2.2",
     "numpy>=2.0",
     "pandas>=2.2",
     "openpyxl>=3.1",
@@ -27,7 +27,12 @@ dependencies = [
     "fastapi>=0.115",
     "pydantic>=2",
     "uvicorn>=0.34",
-    "python-multipart>=0.0.18",
+    # Lower bounds that leave out releases with published vulnerabilities (pip-audit, 21 October 2026): the
+    # upload parser and the server framework under FastAPI. Pillow cannot follow: Streamlit requires pillow<13,
+    # and the fixes are in 13. AuditIQ decodes no uploaded image with it (PDFs are read by PyMuPDF; pandas opens
+    # workbooks read-only, which loads no embedded image), so its advisories are recorded, not excluded.
+    "python-multipart>=0.0.31",
+    "starlette>=1.3.1",
 ]
 
 [project.optional-dependencies]

@@ -34,6 +34,7 @@ import pandas as pd
 
 from .config import load_env
 from .extraction import GRN_FIELDS, HISTORY_FIELDS, INVOICE_FIELDS, LOG_FIELDS, PO_FIELDS, VENDOR_FIELDS
+from .history import History, VendorIndex
 from .policy import PROJECT_ROOT, Policy
 
 DEFAULT_DB = PROJECT_ROOT / ".auditiq" / "auditiq.db"
@@ -620,16 +621,21 @@ def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
     for r in sorted(invoices.values(), key=lambda r: (r["date"], r["invoice_id"])):
         by_vendor.setdefault(r["vendor_id"], []).append({**_row(r, HISTORY_FIELDS), **approver(r["invoice_id"])})
 
+    indexes: dict[str, VendorIndex] = {}           # one per vendor asked about, shared by its transactions
     transactions = []
     for invoice_id in invoice_ids:
         r = invoices[invoice_id]
+        vendor_id = r["vendor_id"]
+        if vendor_id not in indexes:
+            indexes[vendor_id] = VendorIndex(by_vendor[vendor_id])
         transactions.append({
             "invoice": _row(r, INVOICE_FIELDS),
             "po": po.get(r["po_id"]),
             "grn": grn.get(r["grn_id"]),
-            "vendor": vendor.get(r["vendor_id"]),
+            "vendor": vendor.get(vendor_id),
             "approvals": [_row(e, LOG_FIELDS) for e in logs.get(invoice_id, [])],
-            "vendor_history": [h for h in by_vendor[r["vendor_id"]] if h["invoice_id"] != invoice_id],
+            "vendor_history": History([h for h in by_vendor[vendor_id] if h["invoice_id"] != invoice_id],
+                                      indexes[vendor_id]),
         })
     return transactions
 

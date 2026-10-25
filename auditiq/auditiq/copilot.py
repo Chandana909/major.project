@@ -9,12 +9,19 @@
                      and the audit results and nothing else.
 
 Neither function can change the database, and neither can read the benchmark
-labels. Three guards stand between a model-written statement and the data:
+labels. Four guards stand between a model-written statement and the data:
 the statement must be a single SELECT; it may not name a table outside the
-allow-list; and it runs read-only with a row limit and a time limit. On SQLite
-an authorizer also refuses every other table at execution; on PostgreSQL the
-statement runs as the role `auditiq_reader`, when that role exists, which holds
-SELECT on the allow-list only.
+allow-list; it may not call a function that changes the session's role or runs
+a query given as text (`set_config`, `query_to_xml`, `ts_stat` and the like);
+and it runs read-only with a row limit and a time limit. On SQLite an
+authorizer also refuses every other table at execution. On PostgreSQL the
+statement runs as the role `auditiq_reader`, which holds SELECT on the
+allow-list only; without that role a data question is refused, because the
+application's own user can read everything. (A text such as an invoice
+description reaches the model, so a statement must be treated as written by
+someone who wants the labels: `set_config('role', ...)` followed by
+`query_to_xml('select ... from bench' || 'mark_labels', ...)` read them before
+these functions were refused.)
 """
 from __future__ import annotations
 
@@ -124,6 +131,14 @@ class UnsafeQuery(ValueError):
     pass
 
 
+# Functions a SELECT could use to leave the guards behind: change the role or a setting, run a query given as a
+# string (which the name check cannot see), or reach files and other servers. Also refused: identifiers and
+# strings written with Unicode escapes (U&"..."), which could spell any of these names.
+ESCAPING_FUNCTIONS = re.compile(
+    r"\b(set_config|current_setting|query_to_xml\w*|cursor_to_xml\w*|table_to_xml\w*|schema_to_xml\w*|"
+    r"database_to_xml\w*|ts_stat|dblink\w*|lo_\w+)\s*\(|\bU&['\"]", re.IGNORECASE)
+
+
 def check_sql(sql: str) -> str:
     """Reject anything that is not a single SELECT statement. Returns the statement without a trailing semicolon."""
     statement = sql.strip().rstrip(";").strip()
@@ -151,6 +166,10 @@ def run_select(target: Path | str, sql: str, limit: int = ROW_LIMIT) -> tuple[li
         named = re.search(pattern, statement, re.IGNORECASE)
         if named:
             raise UnsafeQuery(f"the statement refers to {named.group(0)}, which the copilot may not read")
+        escaping = ESCAPING_FUNCTIONS.search(statement)
+        if escaping:
+            raise UnsafeQuery(f"the statement uses {escaping.group(0).rstrip('(').strip()}, which the copilot may "
+                              "not call")
         if conn.backend == "sqlite":
             deadline = time.monotonic() + TIME_LIMIT_S
 
@@ -164,9 +183,12 @@ def run_select(target: Path | str, sql: str, limit: int = ROW_LIMIT) -> tuple[li
             conn.raw.set_authorizer(authorize)
             conn.raw.set_progress_handler(lambda: time.monotonic() > deadline, 10000)
         else:
+            if not conn.scalar("SELECT 1 FROM pg_roles WHERE rolname = ?", (db.READER_ROLE,)):
+                raise UnsafeQuery(f"on PostgreSQL the copilot's data questions run as the role {db.READER_ROLE}, "
+                                  "which this server does not have (`python scripts/pg_local.py init` and "
+                                  "deploy/postgres/init.sql create it)")
             conn.execute(f"SET statement_timeout = {int(TIME_LIMIT_S * 1000)}")
-            if conn.scalar("SELECT 1 FROM pg_roles WHERE rolname = ?", (db.READER_ROLE,)):
-                conn.execute(f"SET ROLE {db.READER_ROLE}")
+            conn.execute(f"SET ROLE {db.READER_ROLE}")
         cursor = conn.execute(statement)
         columns = [d[0] for d in cursor.description or []]
         return columns, [tuple(r) for r in cursor.fetchmany(limit)]

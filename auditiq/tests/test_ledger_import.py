@@ -128,3 +128,16 @@ def test_a_file_that_is_not_a_ledger_is_refused(tmp_path, store):
     broken = tmp_path / "broken.zip"
     broken.write_bytes(b"PK\x03\x04 not really a zip")
     assert ledger_import.read(broken, store).problems[0].startswith("the file cannot be read")
+
+
+@pytest.mark.parametrize("suffix", [".zip", ".xlsx"])
+def test_a_small_file_that_unpacks_to_too_much_is_refused_before_it_is_unpacked(tmp_path, store, monkeypatch, suffix):
+    """Both formats are zip containers; a compressed part may not expand past the limit."""
+    monkeypatch.setattr(ledger_import, "MAX_UNPACKED", 1024 * 1024)
+    bomb = tmp_path / f"bomb{suffix}"
+    with zipfile.ZipFile(bomb, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("invoices.csv" if suffix == ".zip" else "xl/worksheets/sheet1.xml", b"0" * (2 * 1024 * 1024))
+    assert bomb.stat().st_size < 64 * 1024
+    problems = ledger_import.read(bomb, store).problems
+    assert problems == [f"the file cannot be read: the {'archive' if suffix == '.zip' else 'workbook'} unpacks to "
+                        "more than 1 MB"]

@@ -51,6 +51,15 @@ cd frontend && npm run e2e && cd ..
 python scripts/reproduce.py
 ```
 
+**The documentation** is in [`auditiq/docs/`](auditiq/docs/), listed in the
+"Documentation" table of [`auditiq/README.md`](auditiq/README.md): the
+architecture, a developer guide to every module
+([`DEVELOPER.md`](auditiq/docs/DEVELOPER.md)), the reference of every API
+endpoint ([`API.md`](auditiq/docs/API.md), generated from the code), security
+([`SECURITY.md`](auditiq/docs/SECURITY.md)), operations, the web application,
+the data dictionary, the datasets, and the code review of 21 October 2026
+([`CODE_REVIEW.md`](auditiq/docs/CODE_REVIEW.md)).
+
 The measured feature and its results:
 [`auditiq/docs/FEATURE_POLICY_AS_DATA.md`](auditiq/docs/FEATURE_POLICY_AS_DATA.md).
 Every measured number and how to reproduce it: the "What has been measured"

@@ -7,7 +7,8 @@ scorer) sees only what is produced here. The labels are never read.
 
 One line per invoice:
     { invoice, po | null, grn | null, vendor, approvals: [...], vendor_history: [...] }
-vendor_history holds the other invoices of the same vendor, oldest first.
+vendor_history holds the other invoices of the same vendor, oldest first (a
+``history.History``: a list with an index of the vendor's invoices).
 """
 from __future__ import annotations
 
@@ -16,6 +17,8 @@ import sys
 from pathlib import Path
 
 import pandas as pd
+
+from .history import History, vendor_histories
 
 INVOICE_FIELDS = ["invoice_id", "vendor_id", "invoice_number", "date", "amount", "quantity",
                   "unit_price", "gstin", "po_id", "grn_id", "description"]
@@ -73,6 +76,7 @@ def extract(dataset: Path) -> list[dict]:
     for r in sorted(invoices, key=lambda r: (r["date"], r["invoice_id"])):
         by_vendor.setdefault(r["vendor_id"], []).append(
             {**record(r, HISTORY_FIELDS), **approver(r["invoice_id"])})
+    indexes = vendor_histories(by_vendor)
 
     transactions = []
     for r in sorted(invoices, key=lambda r: r["invoice_id"]):
@@ -82,7 +86,8 @@ def extract(dataset: Path) -> list[dict]:
             "grn": record(grn[r["grn_id"]], GRN_FIELDS) if r["grn_id"] in grn else None,
             "vendor": record(vendor[r["vendor_id"]], VENDOR_FIELDS),
             "approvals": logs.get(r["invoice_id"], []),
-            "vendor_history": [h for h in by_vendor[r["vendor_id"]] if h["invoice_id"] != r["invoice_id"]],
+            "vendor_history": History([h for h in by_vendor[r["vendor_id"]] if h["invoice_id"] != r["invoice_id"]],
+                                      indexes[r["vendor_id"]]),
         })
     return transactions
 

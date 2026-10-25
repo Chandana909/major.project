@@ -188,15 +188,21 @@ class OpenAIChatClient:
                 last = f"{type(exc).__name__}: {exc}"
             else:
                 if reply.status_code == 200:
-                    data = reply.json()
-                    usage = data.get("usage") or {}
-                    return LLMResponse(
-                        text=data["choices"][0]["message"].get("content") or "",
-                        prompt_tokens=int(usage.get("prompt_tokens") or 0),
-                        completion_tokens=int(usage.get("completion_tokens") or 0),
-                        latency_ms=round((time.perf_counter() - started) * 1000, 1))
-                last = f"HTTP {reply.status_code}: {reply.text[:300]}"
-                if reply.status_code not in (408, 409, 429) and reply.status_code < 500:
+                    # A proxy or a failing server can answer 200 with a page that is not a completion: that is
+                    # a failed attempt like any other, not a crash of the stage.
+                    try:
+                        data = reply.json()
+                        usage = data.get("usage") or {}
+                        return LLMResponse(
+                            text=data["choices"][0]["message"].get("content") or "",
+                            prompt_tokens=int(usage.get("prompt_tokens") or 0),
+                            completion_tokens=int(usage.get("completion_tokens") or 0),
+                            latency_ms=round((time.perf_counter() - started) * 1000, 1))
+                    except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:
+                        last = f"HTTP 200 without a completion ({type(exc).__name__}): {reply.text[:200]}"
+                else:
+                    last = f"HTTP {reply.status_code}: {reply.text[:300]}"
+                if reply.status_code not in (200, 408, 409, 429) and reply.status_code < 500:
                     raise LLMError(f"{self.settings.base_url} rejected the request ({last})")
                 retry_after = reply.headers.get("retry-after", "")
                 if retry_after.replace(".", "", 1).isdigit():

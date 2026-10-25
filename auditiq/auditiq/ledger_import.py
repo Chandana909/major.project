@@ -119,6 +119,11 @@ def _from_zip(path: Path) -> dict[str, pd.DataFrame]:
 
 
 def _from_workbook(path: Path) -> dict[str, pd.DataFrame]:
+    # A workbook is a zip archive too: its parts are bounded like the files of an archive before openpyxl
+    # unpacks them, so a small file cannot expand into gigabytes.
+    with zipfile.ZipFile(path) as archive:
+        if sum(m.file_size for m in archive.infolist()) > MAX_UNPACKED:
+            raise ValueError(f"the workbook unpacks to more than {MAX_UNPACKED // (1024 * 1024)} MB")
     sheets = pd.read_excel(path, sheet_name=None, dtype=object, engine="openpyxl")
     frames = {}
     for name, frame in sheets.items():

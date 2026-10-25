@@ -90,6 +90,7 @@ flowchart LR
 | Data dictionary | `auditiq/datadict.py` | no |
 | Loading a ledger from a folder, an Excel workbook or a zip archive, checked first | `auditiq/ledger_import.py` | no |
 | Extraction: one transaction per invoice | `auditiq/extraction.py`, `auditiq/db.py` | no |
+| The vendor's other invoices, indexed by number and date | `auditiq/history.py` | no |
 | Controls | `auditiq/controls.py` | no |
 | Agents and challenger | `auditiq/agents.py`, `auditiq/prompts.py` | yes |
 | Pipeline graph and configurations | `auditiq/graph.py` | |
@@ -98,10 +99,14 @@ flowchart LR
 | Audit pack | `auditiq/audit_pack.py` | no |
 | Model client and response cache | `auditiq/llm.py` | |
 | Policy PDFs and ingestion | `auditiq/policy_pdf.py`, `auditiq/policy_ingest.py` | no |
+| The policy store's object; reading a document's thresholds | `auditiq/policy.py`, `auditiq/policy_extract.py` | no |
+| Reading a policy in its own wording | `auditiq/policy_llm.py` | yes, confirmed by a person |
 | Policy search | `auditiq/retrieval.py` | optional |
 | Copilot | `auditiq/copilot.py` | yes |
 | Command line | `auditiq/cli.py` | |
 | REST API and background jobs | `auditiq/api.py` | as configured |
+| The API reference (docs/API.md) | `auditiq/apidoc.py` | no |
+| Settings from the environment and `.env`; logging | `auditiq/config.py` | no |
 | Web application | `frontend/` (React, TypeScript, React Three Fiber) | through the API |
 | Streamlit dashboard | `app/dashboard.py` | optional |
 | Benchmark generator | `auditiq_bench/` | no |
@@ -358,4 +363,5 @@ own label.
 - The system audits; it does not block payments, post to an ERP or notify
   anyone. The review queue is where its output meets a person.
 - The API runs as one process; its background jobs live in that process's
-  memory, and it has one shared token, not user accounts.
+  memory, and it has one shared token, not user accounts (SECURITY.md lists
+  what is and is not protected).

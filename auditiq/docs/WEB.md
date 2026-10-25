@@ -78,7 +78,8 @@ The development server is at http://localhost:5173.
 
 ## 4. API
 
-Every response is JSON. Errors carry `detail`: a message, or for a refused
+The reference of every endpoint, with its parameters, body and answers, is
+[API.md](API.md) (generated from the code). Every response is JSON. Errors carry `detail`: a message, or for a refused
 policy `{"message": ..., "problems": [...]}`. Requests that take long return
 **202** with a job; poll `GET /api/jobs/{id}` until `status` is `done` (the
 result is in `result`) or `failed` (the reason is in `error`). `done` and
@@ -110,8 +111,12 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | GET | `/api/results` | The measured results as the evaluation scripts wrote them under `results/` | 200 |
 
 Background jobs run on threads of the server process, each with its own
-database connection. They are kept in memory (the last 200), so a restart
-forgets them; the work they did is in the database.
+database connection. They are kept in memory (the last 200 finished ones, and
+every running one), so a restart forgets them; the work they did is in the
+database. Jobs that would change the ledger under each other do not run
+together: a ledger load is refused (409) while an audit or another load runs,
+and so is a second audit of the whole ledger; the answer names the job that is
+running.
 
 ## 5. The frontend
 

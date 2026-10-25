@@ -405,7 +405,7 @@ Facts about the database itself.
 
 ## Views
 
-Views are read-only. The copilot's generated SQL may read the ledger tables, the policy tables, the audit tables and these views; it may not read `benchmark_labels`.
+Views are read-only. The copilot's generated SQL may read `invoices`, `vendor_master`, `purchase_orders`, `goods_receipts`, `approval_logs`, `v_latest_results`, `v_review_queue`, `audit_flags`, `review_decisions`, `policy_clauses` (`audit_results` and `audit_runs` through the views) and nothing else: not `benchmark_labels`, the audit trail, the policy documents or the store's own tables (`auditiq/copilot.py`).
 
 ### `v_latest_results`
 

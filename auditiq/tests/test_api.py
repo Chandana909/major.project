@@ -248,3 +248,41 @@ def test_the_built_frontend_is_served_with_client_side_routes(library, tmp_path,
     assert web.get("/api/nothing-here").status_code == 404
     assert "AuditIQ" not in web.get("/../../.env").text or web.get("/../../.env").status_code in (200, 404)
     assert load_policy("2.5").version == "2.5"
+
+
+def test_a_job_that_would_change_the_ledger_under_another_is_refused():
+    """Loading a ledger deletes every result, so it may not run beside an audit; two whole-ledger audits neither."""
+    import threading
+
+    jobs, release = api.Jobs(keep=2), threading.Event()
+    applying = jobs.start("apply-policy", lambda job: release.wait(10))
+    for kind in ("load-ledger", "apply-policy"):
+        with pytest.raises(api.JobConflict, match=f"the apply-policy job {applying.id} is still running"):
+            jobs.start(kind, lambda job: None)
+    single = jobs.start("audit", lambda job: "one invoice")        # one invoice beside a whole-ledger run is fine
+    copilot = [jobs.start("copilot", lambda job: None) for _ in range(3)]
+    time.sleep(0.2)
+    assert jobs.get(applying.id) is applying                        # kept past `keep` while it runs
+    release.set()
+    for job in [applying, single, *copilot]:
+        for _ in range(100):
+            if jobs.get(job.id) is None or job.status in ("done", "failed"):
+                break
+            time.sleep(0.05)
+    assert applying.status == "done" and single.result == "one invoice"
+    assert jobs.start("load-ledger", lambda job: None).kind == "load-ledger"
+
+
+def test_a_conflicting_job_is_answered_with_409(client, monkeypatch):
+    def refuse(self, kind, work):
+        raise api.JobConflict("a load-ledger job (abc) is running; wait for it to finish")
+    monkeypatch.setattr(api.Jobs, "start", refuse)
+    response = client.post("/api/policy/apply")
+    assert response.status_code == 409 and "load-ledger" in response.json()["detail"]
+
+
+def test_every_answer_carries_the_security_headers(client):
+    for path in ("/api/health", "/api/no-such-endpoint"):
+        headers = client.get(path).headers
+        assert headers["x-content-type-options"] == "nosniff" and headers["x-frame-options"] == "DENY"
+        assert headers["referrer-policy"] == "no-referrer"
