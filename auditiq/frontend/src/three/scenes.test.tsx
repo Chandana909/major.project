@@ -40,6 +40,13 @@ describe("the geometry of the 3D views", () => {
     expect(layoutVendors(vendors).placed.map((v) => v.position)).toEqual(placed.map((v) => v.position)); // stable
   });
 
+  it("draws the points of a large ledger smaller, so that they do not merge", () => {
+    const many = Array.from({ length: 1000 }, (_, i) => ({ ...vendors[i % 24], vendor_id: `VEND${100000 + i}` }));
+    const sizeOf = (list: VendorPoint[], id: string) => layoutVendors(list).placed.find((v) => v.vendor_id === id)!.size;
+    const few = layoutVendors(vendors).placed[0];
+    expect(sizeOf(many, "VEND100000") / sizeOf(vendors, few.vendor_id)).toBeCloseTo(0.5, 5); // sqrt(250 / 1,000)
+  });
+
   it("connects consecutive stages and fans out to the parallel agents", () => {
     const active = ["extraction", "controls", "math_approvals", "tax_identity", "vendor_intelligence", "challenger", "risk_score"];
     const edges = stageEdges(active);

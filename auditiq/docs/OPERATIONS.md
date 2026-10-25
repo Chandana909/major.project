@@ -237,6 +237,22 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | `python -m auditiq serve --port 8000` | the web application and the REST API (`--host 0.0.0.0` to listen on every interface; set `AUDITIQ_API_TOKEN` first) |
 | `python -m streamlit run app/dashboard.py` | the Streamlit dashboard |
 
+### The application on the 500,000-invoice ledger
+
+`python -m evaluation.huge --work <folder>` generates the huge ledger, checks it
+against the committed hashes and, in its application step, loads it into a
+SQLite store in that folder (`huge.db`) and audits it. Keep the folder outside a
+synchronised folder such as OneDrive (about 2 GB). The web application then runs
+on that store:
+
+```bash
+python -m auditiq --db C:/Users/Chandana/auditiq_huge/huge.db serve --port 8010
+```
+
+Every page answers within about 5.5 s on a laptop (RESULTS.md, Section 5.1).
+For PostgreSQL, set the store up with `setup --dataset <folder>/huge_seed_606`
+and audit it with `run --config C1`.
+
 ## 8. Reproducing the evaluation
 
 **In one command,** every result that needs no model except the timings

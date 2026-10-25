@@ -38,8 +38,12 @@ def test_every_step_runs_on_a_ledger_and_the_report_reads_them(small_dataset, tm
     size = json.loads((out / "size.json").read_text(encoding="utf-8"))
     assert size["invoices"] == size["reference"]["invoices"] == 1200 and size["findings"] == size["reference"]["findings"]
     assert size["repeats"] == 2 and size["ratio"] > 0
+    web = json.loads((out / "api.json").read_text(encoding="utf-8"))
+    assert web["invoices"] == web["audited"] == 1200 and web["results"] == 2400       # two audits, one latest each
+    assert [e["status"] for e in web["endpoints"]] == [200] * len(huge.PAGES)
     report = (out / "huge.md").read_text(encoding="utf-8")
     assert "timed in turn with it" in report and "per earlier invoice" in report
+    assert "## The application on the whole ledger" in report and "| Review queue |" in report
     assert sum(b["invoices"] for b in size["history"]["bins"]) == 1200 and isinstance(size["history"]["us_per_history_record"], float)
     for heading in ("## Data", "## Detection on every invoice", "## Policy change", "## The deployed path",
                     "## The control stage over the whole ledger"):

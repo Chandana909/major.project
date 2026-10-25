@@ -5,8 +5,9 @@ documentation: about 21,000 lines of Python (the application, the benchmark
 generator, the evaluation, the dashboard, the scripts and the tests) and 4,000
 of TypeScript (the web application and its tests). Each finding below says
 what was wrong, what it could cause, what was changed and which test now
-checks it. Section 3 lists what was examined and found sound, and Section 4
-what is left.
+checks it. Findings 12 to 14 were added on 25 October, when the application
+was served from the 500,000-invoice ledger. Section 3 lists what was examined
+and found sound, and Section 4 what is left.
 
 ## 1. How the code was examined
 
@@ -122,6 +123,36 @@ endpoint has one, and `docs/API.md`, the reference of every endpoint with its
 parameters, body, token and answers, is generated from the application
 (`auditiq/apidoc.py`). *Test:* the reference is current and documents every
 endpoint (`tests/test_docs.py`).
+
+**12. The latest result of an invoice was found again for every row**
+(performance, found on 25 October by serving the 500,000-invoice ledger). The
+view `v_latest_results` kept a result when its id was the largest of its
+invoice's, a subquery for every one of a million results; joined to the
+invoices, SQLite built the whole view first. The overview took 19.3 s, the risk
+map 12.8 s, an invoice search 4.1 s. *Changed:* a table `latest_results` (one row
+per invoice, with a unique index on the result) is updated as each result is
+stored, the view joins through it, an older store fills it once when it is
+opened, and loading a ledger clears it (`auditiq/db.py`). *Tests:* a re-audited
+invoice's latest result is the newer one; an older store gets the table filled
+(`tests/test_db.py`); every test of the queue, the API and the copilot passes on
+both backends.
+
+**13. Pages read more than they show** (performance). The overview counted
+states, routes and risk levels in three passes, and the risk map joined every
+invoice with its result before grouping by vendor. *Changed:* one pass for the
+three counts; the risk map counts invoices and latest results per vendor apart
+and joins the two; the invoice search finds its 50 invoices before it reads their
+results (`auditiq/api.py`). The risk map's rows are the same as before for all
+14,998 vendors with invoices. *Measured* on 500,000 invoices: overview 4.6 s,
+risk map 5.5 s, search 1.0 s (RESULTS.md, Section 5.1). An index tried on the
+results' vendor made the queue slower (19 s: SQLite read the results in vendor
+order) and was removed; a store that had it loses it on upgrade.
+
+**14. The 3D view of a large ledger was one surface** (presentation). Points
+were sized for a few hundred vendors; 15,000 merged into a single shape. *Changed:*
+above 250 vendors points and stems shrink with the square root of the number of
+vendors (`frontend/src/three/layout.ts`, `RiskConstellation.tsx`). *Test:*
+`scenes.test.tsx`.
 
 ## 3. Examined and found sound
 

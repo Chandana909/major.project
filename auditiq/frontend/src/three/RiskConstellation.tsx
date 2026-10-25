@@ -35,9 +35,10 @@ export function VendorField({ placed, onHover, onSelect }: {
     (mesh.material as THREE.Material).needsUpdate = true;     // compile the shader with per-instance colours
     const stemMesh = stems.current;
     if (stemMesh) {
+      const width = Math.min(1, Math.sqrt(250 / Math.max(placed.length, 1)));     // thinner as the field fills
       waiting.forEach((v, i) => {
         dummy.position.set(v.position[0], v.position[1] / 2, v.position[2]);
-        dummy.scale.set(1, v.position[1], 1);
+        dummy.scale.set(width, v.position[1], width);
         dummy.updateMatrix();
         stemMesh.setMatrixAt(i, dummy.matrix);
       });

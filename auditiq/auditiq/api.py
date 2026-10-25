@@ -282,11 +282,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     def overview(conn: db.Database = Depends(connection)) -> dict:
         """Counts by state, route and risk level; findings by rule; recent runs; the vendors with most invoices
         waiting."""
-        states = {r[0]: int(r[1]) for r in conn.execute(
-            "SELECT workflow_status, COUNT(*) FROM v_latest_results GROUP BY workflow_status")}
-        routes = {r[0]: int(r[1]) for r in conn.execute("SELECT route, COUNT(*) FROM v_latest_results GROUP BY route")}
-        levels = {r[0]: int(r[1]) for r in conn.execute(
-            "SELECT risk_level, COUNT(*) FROM v_latest_results GROUP BY risk_level")}
+        states: dict[str, int] = {}
+        routes: dict[str, int] = {}
+        levels: dict[str, int] = {}
+        for status, route, level, n in conn.execute(        # one pass over the latest results, not three
+                "SELECT workflow_status, route, risk_level, COUNT(*) FROM v_latest_results "
+                "GROUP BY workflow_status, route, risk_level"):
+            for counts, key in ((states, status), (routes, route), (levels, level)):
+                counts[key] = counts.get(key, 0) + int(n)
         findings = rows(conn.execute(
             "SELECT f.clause AS rule, COALESCE(c.title, 'not in the policy') AS title, f.severity, "
             "CASE f.source WHEN 'D' THEN 'control' ELSE 'agent' END AS source, COUNT(*) AS findings "
@@ -314,15 +317,18 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
     @app.get("/api/risk-map", tags=["status"], dependencies=protected)
     def risk_map(conn: db.Database = Depends(connection)) -> dict:
         """One point per vendor: its invoices, amount, findings and the highest risk among its latest results."""
+        # The invoices of each vendor and the latest results of each vendor, counted apart and joined on the
+        # vendor: one pass over each instead of a join of every invoice with its result.
         vendors = rows(conn.execute(
-            "SELECT v.vendor_id, v.vendor_name, v.vendor_category AS category, COUNT(i.invoice_id) AS invoices, "
-            "COALESCE(SUM(i.amount), 0) AS amount, "
-            "SUM(CASE WHEN l.workflow_status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) AS waiting, "
-            "COALESCE(SUM(l.flag_count), 0) AS findings, COALESCE(MAX(l.rc), 0) AS max_risk, "
-            "MAX(CASE WHEN v.blacklisted = 1 THEN 1 ELSE 0 END) AS blacklisted "
-            "FROM vendor_master v JOIN invoices i ON i.vendor_id = v.vendor_id "
-            "LEFT JOIN v_latest_results l ON l.invoice_id = i.invoice_id "
-            "GROUP BY v.vendor_id, v.vendor_name, v.vendor_category ORDER BY v.vendor_id"))
+            "SELECT v.vendor_id, v.vendor_name, v.vendor_category AS category, n.invoices, n.amount, "
+            "COALESCE(l.waiting, 0) AS waiting, COALESCE(l.findings, 0) AS findings, "
+            "COALESCE(l.max_risk, 0) AS max_risk, CASE WHEN v.blacklisted = 1 THEN 1 ELSE 0 END AS blacklisted "
+            "FROM vendor_master v "
+            "JOIN (SELECT vendor_id, COUNT(*) AS invoices, COALESCE(SUM(amount), 0) AS amount FROM invoices "
+            "GROUP BY vendor_id) n ON n.vendor_id = v.vendor_id "
+            "LEFT JOIN (SELECT vendor_id, SUM(CASE WHEN workflow_status = 'PENDING_REVIEW' THEN 1 ELSE 0 END) "
+            "AS waiting, SUM(flag_count) AS findings, MAX(rc) AS max_risk FROM v_latest_results "
+            "GROUP BY vendor_id) l ON l.vendor_id = v.vendor_id ORDER BY v.vendor_id"))
         for v in vendors:
             for key in ("invoices", "waiting", "findings", "blacklisted"):
                 v[key] = int(v[key] or 0)
@@ -367,11 +373,14 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         """Search invoices by id or vendor name, with their latest audit outcome."""
         limit = max(1, min(limit, 500))
         like = f"%{q.strip()}%"
+        # The matching invoices first, then the latest result of each of them only.
         items = rows(conn.execute(
-            "SELECT i.invoice_id, i.vendor_id, v.vendor_name, i.date, i.amount, l.route, l.risk_level, l.rc, "
-            "l.workflow_status FROM invoices i JOIN vendor_master v ON v.vendor_id = i.vendor_id "
-            "LEFT JOIN v_latest_results l ON l.invoice_id = i.invoice_id "
-            f"WHERE i.invoice_id LIKE ? OR v.vendor_name LIKE ? ORDER BY i.invoice_id LIMIT {limit}", (like, like)))
+            "SELECT i.invoice_id, i.vendor_id, i.vendor_name, i.date, i.amount, r.route, r.risk_level, r.rc, "
+            "r.workflow_status FROM (SELECT i.invoice_id, i.vendor_id, v.vendor_name, i.date, i.amount "
+            "FROM invoices i JOIN vendor_master v ON v.vendor_id = i.vendor_id "
+            f"WHERE i.invoice_id LIKE ? OR v.vendor_name LIKE ? ORDER BY i.invoice_id LIMIT {limit}) i "
+            "LEFT JOIN latest_results m ON m.invoice_id = i.invoice_id "
+            "LEFT JOIN audit_results r ON r.result_id = m.result_id ORDER BY i.invoice_id", (like, like)))
         return {"items": items}
 
     @app.get("/api/invoices/{invoice_id}", tags=["review"], dependencies=protected)

@@ -24,6 +24,9 @@ export function webglAvailable(): boolean {
 export function layoutVendors(vendors: VendorPoint[]): { placed: PlacedVendor[]; categories: { name: string; angle: number }[] } {
   const names = [...new Set(vendors.map((v) => v.category))].sort();
   const sector = (Math.PI * 2) / Math.max(names.length, 1);
+  // Points are drawn for a ledger of up to 250 vendors; beyond that they shrink so that the area they cover stays
+  // about the same (15,000 vendors would otherwise merge into one surface).
+  const density = Math.min(1, Math.sqrt(250 / Math.max(vendors.length, 1)));
   const placed: PlacedVendor[] = [];
   names.forEach((name, c) => {
     const members = vendors
@@ -38,7 +41,7 @@ export function layoutVendors(vendors: VendorPoint[]): { placed: PlacedVendor[];
       placed.push({
         ...v,
         position: [Math.cos(angle) * radius, height, Math.sin(angle) * radius],
-        size: 0.035 + 0.024 * Math.log2(1 + v.invoices),
+        size: (0.035 + 0.024 * Math.log2(1 + v.invoices)) * density,
       });
     });
   });

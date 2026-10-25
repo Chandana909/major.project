@@ -15,6 +15,7 @@ Each step runs in its own process, so that memory is returned between steps, and
   application  the ledger loaded into a SQLite store, audited with every result stored, the strict policy
                adopted, and the ledger audited again: the deployed path
   size         the control stage over the whole ledger in one process
+  api          the application's endpoints on the store of the application step: how long each page waits
   report       huge.md, from the files of the other steps
 No language model is used.
 """
@@ -34,7 +35,7 @@ from auditiq.policy import PROJECT_ROOT
 
 RESULTS = PROJECT_ROOT / "results"
 NAME = "huge_seed_606"
-STEPS = ["generate", "detection", "policy", "application", "size", "report"]
+STEPS = ["generate", "detection", "policy", "application", "size", "api", "report"]
 
 
 def out_dir(results: Path) -> Path:
@@ -140,6 +141,47 @@ def step_application(dataset: Path, results: Path, work: Path) -> None:
     print(f"application: load {load_seconds} s, audit {result['seconds']['audit_before']} s")
 
 
+# The requests the web application's pages make, read-only, in the order a reviewer would open them.
+PAGES = [("Health (every page)", "/api/health"), ("Overview", "/api/overview"),
+         ("Risk map (overview, 3D)", "/api/risk-map"), ("Review queue", "/api/queue?limit=200"),
+         ("Invoice search", "/api/invoices?q=INV5&limit=50"), ("Invoice page", "/api/invoices/{invoice}"),
+         ("Policy page", "/api/policy"), ("Policy search", "/api/search?q=weekend%20invoice")]
+
+
+def step_api(results: Path, work: Path, repeats: int = 3) -> None:
+    """The endpoints of the pages on the store the application step left: the ledger with every result."""
+    import statistics
+
+    from fastapi.testclient import TestClient
+
+    from auditiq import api
+
+    store = work / "huge.db"
+    if not store.exists():
+        raise SystemExit(f"{store} does not exist: run the application step first")
+    client = TestClient(api.create_app(target=str(store), token="", cors_origins=[]))
+    queue = client.get("/api/queue?limit=1").json()
+    invoice = queue["items"][0]["invoice_id"] if queue["items"] else "INV00000"
+    rows = []
+    for page, path in PAGES:
+        path = path.format(invoice=invoice)
+        times, size, status = [], 0, 0
+        for _ in range(repeats):
+            began = time.perf_counter()
+            reply = client.get(path)
+            times.append(time.perf_counter() - began)
+            size, status = len(reply.content), reply.status_code
+        rows.append({"page": page, "path": path, "status": status, "seconds": round(statistics.median(times), 3),
+                     "kilobytes": round(size / 1024, 1)})
+        print(f"api: {page}: {rows[-1]['seconds']} s")
+    overview = client.get("/api/overview").json()
+    write_json(out_dir(results) / "api.json",
+               {"store": "SQLite", "invoices": overview["invoices"], "vendors": overview["vendors"],
+                "audited": overview["audited"], "results": int(sum(r["invoices"] for r in overview["runs"])),
+                "waiting": overview["states"].get("PENDING_REVIEW", 0), "repeats": repeats, "endpoints": rows,
+                "produced": time.strftime("%Y-%m-%d %H:%M"), "machine": machine()})
+
+
 def step_size(dataset: Path, results: Path, reference: Path, repeats: int = 3) -> None:
     """The control stage over the whole ledger, and over a reference ledger in the same process.
 
@@ -205,8 +247,8 @@ def ci(m: dict) -> str:
 def report(results: Path) -> Path:
     out = out_dir(results)
     load = lambda name: json.loads((out / name).read_text(encoding="utf-8")) if (out / name).exists() else None  # noqa: E731
-    gen, det, pol, app, size = (load(n) for n in ("generate.json", "metrics.json", "policy_change.json",
-                                                  "application.json", "size.json"))
+    gen, det, pol, app, size, web = (load(n) for n in ("generate.json", "metrics.json", "policy_change.json",
+                                                       "application.json", "size.json", "api.json"))
     lines = [f"# The huge ledger (`{NAME}`)", "",
              "Produced by `python -m evaluation.huge`. 500,000 invoices from 15,000 vendors at the anomaly rate of the "
              "large ledger; generated from its seed into a work folder (not committed) and checked against the file "
@@ -262,6 +304,15 @@ def report(results: Path) -> Path:
                   f"| Waiting for review | {b['states'].get('PENDING_REVIEW', 0):,} | {a['states'].get('PENDING_REVIEW', 0):,} |",
                   f"| Approved automatically | {b['states'].get('AUTO_APPROVED', 0):,} | {a['states'].get('AUTO_APPROVED', 0):,} |",
                   ""]
+    if web:
+        lines += ["## The application on the whole ledger", "",
+                  f"The web application's requests on the store of the deployed path ({web['store']}: "
+                  f"{web['invoices']:,} invoices from {web['vendors']:,} vendors, {web['results']:,} results of "
+                  f"which {web['audited']:,} are the latest, {web['waiting']:,} invoices waiting for review), "
+                  f"through the API in one process; median of {web['repeats']} requests.", "",
+                  "| Page | Request | Seconds | Answer (KB) |", "|---|---|---|---|"]
+        lines += [f"| {e['page']} | `{e['path']}` | {e['seconds']:.2f} | {e['kilobytes']:,.0f} |" for e in web["endpoints"]]
+        lines += [""]
     if size:
         lines += ["## The control stage over the whole ledger", "",
                   f"{size['invoices']:,} invoices in {size['seconds']:.1f} s in one process: "
@@ -303,7 +354,7 @@ def report(results: Path) -> Path:
                               "processor's caches; that explanation has not been tested. The time of the stage is "
                               "not linear in the number of invoices at this scale.")
         lines += [""]
-    stamps = [x["machine"] for x in (gen, det, pol, app, size) if x and x.get("machine")]
+    stamps = [x["machine"] for x in (gen, det, pol, app, size, web) if x and x.get("machine")]
     if stamps:
         lines += [f"Machine: {stamps[0]}."]
     path = out / "huge.md"
@@ -337,6 +388,8 @@ def main(argv: list[str] | None = None) -> int:
             step_application(dataset, args.results, args.work)
         elif args.step == "size":
             step_size(dataset, args.results, args.reference, args.repeats)
+        elif args.step == "api":
+            step_api(args.results, args.work, args.repeats)
         else:
             print(f"wrote {report(args.results)}")
         return 0

@@ -9,6 +9,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const WORKBOOK = path.join(ROOT, ".auditiq", "e2e", "pilot_seed_909.xlsx");
+const HEAVY = 150_000;
 const POLICY = path.join(ROOT, "policy", "variants_heldout", "Company_Policy_v4.10.pdf");
 
 test.describe.configure({ mode: "serial" });
@@ -46,10 +47,15 @@ test("a workbook is loaded through the web application and audited with the cont
   await expect(load).toBeDisabled(); // nothing is replaced before the reviewer confirms
   await page.getByLabel(/Replace the current ledger/).check();
   await load.click();
-  await expect(page.locator(".banner")).toContainText("Ledger pilot_seed_909 loaded: 5,000 invoices from 250 vendors");
+  // Loading and auditing 5,000 invoices are the heaviest steps: on a laptop on battery, with the browser drawing
+  // the 3D view in software beside them, each can take more than the usual minute.
+  await expect(page.locator(".banner")).toContainText("Ledger pilot_seed_909 loaded: 5,000 invoices from 250 vendors", {
+    timeout: HEAVY,
+  });
   await page.getByRole("button", { name: "Audit it with the controls" }).click();
   await expect(page.locator(".notice")).toHaveText(
     "5,000 invoices audited with the controls: 300 findings, 240 waiting for review.",
+    { timeout: HEAVY },
   );
   await expect(page.locator(".page-head")).toContainText("pilot_seed_909");
   await expect(kpi(page, "Audited")).toHaveText("5,000");

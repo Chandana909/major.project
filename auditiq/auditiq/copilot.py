@@ -65,7 +65,7 @@ Reply with one JSON object and nothing else:
 # chunks and the bookkeeping table are not among them.
 READABLE = ["invoices", "vendor_master", "purchase_orders", "goods_receipts", "approval_logs", "v_latest_results",
             "v_review_queue", "audit_flags", "review_decisions", "policy_clauses"]
-UNDERLYING = ["audit_results", "audit_runs"]          # read through the views
+UNDERLYING = ["audit_results", "audit_runs", "latest_results"]          # read through the views
 ROW_LIMIT = 200
 TIME_LIMIT_S = 10.0
 

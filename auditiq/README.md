@@ -144,7 +144,7 @@ ground truth of every invoice.
 | `pilot_seed_909` | 5,000 | 20,755 | development; the only ledger prompts may be tried on |
 | `swap_seed_404` | 5,000 | 20,904 | the policy-swap experiment |
 | `large_seed_505` | 20,000 | 83,495 | the application; a realistic anomaly rate (2.1%) |
-| `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale; generated only on request (`python -m evaluation.huge`), not committed |
+| `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale, and the web application on half a million invoices; generated only on request (`python -m evaluation.huge`), not committed |
 
 `python -m auditiq_bench` regenerates them byte-identically;
 `python -m auditiq_bench.overview --verify` checks the files against their

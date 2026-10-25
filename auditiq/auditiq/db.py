@@ -218,6 +218,11 @@ CREATE TABLE IF NOT EXISTS audit_results (
 );
 CREATE INDEX IF NOT EXISTS idx_results_invoice ON audit_results(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_results_status ON audit_results(workflow_status);
+CREATE TABLE IF NOT EXISTS latest_results (
+  invoice_id     TEXT PRIMARY KEY REFERENCES invoices(invoice_id),
+  result_id      BIGINT NOT NULL REFERENCES audit_results(result_id) ON DELETE CASCADE
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_latest_result ON latest_results(result_id);
 CREATE TABLE IF NOT EXISTS audit_flags (
   flag_id        {pk},
   result_id      BIGINT NOT NULL REFERENCES audit_results(result_id) ON DELETE CASCADE,
@@ -271,9 +276,9 @@ CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
 
 {view} v_latest_results AS
 SELECT r.*, u.configuration, u.policy_version, u.model
-FROM audit_results r
-JOIN audit_runs u ON u.run_id = r.run_id
-WHERE r.result_id = (SELECT MAX(x.result_id) FROM audit_results x WHERE x.invoice_id = r.invoice_id);
+FROM latest_results m
+JOIN audit_results r ON r.result_id = m.result_id
+JOIN audit_runs u ON u.run_id = r.run_id;
 
 {view} v_review_queue AS
 SELECT l.result_id, l.invoice_id, l.vendor_id, v.vendor_name, i.date AS invoice_date, i.amount,
@@ -286,7 +291,7 @@ WHERE l.workflow_status = 'PENDING_REVIEW';
 
 LEDGER_TABLES = ["vendor_master", "purchase_orders", "goods_receipts", "invoices", "approval_logs"]
 ALL_TABLES = LEDGER_TABLES + ["company_policies", "policy_clauses", "policy_parameters", "policy_documents",
-                              "policy_chunks", "audit_runs", "audit_results", "audit_flags", "audit_trail",
+                              "policy_chunks", "audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail",
                               "review_decisions", "benchmark_labels", "meta"]
 VIEWS = ["v_latest_results", "v_review_queue"]
 BOOLEAN_COLUMNS = {"is_active", "blacklisted", "blacklist_status"}
@@ -428,9 +433,17 @@ def recorded_stamp(db: Database) -> str | None:
 
 
 def create_schema(db: Database) -> None:
+    db.execute("DROP INDEX IF EXISTS idx_results_vendor")      # briefly in the schema; it slowed the queue
+    if db.backend == "sqlite":            # CREATE VIEW IF NOT EXISTS would keep a view of an older schema
+        db.execute("DROP VIEW IF EXISTS v_review_queue")
+        db.execute("DROP VIEW IF EXISTS v_latest_results")
     for statement in SCHEMA.format(**TYPES[db.backend]).split(";\n"):
         if statement.strip():
             db.execute(statement)
+    # A store made before latest_results existed: record the latest result of every invoice once.
+    if not db.scalar("SELECT 1 FROM latest_results LIMIT 1"):
+        db.execute("INSERT INTO latest_results (invoice_id, result_id) "
+                   "SELECT invoice_id, MAX(result_id) FROM audit_results GROUP BY invoice_id")
     if db.backend == "postgres" and db.scalar("SELECT 1 FROM pg_roles WHERE rolname = ?", (READER_ROLE,)):
         # The copilot's queries run as this role: it may read the copilot's tables and nothing else.
         from .copilot import READABLE, UNDERLYING
@@ -519,7 +532,8 @@ def load_dataset(db: Database, dataset: Path, replace: bool = True) -> dict[str,
 def load_frames(db: Database, frames: dict[str, pd.DataFrame], name: str, replace: bool = True) -> dict[str, int]:
     """Load the record tables of a ledger given as text frames (see ``load_dataset``); ``name`` is recorded."""
     if replace:
-        for table in ["review_decisions", "audit_trail", "audit_flags", "audit_results", "audit_runs",
+        for table in ["review_decisions", "audit_trail", "audit_flags", "latest_results", "audit_results",
+                      "audit_runs",
                       "benchmark_labels", "approval_logs", "invoices", "goods_receipts", "purchase_orders",
                       "vendor_master"]:
             db.execute(f"DELETE FROM {table}")
@@ -716,6 +730,10 @@ def save_result(db: Database, run_id: int, state: dict, result: dict, workflow_s
          result["rc"], len(result["flags"]), workflow_status, cost["llm_calls"], cost["prompt_tokens"],
          cost["completion_tokens"], cost["latency_ms"], result["issues"]["failed_stages"],
          json.dumps(pack, ensure_ascii=False), now()), "result_id")
+    # Results are only added, and a later one has a larger id: it becomes the invoice's latest.
+    db.execute("INSERT INTO latest_results (invoice_id, result_id) VALUES (?, ?) "
+               "ON CONFLICT (invoice_id) DO UPDATE SET result_id = excluded.result_id",
+               (result["invoice_id"], result_id))
     flags = [(f, "kept") for f in result["flags"]] + [(f, "removed") for f in result["removed_flags"]]
     db.executemany(
         "INSERT INTO audit_flags (result_id, clause, severity, source, agent, status, g, p, a, confidence, "

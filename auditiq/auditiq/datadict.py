@@ -35,7 +35,7 @@ GROUPS = [
               "again has one result per run and the earlier ones remain. The only later change to a result "
               "is its review: the decision sets the status of the result, is added to its audit pack and "
               "closes its audit trail.",
-     ["audit_runs", "audit_results", "audit_flags", "audit_trail", "review_decisions"]),
+     ["audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail", "review_decisions"]),
     ("Other", "", ["benchmark_labels", "meta"]),
 ]
 
@@ -295,6 +295,18 @@ TABLES: dict[str, dict] = {
                           "its confidence, the findings the challenger removed and why, the scores, the route, "
                           "the policy citations and, after review, the decision.",
             "created_at": "When the result was stored.",
+        },
+    },
+    "latest_results": {
+        "summary": "One row per audited invoice: its most recent result. The view `v_latest_results` joins "
+                   "through it, so that the latest results of a ledger are read by index, not found again "
+                   "for every row (on 500,000 invoices the overview took 19 s that way).",
+        "source": "The pipeline, with every stored result; filled from `audit_results` when an older store is "
+                  "opened",
+        "used": "`v_latest_results`, and through it the review queue, the overview, the risk map and the copilot.",
+        "columns": {
+            "invoice_id": "The invoice.",
+            "result_id": "Its most recent result: the largest `result_id` stored for it.",
         },
     },
     "audit_flags": {

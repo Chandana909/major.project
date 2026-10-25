@@ -92,7 +92,7 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 10 | How do the language-model stages do? | Benchmark sample of 90 invoices (ledger 202, integrated GPU): the agents (C3) found 34 of 60 judgement anomalies (0.567); 0.493 of their findings name a violated rule (0.600 with the challenger); the single prompt (C2) flagged 9 of 10 ordinary invoices and 0.030 of its findings name a violated rule. **C3 is better than C2 on this sample (37 invoices right only under C3, 1 only under C2; Holm-adjusted p < 0.001)**; the challenger's gain is not significant. The 34-invoice sample of ledger 101 agrees. 3 to 5 model calls per invoice. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 | 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
-| 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage takes 18.4 µs per invoice (31.7 before the vendor index of the code review). | Measured | 5.1 |
+| 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage takes 18.4 µs per invoice (31.7 before the vendor index of the code review), and the web application serves the ledger with every page answering within 5.5 s. | Measured | 5.1 |
 
 ## 2. Data
 
@@ -450,6 +450,33 @@ audited again in 755 s.
 | Findings | 7,140 | 165,741 |
 | Waiting for review | 5,712 | 160,068 |
 | Approved automatically | 494,288 | 339,932 |
+
+**The application on the whole ledger** (`results/huge_seed_606/api.json`,
+`python -m evaluation.huge --steps api`). The web application served from that
+store: 500,000 invoices, 15,000 vendors, 1,000,000 results of which 500,000 are
+the latest, 160,068 invoices waiting for review. Each page's request through the
+API, median of three, on the laptop's SQLite:
+
+| Page | Before the change | After it (both 25 October) |
+|---|---|---|
+| Overview | 19.3 s | **4.6 s** |
+| Risk map (the 3D view, 15,000 vendors) | 12.8 s | **5.5 s** |
+| Review queue (first 200 of 160,068) | 1.6 s | 1.9 s |
+| Invoice search | 4.1 s | **1.0 s** |
+| One invoice with its audit pack | 0.03 s | 0.01 s |
+| Policy page | 0.7 s | 0.5 s |
+| Policy search | 0.04 s | 0.1 s |
+
+The first column was measured once before any change. The latest result of
+each invoice used to be found again for every row (a subquery over a million
+results); it is now recorded in a table, `latest_results`, as each result is
+stored, and the view joins through it. The overview counts states, routes and
+risk levels in one pass instead of three, and the risk map counts invoices and
+results per vendor apart before joining them; the rows it returns are identical
+for all 14,998 vendors with invoices. The 3D view draws its points smaller as the
+vendors get denser, so 15,000 of them stay separate points
+(docs/CODE_REVIEW.md, findings 12 to 14). To open it:
+`python -m auditiq --db <work folder>/huge.db serve` (OPERATIONS.md, Section 7).
 
 **The control stage.** Measured twice on 21 October, each time with the
 20,000-invoice ledger timed in turn in the same process (median of three runs;

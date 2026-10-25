@@ -216,6 +216,30 @@ def test_a_newer_audit_of_an_invoice_replaces_its_place_in_the_queue(conn):
     assert conn.scalar("SELECT COUNT(*) FROM audit_results WHERE invoice_id = ?", (target,)) == 2
     unaudited = db.invoice_ids(conn, only_unaudited=True)
     assert len(unaudited) == 1199 and target not in unaudited
+    newest = conn.scalar("SELECT MAX(result_id) FROM audit_results WHERE invoice_id = ?", (target,))
+    assert db.latest_result(conn, target)["result_id"] == newest
+    assert conn.scalar("SELECT result_id FROM latest_results WHERE invoice_id = ?", (target,)) == newest
+
+
+def test_a_store_made_before_the_latest_results_table_is_filled_when_it_is_opened(backend, make_store, small_dataset,
+                                                                                  monkeypatch):
+    """The view of the latest results joins through latest_results; an older store gets it on upgrade."""
+    target = make_store(backend)
+    conn = db.connect(target)
+    db.load_dataset(conn, small_dataset)
+    db.store_policy(conn, load_policy("2.5"), active=True)
+    ids = db.invoice_ids(conn)[:30]
+    service.audit_invoices(conn, PRESETS["C1"], db.read_policy(conn), None, ids)
+    service.audit_invoices(conn, PRESETS["C1"], db.read_policy(conn), None, ids[:10])
+    expected = {r[0]: r[1] for r in conn.execute("SELECT invoice_id, MAX(result_id) FROM audit_results GROUP BY invoice_id")}
+    conn.execute("DELETE FROM latest_results")                  # as in a store of the previous schema
+    conn.commit()
+    conn.close()
+    monkeypatch.setattr(db, "SCHEMA_ID", "0123456789abcdef")    # the stamp no longer matches: the schema is made again
+    conn = db.connect(target)
+    assert {r[0]: r[1] for r in conn.execute("SELECT invoice_id, result_id FROM latest_results")} == expected
+    assert conn.scalar("SELECT COUNT(*) FROM v_latest_results") == 30
+    conn.close()
 
 
 def test_sampled_results_are_queued_at_the_configured_rate():

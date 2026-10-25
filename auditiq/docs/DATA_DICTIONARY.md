@@ -307,6 +307,18 @@ One row per invoice per run: the decision of the audit.
 
 Also: `UNIQUE (run_id, invoice_id)`; `INDEX (invoice_id)`; `INDEX (workflow_status)`.
 
+### `latest_results`
+
+One row per audited invoice: its most recent result. The view `v_latest_results` joins through it, so that the latest results of a ledger are read by index, not found again for every row (on 500,000 invoices the overview took 19 s that way).
+
+- **Written by:** The pipeline, with every stored result; filled from `audit_results` when an older store is opened
+- **Used by:** `v_latest_results`, and through it the review queue, the overview, the risk map and the copilot.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `invoice_id` | TEXT PRIMARY KEY REFERENCES invoices(invoice_id) | TEXT PRIMARY KEY REFERENCES invoices(invoice_id) | The invoice. |
+| `result_id` | BIGINT NOT NULL REFERENCES audit_results(result_id) ON DELETE CASCADE | BIGINT NOT NULL REFERENCES audit_results(result_id) ON DELETE CASCADE | Its most recent result: the largest `result_id` stored for it. |
+
 ### `audit_flags`
 
 One row per finding of a result, including findings the challenger removed.
@@ -405,7 +417,7 @@ Facts about the database itself.
 
 ## Views
 
-Views are read-only. The copilot's generated SQL may read `invoices`, `vendor_master`, `purchase_orders`, `goods_receipts`, `approval_logs`, `v_latest_results`, `v_review_queue`, `audit_flags`, `review_decisions`, `policy_clauses` (`audit_results` and `audit_runs` through the views) and nothing else: not `benchmark_labels`, the audit trail, the policy documents or the store's own tables (`auditiq/copilot.py`).
+Views are read-only. The copilot's generated SQL may read `invoices`, `vendor_master`, `purchase_orders`, `goods_receipts`, `approval_logs`, `v_latest_results`, `v_review_queue`, `audit_flags`, `review_decisions`, `policy_clauses` (`audit_results` and `audit_runs` and `latest_results` through the views) and nothing else: not `benchmark_labels`, the audit trail, the policy documents or the store's own tables (`auditiq/copilot.py`).
 
 ### `v_latest_results`
 

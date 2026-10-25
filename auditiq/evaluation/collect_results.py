@@ -244,6 +244,7 @@ def huge_ledger() -> dict:
         return {}
     gen, det = load(f"{folder}/generate.json"), load(f"{folder}/metrics.json")
     pol, app, size = load(f"{folder}/policy_change.json"), load(f"{folder}/application.json"), load(f"{folder}/size.json")
+    web = load(f"{folder}/api.json") if (RESULTS / folder / "api.json").exists() else None
     keys = ["detection_recall", "detection_precision", "detection_f1", "fpr_hard_negative", "fpr_ordinary"]
     n = pol["invoices"]
     return {"huge_ledger": {
@@ -263,6 +264,9 @@ def huge_ledger() -> dict:
                                         "needless_escalations": v["frozen"]["needless_escalations"]}
                                        for v in pol["variants"]]},
         "deployed_path": {"seconds": app["seconds"], "before": app["before"], "after": app["after"]},
+        **({"web_application": {"store": web["store"], "results": web["results"], "waiting": web["waiting"],
+                                "seconds_per_page": {e["page"]: e["seconds"] for e in web["endpoints"]}}}
+           if web else {}),
         "control_stage": {**{k: size[k] for k in ("invoices", "seconds", "microseconds_per_invoice", "findings")},
                           **({"reference": {k: size["reference"][k] for k in ("dataset", "invoices",
                                                                              "microseconds_per_invoice")},
@@ -273,7 +277,8 @@ def huge_ledger() -> dict:
                                                               ("reference", size["reference"]["history"]))}}
                              if size.get("history") and size.get("reference") else {})},
         "sources": [source(f"{folder}/{f}") for f in ("huge.md", "manifest.json", "metrics.json", "policy_change.json",
-                                                      "application.json", "size.json")],
+                                                      "application.json", "size.json")]
+                   + ([source(f"{folder}/api.json")] if web else []),
         "command": "python -m evaluation.huge"}}
 
 

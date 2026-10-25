@@ -4336,6 +4336,21 @@
      }
     }
    },
+   "web_application": {
+    "store": "SQLite",
+    "results": 1000000,
+    "waiting": 160068,
+    "seconds_per_page": {
+     "Health (every page)": 0.011,
+     "Overview": 4.636,
+     "Risk map (overview, 3D)": 5.508,
+     "Review queue": 1.885,
+     "Invoice search": 1.049,
+     "Invoice page": 0.013,
+     "Policy page": 0.497,
+     "Policy search": 0.107
+    }
+   },
    "control_stage": {
     "invoices": 500000,
     "seconds": 9.196,
@@ -4384,6 +4399,10 @@
     {
      "path": "auditiq/results/huge_seed_606/size.json",
      "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/size.json"
+    },
+    {
+     "path": "auditiq/results/huge_seed_606/api.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/api.json"
     }
    ],
    "command": "python -m evaluation.huge"

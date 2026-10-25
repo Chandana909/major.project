@@ -57,6 +57,21 @@ The ledger loaded into a new SQLite store in 36 s; every invoice audited with th
 | Waiting for review | 5,712 | 160,068 |
 | Approved automatically | 494,288 | 339,932 |
 
+## The application on the whole ledger
+
+The web application's requests on the store of the deployed path (SQLite: 500,000 invoices from 15,000 vendors, 1,000,000 results of which 500,000 are the latest, 160,068 invoices waiting for review), through the API in one process; median of 3 requests.
+
+| Page | Request | Seconds | Answer (KB) |
+|---|---|---|---|
+| Health (every page) | `/api/health` | 0.01 | 0 |
+| Overview | `/api/overview` | 4.64 | 3 |
+| Risk map (overview, 3D) | `/api/risk-map` | 5.51 | 2,639 |
+| Review queue | `/api/queue?limit=200` | 1.89 | 55 |
+| Invoice search | `/api/invoices?q=INV5&limit=50` | 1.05 | 10 |
+| Invoice page | `/api/invoices/INV316514` | 0.01 | 14 |
+| Policy page | `/api/policy` | 0.50 | 3 |
+| Policy search | `/api/search?q=weekend%20invoice` | 0.11 | 2 |
+
 ## The control stage over the whole ledger
 
 500,000 invoices in 9.2 s in one process: 18.4 µs per invoice (54,371 invoices per second), 7,140 findings; median of 3 run(s).
