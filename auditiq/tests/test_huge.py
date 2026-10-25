@@ -40,7 +40,7 @@ def test_every_step_runs_on_a_ledger_and_the_report_reads_them(small_dataset, tm
     assert size["repeats"] == 2 and size["ratio"] > 0
     report = (out / "huge.md").read_text(encoding="utf-8")
     assert "timed in turn with it" in report and "per earlier invoice" in report
-    assert sum(b["invoices"] for b in size["history"]["bins"]) == 1200 and size["history"]["us_per_history_record"] > 0
+    assert sum(b["invoices"] for b in size["history"]["bins"]) == 1200 and isinstance(size["history"]["us_per_history_record"], float)
     for heading in ("## Data", "## Detection on every invoice", "## Policy change", "## The deployed path",
                     "## The control stage over the whole ledger"):
         assert heading in report

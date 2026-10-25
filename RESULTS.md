@@ -54,11 +54,11 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
    hosted model endpoint (Section 7). Until then the paper reports the pilot
    and the two samples (34 and 90 invoices; Sections 7.2 and 7.3), and gives
    expected values for the full run (Section 10).
-5. Qualify one sentence in both papers (conference `main.tex`, Section on
-   scalability; `auditiq_paper.tex`, Section "Scalability"): the cost per
-   invoice is unchanged from 5,000 to 40,000 invoices, so time is linear over
-   that range, but at 500,000 invoices it is 1.96 times that of 20,000
-   (Section 5.1). The papers were not edited after 21 October.
+5. Optionally add one sentence to both papers' scalability section: at
+   500,000 invoices the control stage takes 18.4 µs per invoice (1.26 times
+   the 20,000-invoice ledger in the same run), after the vendor index of the
+   code review; before it, 31.7 µs (Section 5.1). The papers' claim that the
+   cost per invoice does not grow from 5,000 to 40,000 invoices stays true.
 
 ## Contents
 
@@ -87,12 +87,12 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 5 | What does a policy change do in the application? | Strict policy on 20,000 invoices: findings 300 to 6,546; invoices waiting for review 240 to 6,353. No code edited. | Measured | 3.5 |
 | 6 | How do the controls compare with anomaly detectors? | F1 0.833 at precision 1.000, against 0.536 (isolation forest) and 0.498 (one-class SVM); false positives on hard negatives 0.000 against 0.403 and 0.481. | Measured | 4 |
 | 7 | And at a realistic anomaly rate (2.1%)? | F1 0.833 against 0.211 and 0.429. | Measured | 4 |
-| 8 | How fast is the control stage? | About 18 µs per invoice on 5,000 to 40,000 invoices, 31.7 µs on 500,000 (the vendors' histories are longer); 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
+| 8 | How fast is the control stage? | About 18 µs per invoice on 5,000 to 40,000 invoices; 18.4 µs on 500,000 with the vendor index (31.7 before it); 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
 | 9 | Can a model read a policy written in its own words? | 6 documents, 84 values: 80 proposed correctly; the code check verified 56, held back 24 right ones, caught 2 wrong ones and passed 2. | Measured (one 7B model) | 6 |
 | 10 | How do the language-model stages do? | Benchmark sample of 90 invoices (ledger 202, integrated GPU): the agents (C3) found 34 of 60 judgement anomalies (0.567); 0.493 of their findings name a violated rule (0.600 with the challenger); the single prompt (C2) flagged 9 of 10 ordinary invoices and 0.030 of its findings name a violated rule. **C3 is better than C2 on this sample (37 invoices right only under C3, 1 only under C2; Holm-adjusted p < 0.001)**; the challenger's gain is not significant. The 34-invoice sample of ledger 101 agrees. 3 to 5 model calls per invoice. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 | 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
-| 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage costs 1.96 times as much per invoice as on 20,000 invoices, because two controls read the vendor's history. | Measured | 5.1 |
+| 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage takes 18.4 µs per invoice (31.7 before the vendor index of the code review). | Measured | 5.1 |
 
 ## 2. Data
 
@@ -382,7 +382,8 @@ under 15 policy versions); every run produced the same 16,840 findings.
 
 From 5,000 to 40,000 invoices the cost per invoice does not grow with the
 ledger, so over that range time is linear in the number of invoices. At
-500,000 invoices it is about twice as high (Section 5.1). The speed-up is below the number of processes because of
+500,000 invoices it was about twice as high, until the code review gave the
+vendor history an index; it is now 18.4 µs (Section 5.1). The speed-up is below the number of processes because of
 the efficiency cores. With storage in the database, one process audits 20,000
 invoices in under a minute (Section 3.5). A deployment on several machines has
 not been measured.
@@ -450,23 +451,31 @@ audited again in 755 s.
 | Waiting for review | 5,712 | 160,068 |
 | Approved automatically | 494,288 | 339,932 |
 
-**The control stage.** 500,000 invoices in 15.9 s in one process, 31.7 µs per
-invoice (31,532 invoices per second), median of three runs. Timed in turn with
-it in the same process, the 20,000-invoice ledger took 16.2 µs per invoice: the
-larger ledger costs 1.96 times as much per invoice. A first measurement, taken
-while the test suite ran beside it, gave 33.7 µs and is not used. The reason is
-in the controls: two of them (2.2.1, exact duplicate, and 4.1.1, invoices of
-the vendor on one day) read every other invoice of the vendor. Timing each
-invoice alone and fitting a straight line gives 10.6 µs plus 0.431 µs per
-earlier invoice of the vendor on the huge ledger (mean history 49.4), and
-11.7 µs plus 0.168 µs on the 20,000-invoice ledger (mean history 29.4). So the
-histories are longer, and on the larger ledger each record of a history also
-costs more to read. The likely reason for the second is that the ledger in
-memory outgrows the processor's caches; that has not been tested. **The
-control stage is therefore not linear in the number of invoices at this
-scale.** An index of each vendor's invoices by number and by date would remove
-the scan. It has not been implemented, because every result in this document
-was computed with the controls as they are.
+**The control stage.** Measured twice on 21 October, each time with the
+20,000-invoice ledger timed in turn in the same process (median of three runs;
+a first measurement taken while the test suite ran beside it, 33.7 µs, is not
+used).
+
+| | Before the vendor index | After the vendor index |
+|---|---|---|
+| 500,000 invoices, one process | 15.9 s, 31.7 µs per invoice | 9.2 s, **18.4 µs per invoice** (54,371 per second) |
+| 20,000 invoices, in turn with it | 16.2 µs per invoice | 14.6 µs per invoice |
+| Cost per invoice, 500,000 against 20,000 | 1.96 times | 1.26 times |
+| Each earlier invoice of the vendor adds (fit over single invoices) | 0.431 µs | 0.006 µs |
+| Findings | 7,140 and 300 | 7,140 and 300 (the same) |
+
+Before, two controls (2.2.1, exact duplicate; 4.1.1, invoices of the vendor
+on one day) read every other invoice of the vendor, so an invoice cost more the
+longer its vendor's history (mean 49.4 earlier invoices here, 29.4 on the
+20,000-invoice ledger), and each record also cost more to read in the larger
+ledger. The code review of 21 October gave the vendor history an index by
+invoice number and by date, built once per vendor (`auditiq/history.py`,
+docs/CODE_REVIEW.md, finding 7); the two controls now look up only the
+invoices they need, and their findings are the same on every invoice. **The
+cost of an invoice no longer depends on its vendor's history** (median 11.4 to
+12.1 µs from the shortest histories to the longest, per-invoice timing in
+`huge.md`). The remaining 1.26 times is the larger ledger in memory; the cause
+has not been tested.
 
 ## 6. Policies written in their own wording
 
@@ -766,7 +775,7 @@ a model audits.
 - Pattern reading accepts only the template's wording; the model-assisted path was measured on six short documents written by the authors, and two wrong values passed its check.
 - Confidence measures stability, not correctness.
 - Everything ran on one laptop; the services are separable, but a multi-machine deployment has not been measured.
-- The control stage reads each vendor's history: at 500,000 invoices it costs about twice as much per invoice as at 20,000 (Section 5.1).
+- The scalability figures of Section 5 were measured on one laptop; at 500,000 invoices an invoice costs 1.26 times as much as at 20,000 (Section 5.1).
 - The web application has one shared token and no user accounts.
 - The two base papers were described from their abstracts.
 

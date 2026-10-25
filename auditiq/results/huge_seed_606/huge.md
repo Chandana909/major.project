@@ -59,21 +59,21 @@ The ledger loaded into a new SQLite store in 36 s; every invoice audited with th
 
 ## The control stage over the whole ledger
 
-500,000 invoices in 15.9 s in one process: 31.7 µs per invoice (31,532 invoices per second), 7,140 findings; median of 3 run(s).
-In the same process, timed in turn with it, the 20,000-invoice ledger `large_seed_505` took 16.2 µs per invoice (300 findings): the cost per invoice of the larger ledger is 1.96 times that of the smaller.
+500,000 invoices in 9.2 s in one process: 18.4 µs per invoice (54,371 invoices per second), 7,140 findings; median of 3 run(s).
+In the same process, timed in turn with it, the 20,000-invoice ledger `large_seed_505` took 14.6 µs per invoice (300 findings): the cost per invoice of the larger ledger is 1.26 times that of the smaller.
 
 Two controls (2.2.1, exact duplicate; 4.1.1, invoices of the vendor on one day) read the vendor's other invoices, so an invoice costs more the longer its vendor's history. Each invoice timed alone (the timer adds a little to every figure):
 
 | Earlier invoices of the vendor | Invoices (huge_seed_606) | Median µs | Invoices (large_seed_505) | Median µs |
 |---|---|---|---|---|
-| 0 to 24 | 104,977 | 17.2 | 9,780 | 13.0 |
-| 25 to 49 | 201,472 | 24.5 | 7,578 | 16.4 |
-| 50 to 74 | 107,694 | 34.4 | 1,998 | 19.9 |
-| 75 to 99 | 45,876 | 44.9 | 485 | 22.3 |
-| 100 to 124 | 22,190 | 55.5 | 0 |  |
-| 125 to 149 | 10,285 | 65.7 | 0 |  |
-| 150 or more | 7,506 | 82.0 | 159 | 29.3 |
+| 0 to 24 | 104,977 | 11.4 | 9,780 | 10.7 |
+| 25 to 49 | 201,472 | 11.5 | 7,578 | 10.7 |
+| 50 to 74 | 107,694 | 11.6 | 1,998 | 10.6 |
+| 75 to 99 | 45,876 | 11.7 | 485 | 10.8 |
+| 100 to 124 | 22,190 | 11.9 | 0 |  |
+| 125 to 149 | 10,285 | 11.9 | 0 |  |
+| 150 or more | 7,506 | 12.1 | 159 | 10.8 |
 
-A straight line through the times of single invoices: 10.6 µs plus 0.431 µs per earlier invoice on this ledger (mean history 49.4); 11.7 µs plus 0.168 µs on `large_seed_505` (mean history 29.4). Two things grow with this ledger: the histories are longer, and each earlier invoice costs more to read. The second is likely the ledger in memory outgrowing the processor's caches; that explanation has not been tested. The time of the stage is not linear in the number of invoices at this scale.
+A straight line through the times of single invoices: 13.9 µs plus 0.006 µs per earlier invoice on this ledger (mean history 49.4); 13.0 µs plus 0.02 µs on `large_seed_505` (mean history 29.4).
 
 Machine: Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3.

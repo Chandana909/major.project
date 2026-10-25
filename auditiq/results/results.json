@@ -4338,25 +4338,25 @@
    },
    "control_stage": {
     "invoices": 500000,
-    "seconds": 15.857,
-    "microseconds_per_invoice": 31.7,
+    "seconds": 9.196,
+    "microseconds_per_invoice": 18.4,
     "findings": 7140,
     "reference": {
      "dataset": "large_seed_505",
      "invoices": 20000,
-     "microseconds_per_invoice": 16.2
+     "microseconds_per_invoice": 14.6
     },
-    "ratio": 1.96,
+    "ratio": 1.26,
     "history_fit": {
      "ledger": {
       "mean_history": 49.4,
-      "intercept_us": 10.6,
-      "us_per_history_record": 0.431
+      "intercept_us": 13.9,
+      "us_per_history_record": 0.006
      },
      "reference": {
       "mean_history": 29.4,
-      "intercept_us": 11.7,
-      "us_per_history_record": 0.168
+      "intercept_us": 13.0,
+      "us_per_history_record": 0.02
      }
     }
    },

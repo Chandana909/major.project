@@ -1,49 +1,49 @@
 {
  "invoices": 500000,
- "seconds": 15.857,
+ "seconds": 9.196,
  "findings": 7140,
- "invoices_per_second": 31532,
- "microseconds_per_invoice": 31.7,
+ "invoices_per_second": 54371,
+ "microseconds_per_invoice": 18.4,
  "history": {
   "mean_history": 49.4,
   "max_history": 281,
-  "intercept_us": 10.6,
-  "us_per_history_record": 0.431,
+  "intercept_us": 13.9,
+  "us_per_history_record": 0.006,
   "bins": [
    {
     "from": 0,
     "invoices": 104977,
-    "median_us": 17.2
+    "median_us": 11.4
    },
    {
     "from": 25,
     "invoices": 201472,
-    "median_us": 24.5
+    "median_us": 11.5
    },
    {
     "from": 50,
     "invoices": 107694,
-    "median_us": 34.4
+    "median_us": 11.6
    },
    {
     "from": 75,
     "invoices": 45876,
-    "median_us": 44.9
+    "median_us": 11.7
    },
    {
     "from": 100,
     "invoices": 22190,
-    "median_us": 55.5
+    "median_us": 11.9
    },
    {
     "from": 125,
     "invoices": 10285,
-    "median_us": 65.7
+    "median_us": 11.9
    },
    {
     "from": 150,
     "invoices": 7506,
-    "median_us": 82.0
+    "median_us": 12.1
    }
   ]
  },
@@ -51,45 +51,45 @@
  "reference": {
   "dataset": "large_seed_505",
   "invoices": 20000,
-  "seconds": 0.324,
+  "seconds": 0.291,
   "findings": 300,
-  "invoices_per_second": 61662,
-  "microseconds_per_invoice": 16.2,
+  "invoices_per_second": 68642,
+  "microseconds_per_invoice": 14.6,
   "history": {
    "mean_history": 29.4,
    "max_history": 158,
-   "intercept_us": 11.7,
-   "us_per_history_record": 0.168,
+   "intercept_us": 13.0,
+   "us_per_history_record": 0.02,
    "bins": [
     {
      "from": 0,
      "invoices": 9780,
-     "median_us": 13.0
+     "median_us": 10.7
     },
     {
      "from": 25,
      "invoices": 7578,
-     "median_us": 16.4
+     "median_us": 10.7
     },
     {
      "from": 50,
      "invoices": 1998,
-     "median_us": 19.9
+     "median_us": 10.6
     },
     {
      "from": 75,
      "invoices": 485,
-     "median_us": 22.3
+     "median_us": 10.8
     },
     {
      "from": 150,
      "invoices": 159,
-     "median_us": 29.3
+     "median_us": 10.8
     }
    ]
   }
  },
- "ratio": 1.96,
- "produced": "2026-10-21 09:56",
+ "ratio": 1.26,
+ "produced": "2026-10-25 17:00",
  "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, Python 3.11.3"
 }

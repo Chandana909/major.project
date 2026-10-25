@@ -91,7 +91,11 @@ with the index equal the findings from the plain list
 (`tests/test_controls.py`); the reproduction compares every result file with
 the committed one. *Measured:* on the 20,000-invoice ledger, timed in turn
 three times, 21.0, 24.1 and 20.9 µs per invoice before and 13.4, 15.8 and 12.7
-after (about 37% less), with the same 300 findings.
+after (about 37% less), with the same 300 findings. On the 500,000-invoice ledger,
+31.7 µs per invoice before and 18.4 after, with the same 7,140 findings; the
+cost an earlier invoice of the vendor adds fell from 0.431 µs to 0.006, so the
+cost of an invoice no longer depends on its vendor's history (RESULTS.md,
+Section 5.1).
 
 **8. No security headers** (security, low). *Changed:* every answer carries
 `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and
