@@ -3523,6 +3523,505 @@
    "command": "python -m evaluation.run_pilot --dataset data/bench_seed_101 --ids-file evaluation/bench101_sample_ids.txt --tag sample34",
    "note": "Too few invoices to compare configurations: no difference between them is significant."
   },
+  "llm_stages_sample_90_invoices": {
+   "label": "sample",
+   "question": "The five configurations with a local 7B model on the laptop's integrated GPU and frozen prompts on 90 invoices of benchmark ledger 202 (15 of each judgement class, 4 of each hard-negative type, 10 ordinary).",
+   "configurations": {
+    "C1": "controls only",
+    "C2": "one LLM prompt, no controls",
+    "C3": "controls and three agents",
+    "C4": "C3 and the challenger",
+    "C5": "C4 and confidence (sampled review)"
+   },
+   "metrics": {
+    "Macro-F1, rule-defined classes": {
+     "C1": null,
+     "C3": null,
+     "C4": null,
+     "C5": null,
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Macro-F1, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.468,
+      "ci_low": 0.4,
+      "ci_high": 0.525
+     },
+     "C4": {
+      "value": 0.405,
+      "ci_low": 0.321,
+      "ci_high": 0.481
+     },
+     "C5": {
+      "value": 0.405,
+      "ci_low": 0.321,
+      "ci_high": 0.481
+     },
+     "C2": {
+      "value": 0.172,
+      "ci_low": 0.115,
+      "ci_high": 0.214
+     }
+    },
+    "Macro-recall, judgement classes": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.567,
+      "ci_low": 0.486,
+      "ci_high": 0.646
+     },
+     "C4": {
+      "value": 0.4,
+      "ci_low": 0.321,
+      "ci_high": 0.481
+     },
+     "C5": {
+      "value": 0.4,
+      "ci_low": 0.321,
+      "ci_high": 0.481
+     },
+     "C2": {
+      "value": 0.167,
+      "ci_low": 0.103,
+      "ci_high": 0.227
+     }
+    },
+    "Recall, J1 near-duplicate": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.867,
+      "ci_low": 0.667,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 0.467,
+      "ci_low": 0.214,
+      "ci_high": 0.727
+     },
+     "C5": {
+      "value": 0.467,
+      "ci_low": 0.214,
+      "ci_high": 0.727
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J2 structuring across days": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.4,
+      "ci_low": 0.166,
+      "ci_high": 0.667
+     },
+     "C4": {
+      "value": 0.133,
+      "ci_low": 0.0,
+      "ci_high": 0.333
+     },
+     "C5": {
+      "value": 0.133,
+      "ci_low": 0.0,
+      "ci_high": 0.333
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J3 description against the PO": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     }
+    },
+    "Recall, J4 goods-receipt remark": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C4": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C5": {
+      "value": 1.0,
+      "ci_low": 1.0,
+      "ci_high": 1.0
+     },
+     "C2": {
+      "value": 0.667,
+      "ci_low": 0.412,
+      "ci_high": 0.909
+     }
+    },
+    "Invoice-level recall": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.683,
+      "ci_low": 0.569,
+      "ci_high": 0.793
+     },
+     "C4": {
+      "value": 0.533,
+      "ci_low": 0.41,
+      "ci_high": 0.661
+     },
+     "C5": {
+      "value": 0.533,
+      "ci_low": 0.41,
+      "ci_high": 0.661
+     },
+     "C2": {
+      "value": 0.917,
+      "ci_low": 0.84,
+      "ci_high": 0.983
+     }
+    },
+    "Invoice-level precision": {
+     "C1": null,
+     "C3": {
+      "value": 0.745,
+      "ci_low": 0.629,
+      "ci_high": 0.854
+     },
+     "C4": {
+      "value": 0.8,
+      "ci_low": 0.667,
+      "ci_high": 0.921
+     },
+     "C5": {
+      "value": 0.8,
+      "ci_low": 0.667,
+      "ci_high": 0.921
+     },
+     "C2": {
+      "value": 0.671,
+      "ci_low": 0.557,
+      "ci_high": 0.76
+     }
+    },
+    "FPR, ordinary clean": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.1,
+      "ci_low": 0.0,
+      "ci_high": 0.333
+     },
+     "C4": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C5": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C2": {
+      "value": 0.9,
+      "ci_low": 0.667,
+      "ci_high": 1.0
+     }
+    },
+    "FPR, hard negatives": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.65,
+      "ci_low": 0.435,
+      "ci_high": 0.857
+     },
+     "C4": {
+      "value": 0.4,
+      "ci_low": 0.185,
+      "ci_high": 0.625
+     },
+     "C5": {
+      "value": 0.4,
+      "ci_low": 0.185,
+      "ci_high": 0.625
+     },
+     "C2": {
+      "value": 0.9,
+      "ci_low": 0.75,
+      "ci_high": 1.0
+     }
+    },
+    "Precision at 2% prevalence": {
+     "C1": null,
+     "C3": {
+      "value": 0.029,
+      "ci_low": 0.02,
+      "ci_high": 0.047
+     },
+     "C4": {
+      "value": 0.039,
+      "ci_low": 0.023,
+      "ci_high": 0.097
+     },
+     "C5": {
+      "value": 0.039,
+      "ci_low": 0.023,
+      "ci_high": 0.097
+     },
+     "C2": {
+      "value": 0.02,
+      "ci_low": 0.018,
+      "ci_high": 0.024
+     }
+    },
+    "Citation correctness": {
+     "C1": null,
+     "C3": {
+      "value": 0.654,
+      "ci_low": 0.559,
+      "ci_high": 0.756
+     },
+     "C4": {
+      "value": 0.75,
+      "ci_low": 0.593,
+      "ci_high": 0.903
+     },
+     "C5": {
+      "value": 0.75,
+      "ci_low": 0.593,
+      "ci_high": 0.903
+     },
+     "C2": {
+      "value": 0.042,
+      "ci_low": 0.02,
+      "ci_high": 0.065
+     }
+    },
+    "Model findings naming a violated rule": {
+     "C1": null,
+     "C3": {
+      "value": 0.493,
+      "ci_low": 0.389,
+      "ci_high": 0.592
+     },
+     "C4": {
+      "value": 0.6,
+      "ci_low": 0.454,
+      "ci_high": 0.757
+     },
+     "C5": {
+      "value": 0.6,
+      "ci_low": 0.454,
+      "ci_high": 0.757
+     },
+     "C2": {
+      "value": 0.03,
+      "ci_low": 0.014,
+      "ci_high": 0.046
+     }
+    },
+    "Exact match of cited clauses": {
+     "C1": {
+      "value": 0.333,
+      "ci_low": 0.244,
+      "ci_high": 0.433
+     },
+     "C3": {
+      "value": 0.433,
+      "ci_low": 0.333,
+      "ci_high": 0.533
+     },
+     "C4": {
+      "value": 0.511,
+      "ci_low": 0.411,
+      "ci_high": 0.611
+     },
+     "C5": {
+      "value": 0.511,
+      "ci_low": 0.411,
+      "ci_high": 0.611
+     },
+     "C2": {
+      "value": 0.033,
+      "ci_low": 0.0,
+      "ci_high": 0.078
+     }
+    },
+    "Escalation precision": {
+     "C1": null,
+     "C3": {
+      "value": 0.709,
+      "ci_low": 0.58,
+      "ci_high": 0.818
+     },
+     "C4": {
+      "value": 0.775,
+      "ci_low": 0.639,
+      "ci_high": 0.895
+     },
+     "C5": {
+      "value": 0.778,
+      "ci_low": 0.633,
+      "ci_high": 0.9
+     },
+     "C2": {
+      "value": 0.481,
+      "ci_low": 0.372,
+      "ci_high": 0.583
+     }
+    },
+    "Escalation recall": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 0.867,
+      "ci_low": 0.763,
+      "ci_high": 0.956
+     },
+     "C4": {
+      "value": 0.689,
+      "ci_low": 0.556,
+      "ci_high": 0.818
+     },
+     "C5": {
+      "value": 0.622,
+      "ci_low": 0.479,
+      "ci_high": 0.765
+     },
+     "C2": {
+      "value": 0.867,
+      "ci_low": 0.762,
+      "ci_high": 0.957
+     }
+    },
+    "Invoices in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 4,
+     "C2": 0
+    },
+    "True anomalies in sampled review": {
+     "C1": 0,
+     "C3": 0,
+     "C4": 0,
+     "C5": 3,
+     "C2": 0
+    },
+    "High or critical anomalies auto-approved": {
+     "C1": 45,
+     "C3": 6,
+     "C4": 14,
+     "C5": 14,
+     "C2": 6
+    },
+    "LLM calls per invoice": {
+     "C1": {
+      "value": 0.0,
+      "ci_low": 0.0,
+      "ci_high": 0.0
+     },
+     "C3": {
+      "value": 3.0,
+      "ci_low": 3.0,
+      "ci_high": 3.0
+     },
+     "C4": {
+      "value": 3.61,
+      "ci_low": 3.51,
+      "ci_high": 3.71
+     },
+     "C5": {
+      "value": 4.94,
+      "ci_low": 4.58,
+      "ci_high": 5.32
+     },
+     "C2": {
+      "value": 1.16,
+      "ci_low": 1.09,
+      "ci_high": 1.23
+     }
+    },
+    "Tokens per invoice": {
+     "C1": 0,
+     "C3": 9501,
+     "C4": 11718,
+     "C5": 16058,
+     "C2": 5768
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/bench_seed_202/igpu90.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/igpu90.md"
+    }
+   ],
+   "command": "python -m evaluation.run_full --ledgers bench_seed_202 --ids-file evaluation/bench202_sample_ids.txt --tag igpu90",
+   "note": "A stratified sample of the evaluation subset, not the full run; read differences between configurations from the McNemar tests of the source."
+  },
   "huge_ledger": {
    "label": "measured",
    "question": "Do the results hold on a ledger of 500,000 invoices, and does the deployed path carry it?",

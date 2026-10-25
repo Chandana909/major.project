@@ -182,6 +182,7 @@ Definitions as implemented in `evaluation/metrics.py`. Every rate is a ratio of 
 | Policies in their own wording (17) | Six documents (three memoranda, three handbooks) none in the template's wording; one model call per document at temperature 0; code verification; outcome per value | `python -m evaluation.policy_llm_eval` |
 | Pilot (18) | 20 invoices of the development ledger: 1 × R1, 1 × R2, 1 × R3, 1 × R4, 1 × R5, 1 × R6, 1 × R7, 1 × R8, 1 × R9, 1 × R10, 1 × J1, 1 × J2, 1 × J3, 1 × J4, 1 × HN_TOLERANCE, 1 × HN_DAILY_LIMIT, 1 × HN_NEAR_LIMIT, 1 × HN_SIMILAR_NUMBER, 1 × HN_RECURRING, 1 ordinary | `python -m evaluation.run_pilot ... --tag pilot20` |
 | Benchmark sample (18) | 34 invoices of `bench_seed_101`, drawn with seed 0 by `evaluation/sample_ids.py`: 5 × J1, 5 × J2, 5 × J3, 5 × J4, 2 × HN_TOLERANCE, 2 × HN_DAILY_LIMIT, 2 × HN_NEAR_LIMIT, 2 × HN_SIMILAR_NUMBER, 2 × HN_RECURRING, 4 ordinary | `python -m evaluation.run_pilot ... --tag sample34` |
+| Benchmark sample on the integrated GPU (18.5) | 90 invoices of `bench_seed_202`, drawn with seed 0 by `evaluation/sample_ids.py`: 15 × J1, 15 × J2, 15 × J3, 15 × J4, 4 × HN_TOLERANCE, 4 × HN_DAILY_LIMIT, 4 × HN_NEAR_LIMIT, 4 × HN_SIMILAR_NUMBER, 4 × HN_RECURRING, 10 ordinary | `python -m evaluation.run_full ... --tag igpu90` |
 | Policy search (19) | 48 fixed questions over 27 passages: 16 in the policy's wording, 16 paraphrases used to choose the default ranker (dev), 16 never used for a choice (test) | `python -m evaluation.retrieval_eval --rewrite` |
 | History cap (20) | Every labelled invoice whose vendor history exceeds the cap: are the invoices its case depends on still shown? | `python -m evaluation.history_cap` |
 
@@ -766,6 +767,136 @@ Per invoice: route (E escalate, S sampled review, A approve), then each cited ru
 
 Not run yet. The configurations with a model are measured only on the pilot and the sample above. The full run (the 1,200-invoice evaluation subset of each benchmark ledger, about 1,200 times three to five model calls per ledger) needs a GPU or a hosted endpoint; the command is `python -m evaluation.run_full` (RESULTS.md, Section 10.1). Its reports appear here once they exist.
 
+### 18.5 Benchmark sample on the integrated GPU: 90 invoices of ledger 202 (sample)
+
+Source: [`bench_seed_202/igpu90.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/igpu90.md), [`bench_seed_202/C1-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C1-igpu90.jsonl).
+
+| Metric (value [95% interval]) | C1 | C2 | C3 | C4 | C5 |
+|---|---|---|---|---|---|
+| Macro-F1, rule-defined classes | – | 0.000 [0.000, 0.000] | – | – | – |
+| Macro-F1, judgement classes | 0.000 [0.000, 0.000] | 0.172 [0.115, 0.214] | 0.468 [0.400, 0.525] | 0.405 [0.321, 0.481] | 0.405 [0.321, 0.481] |
+| Macro-recall, judgement classes | 0.000 [0.000, 0.000] | 0.167 [0.103, 0.227] | 0.567 [0.486, 0.646] | 0.400 [0.321, 0.481] | 0.400 [0.321, 0.481] |
+| Recall, J1 near-duplicate | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.867 [0.667, 1.000] | 0.467 [0.214, 0.727] | 0.467 [0.214, 0.727] |
+| Recall, J2 structuring across days | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.400 [0.166, 0.667] | 0.133 [0.000, 0.333] | 0.133 [0.000, 0.333] |
+| Recall, J3 description against the PO | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| Recall, J4 goods-receipt remark | 0.000 [0.000, 0.000] | 0.667 [0.412, 0.909] | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] | 1.000 [1.000, 1.000] |
+| Invoice-level recall | 0.000 [0.000, 0.000] | 0.917 [0.840, 0.983] | 0.683 [0.569, 0.793] | 0.533 [0.410, 0.661] | 0.533 [0.410, 0.661] |
+| Invoice-level precision | – | 0.671 [0.557, 0.760] | 0.745 [0.629, 0.854] | 0.800 [0.667, 0.921] | 0.800 [0.667, 0.921] |
+| FPR, ordinary clean | 0.000 [0.000, 0.000] | 0.900 [0.667, 1.000] | 0.100 [0.000, 0.333] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] |
+| FPR, hard negatives | 0.000 [0.000, 0.000] | 0.900 [0.750, 1.000] | 0.650 [0.435, 0.857] | 0.400 [0.185, 0.625] | 0.400 [0.185, 0.625] |
+| Precision at 2% prevalence | – | 0.020 [0.018, 0.024] | 0.029 [0.020, 0.047] | 0.039 [0.023, 0.097] | 0.039 [0.023, 0.097] |
+| Citation correctness | – | 0.042 [0.020, 0.065] | 0.654 [0.559, 0.756] | 0.750 [0.593, 0.903] | 0.750 [0.593, 0.903] |
+| Model findings naming a violated rule | – | 0.030 [0.014, 0.046] | 0.493 [0.389, 0.592] | 0.600 [0.454, 0.757] | 0.600 [0.454, 0.757] |
+| Exact match of cited clauses | 0.333 [0.244, 0.433] | 0.033 [0.000, 0.078] | 0.433 [0.333, 0.533] | 0.511 [0.411, 0.611] | 0.511 [0.411, 0.611] |
+| Escalation precision | – | 0.481 [0.372, 0.583] | 0.709 [0.580, 0.818] | 0.775 [0.639, 0.895] | 0.778 [0.633, 0.900] |
+| Escalation recall | 0.000 [0.000, 0.000] | 0.867 [0.762, 0.957] | 0.867 [0.763, 0.956] | 0.689 [0.556, 0.818] | 0.622 [0.479, 0.765] |
+| Invoices in sampled review | 0 | 0 | 0 | 0 | 4 |
+| True anomalies in sampled review | 0 | 0 | 0 | 0 | 3 |
+| High or critical anomalies auto-approved | 45 | 6 | 6 | 14 | 14 |
+| LLM calls per invoice | 0.000 [0.000, 0.000] | 1.160 [1.090, 1.230] | 3.000 [3.000, 3.000] | 3.610 [3.510, 3.710] | 4.940 [4.580, 5.320] |
+| Tokens per invoice | 0 | 5768 | 9501 | 11718 | 16058 |
+
+| Comparison | Only first correct | Only second correct | p | Holm-adjusted p |
+|---|---|---|---|---|
+| C3-igpu90 vs C2-igpu90 | 37 | 1 | 2.84e-10 | 8.51e-10 |
+| C4-igpu90 vs C3-igpu90 | 11 | 4 | 0.118 | 0.237 |
+| C5-igpu90 vs C4-igpu90 | 0 | 0 | 1 | 1 |
+
+Per invoice: route (E escalate, S sampled review, A approve), then each cited rule marked ✓ if the invoice violates it and ✗ if not; (−k) is the number of findings the challenger removed, ⚠ a failed stage.
+
+| Invoice | Truth | Violated rule(s) | C1 | C2 | C3 | C4 | C5 |
+|---|---|---|---|---|---|---|---|
+| INV40944 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV41156 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✓2.2.2 | E ✓2.2.2 | E ✓2.2.2 |
+| INV41484 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✓2.2.2 ✗4.1.2 | E ✗4.1.2 (−1) | E ✗4.1.2 (−1) |
+| INV41743 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✓2.2.2 | A – (−1) | A – (−1) |
+| INV41773 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✓2.2.2 | E ✓2.2.2 | E ✓2.2.2 |
+| INV42098 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✓2.2.2 | E ✓2.2.2 | E ✓2.2.2 |
+| INV42319 | J1 | 2.2.2 | A – | A – ⚠ | E ✓2.2.2 | A – (−1) | A – (−1) |
+| INV42721 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗5.1.1 | E ✓2.2.2 | E ✓2.2.2 | E ✓2.2.2 |
+| INV42724 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✗4.1.2 | A – (−1) | A – (−1) |
+| INV43788 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 ✗4.1.1 ✗4.2.1 ✗4.3.1 | E ✓2.2.2 ✗4.1.2 | E ✗4.1.2 (−1) | E ✗4.1.2 (−1) |
+| INV43925 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.2 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 | E ✓2.2.2 ✗4.1.2 | E ✗4.1.2 (−1) | S ✗4.1.2 (−1) |
+| INV43982 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.5 ✗3.1.1 ✗3.1.2 ✗3.1.3 ✗4.1.1 ✗4.2.1 ✗4.4.1 ✗5.1.1 | E ✓2.2.2 ✗4.1.2 | E ✓2.2.2 (−1) | E ✓2.2.2 (−1) |
+| INV44763 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✓2.2.2 ✗4.1.2 | E ✗4.1.2 (−1) | E ✗4.1.2 (−1) |
+| INV44786 | J1 | 2.2.2 | A – | E ✗2.1.1 ✗2.1.3 ✗4.1.1 | E ✓2.2.2 ✗4.1.2 | E ✓2.2.2 (−1) | E ✓2.2.2 (−1) |
+| INV44874 | J1 | 2.2.2 | A – | A – | E ✓2.2.2 | E ✓2.2.2 | E ✓2.2.2 |
+| INV40720 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 ✗4.1.1 ✗4.2.1 | A – | A – | A – |
+| INV40799 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV40842 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV40873 | J2 | 4.1.2 | A – | A – | A – | A – | A – |
+| INV41891 | J2 | 4.1.2 | A – | A – ⚠ | A – | A – | A – |
+| INV42033 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.2 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗4.4.1 ✗5.1.1 | E ✗2.2.2 ✓4.1.2 | E ✓4.1.2 (−1) | E ✓4.1.2 (−1) |
+| INV42066 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✗2.2.2 ✓4.1.2 | E ✗2.2.2 (−1) | E ✗2.2.2 (−1) |
+| INV42458 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✗2.2.2 | E ✗2.2.2 | S ✗2.2.2 |
+| INV42518 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✗2.1.4 ✗2.1.5 ✗3.1.1 ✗3.1.2 ✗4.1.1 ✗4.2.1 ✗5.1.1 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV42783 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗5.1.1 | E ✓4.1.2 | A – (−1) | A – (−1) |
+| INV42797 | J2 | 4.1.2 | A – | A – ⚠ | E ✓4.1.2 | A – (−1) | A – (−1) |
+| INV42854 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.4 ✗4.2.1 ✗4.3.1 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV44465 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV44483 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 ✓4.1.2 | A – (−2) | A – (−2) |
+| INV44527 | J2 | 4.1.2 | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 ✓4.1.2 | E ✓4.1.2 (−1) | S ✓4.1.2 (−1) |
+| INV40146 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.2.1 | A – | A – | A – |
+| INV40276 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | A – | A – | A – |
+| INV40461 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV40580 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV40793 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV40908 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | A – | A – | A – |
+| INV41372 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV41449 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗3.1.1 ✗4.1.1 | A – | A – | A – |
+| INV41638 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV42378 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV42792 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV42801 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV42874 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 | A – | A – | A – |
+| INV43213 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗4.4.1 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV44253 | J3 | 2.1.5 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.2.1 | A – | A – | A – |
+| INV40223 | J4 | 2.1.4 | A – | E ✗2.1.1 ✓2.1.4 ✗4.2.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV40369 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✓2.1.4 ✗2.1.5 ✗4.1.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV40561 | J4 | 2.1.4 | A – | E ✗2.1.1 ✓2.1.4 ✗3.1.1 ✗4.2.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV40685 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.3 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV40900 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV41502 | J4 | 2.1.4 | A – | E ✗2.1.1 ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV41871 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗4.4.1 ✗5.1.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV42029 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.3 ✗4.1.1 ✗4.2.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV42171 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✓2.1.4 ✗2.1.5 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV42263 | J4 | 2.1.4 | A – | A ✗2.1.5 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV42846 | J4 | 2.1.4 | A – | E ✗2.1.1 ✓2.1.4 ✗4.2.1 ✗4.3.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV42940 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✓2.1.4 ✗3.1.1 ✗4.1.1 ✗4.2.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV43577 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✓2.1.4 ✗3.1.1 ✗3.1.2 ✗4.1.1 ✗4.2.1 ✗5.1.1 | E ✓2.1.4 ✗4.1.2 | E ✓2.1.4 (−1) | E ✓2.1.4 (−1) |
+| INV44015 | J4 | 2.1.4 | A – | E ✗2.1.1 ✓2.1.4 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗5.1.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV44425 | J4 | 2.1.4 | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✓2.1.4 ✗2.1.5 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗5.1.1 | E ✓2.1.4 | E ✓2.1.4 | E ✓2.1.4 |
+| INV43021 | HN_TOLERANCE | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | A – | A – | A – |
+| INV44473 | HN_TOLERANCE | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV44648 | HN_TOLERANCE | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.2.1 | A – | A – | A – |
+| INV44938 | HN_TOLERANCE | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.2.1 | A – | A – | A – |
+| INV43192 | HN_DAILY_LIMIT | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV43431 | HN_DAILY_LIMIT | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV44555 | HN_DAILY_LIMIT | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV44705 | HN_DAILY_LIMIT | – | A – | E ✗2.1.1 ✗2.1.2 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV42105 | HN_NEAR_LIMIT | – | A – | E ✗2.1.1 ✗3.1.1 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV44033 | HN_NEAR_LIMIT | – | A – | A – | A – | A – | A – |
+| INV44750 | HN_NEAR_LIMIT | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗4.4.1 ✗5.1.1 | A – | A – | A – |
+| INV44865 | HN_NEAR_LIMIT | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗4.1.2 | E ✗4.1.2 | S ✗4.1.2 |
+| INV40281 | HN_SIMILAR_NUMBER | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 ✗4.1.2 | E ✗4.1.2 (−1) | E ✗4.1.2 (−1) |
+| INV40666 | HN_SIMILAR_NUMBER | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV44019 | HN_SIMILAR_NUMBER | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗4.1.2 | E ✗4.1.2 | E ✗4.1.2 |
+| INV44900 | HN_SIMILAR_NUMBER | – | A – | A – ⚠ | E ✗2.2.2 | A – (−1) | A – (−1) |
+| INV41815 | HN_RECURRING | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV42243 | HN_RECURRING | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 | E ✗2.2.2 | E ✗2.2.2 |
+| INV43147 | HN_RECURRING | – | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.5 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗5.1.1 | E ✗2.2.2 ✗4.1.2 | E ✗2.2.2 (−1) | E ✗2.2.2 (−1) |
+| INV43900 | HN_RECURRING | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗2.2.2 ✗4.1.2 | A – (−2) | A – (−2) |
+| INV40935 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV41938 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV42091 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 ✗3.1.1 ✗4.1.1 ✗4.2.1 | A – | A – | A – |
+| INV42240 | ordinary | – | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✗2.1.4 ✗2.1.5 ✗3.1.1 ✗3.1.2 ✗4.1.1 ✗4.2.1 ✗5.1.1 | A – | A – | A – |
+| INV42388 | ordinary | – | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.3 ✗2.1.4 ✗2.1.5 ✗3.1.1 ✗4.1.1 ✗4.2.1 ✗4.3.1 ✗5.1.1 | A – | A – | A – |
+| INV42418 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV43389 | ordinary | – | A – | A – ⚠ | A – | A – | A – |
+| INV43529 | ordinary | – | A – | E ✗2.1.1 ✗2.1.2 ✗2.1.5 ✗3.1.1 ✗4.2.1 ✗4.3.1 | A – | A – | A – |
+| INV43552 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 | A – | A – | A – |
+| INV43669 | ordinary | – | A – | E ✗2.1.1 ✗2.1.3 | E ✗4.1.2 | A – (−1) | A – (−1) |
+
 ## 19. Policy search
 
 Source: [`retrieval.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/retrieval.md).
@@ -895,7 +1026,18 @@ The result files of the repository, with their public raw addresses (`.jsonl` fi
 - [`auditiq/results/bench_seed_101/sample34.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_101/sample34.md)
 - [`auditiq/results/bench_seed_202/C0-IF.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C0-IF.jsonl)
 - [`auditiq/results/bench_seed_202/C0-SVM.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C0-SVM.jsonl)
+- [`auditiq/results/bench_seed_202/C1-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C1-igpu90.jsonl)
+- [`auditiq/results/bench_seed_202/C1-igpu90.meta.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C1-igpu90.meta.json)
 - [`auditiq/results/bench_seed_202/C1.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C1.jsonl)
+- [`auditiq/results/bench_seed_202/C2-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C2-igpu90.jsonl)
+- [`auditiq/results/bench_seed_202/C2-igpu90.meta.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C2-igpu90.meta.json)
+- [`auditiq/results/bench_seed_202/C3-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C3-igpu90.jsonl)
+- [`auditiq/results/bench_seed_202/C3-igpu90.meta.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C3-igpu90.meta.json)
+- [`auditiq/results/bench_seed_202/C4-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C4-igpu90.jsonl)
+- [`auditiq/results/bench_seed_202/C4-igpu90.meta.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C4-igpu90.meta.json)
+- [`auditiq/results/bench_seed_202/C5-igpu90.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C5-igpu90.jsonl)
+- [`auditiq/results/bench_seed_202/C5-igpu90.meta.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/C5-igpu90.meta.json)
+- [`auditiq/results/bench_seed_202/igpu90.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/igpu90.md)
 - [`auditiq/results/bench_seed_202/metrics.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_202/metrics.json)
 - [`auditiq/results/bench_seed_303/C0-IF.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_303/C0-IF.jsonl)
 - [`auditiq/results/bench_seed_303/C0-SVM.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_303/C0-SVM.jsonl)

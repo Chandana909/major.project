@@ -10,14 +10,15 @@ number comes from, and the script that wrote that file. Paths are relative to
 | Label | Meaning | How to write it in the paper |
 |---|---|---|
 | **Measured** | A script of the repository produced it on the data stated. | As a result. |
-| **Pilot** or **sample** | Measured, but on a small sample (20 or 34 invoices). | As a pilot: say the sample size; claim no difference between configurations. |
+| **Pilot** or **sample** | Measured, but on a small sample (20, 34 or 90 invoices). | As a pilot: say the sample size; claim no difference between configurations. |
 | **Expected** | A target fixed before measurement. | Only in a table of expected values, never as a result. |
 
 Status: complete, 18 October 2026. Every result below was produced by the code
 in this repository, and every result that needs no model was reproduced end to
 end from regenerated datasets on that day (Section 13). Ledgers are synthetic
 (Section 2). The language-model stages have been run only on samples (20 and
-34 invoices), with a local 7B model on a laptop CPU (Section 7). On 21 October
+34 invoices on the laptop's CPU, 90 on its integrated GPU), with a local 7B model
+(Section 7). On 21 October
 every measurement that needs no model was repeated on a ledger of 500,000
 invoices (Section 5.1).
 
@@ -51,7 +52,8 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
    remains the long version, with three authors listed.
 4. Optional: run C2 to C5 on the full benchmark ledgers. This needs a GPU or a
    hosted model endpoint (Section 7). Until then the paper reports the pilot
-   and the sample, and gives expected values for the full run (Section 10).
+   and the two samples (34 and 90 invoices; Sections 7.2 and 7.3), and gives
+   expected values for the full run (Section 10).
 5. Qualify one sentence in both papers (conference `main.tex`, Section on
    scalability; `auditiq_paper.tex`, Section "Scalability"): the cost per
    invoice is unchanged from 5,000 to 40,000 invoices, so time is linear over
@@ -87,7 +89,7 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 7 | And at a realistic anomaly rate (2.1%)? | F1 0.833 against 0.211 and 0.429. | Measured | 4 |
 | 8 | How fast is the control stage? | About 18 µs per invoice on 5,000 to 40,000 invoices, 31.7 µs on 500,000 (the vendors' histories are longer); 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
 | 9 | Can a model read a policy written in its own words? | 6 documents, 84 values: 80 proposed correctly; the code check verified 56, held back 24 right ones, caught 2 wrong ones and passed 2. | Measured (one 7B model) | 6 |
-| 10 | How do the language-model stages do? | Benchmark sample of 34 invoices: the agents (C3) found 12 of 20 judgement anomalies (0.600); 0.375 of their findings name a violated rule (0.471 with the challenger); the single prompt (C2) found 4 of 20 and 4 of its 128 findings name a violated rule. 3 to 5 model calls per invoice. No difference is significant on 34 invoices. | Sample | 7 |
+| 10 | How do the language-model stages do? | Benchmark sample of 90 invoices (ledger 202, integrated GPU): the agents (C3) found 34 of 60 judgement anomalies (0.567); 0.493 of their findings name a violated rule (0.600 with the challenger); the single prompt (C2) flagged 9 of 10 ordinary invoices and 0.030 of its findings name a violated rule. **C3 is better than C2 on this sample (37 invoices right only under C3, 1 only under C2; Holm-adjusted p < 0.001)**; the challenger's gain is not significant. The 34-invoice sample of ledger 101 agrees. 3 to 5 model calls per invoice. | Sample | 7 |
 | 11 | Does policy search find the right passage? | Hybrid ranking after question rewriting: rank-1 accuracy 0.625 and top-3 accuracy 0.938 on held-out paraphrases (16 questions). | Measured (small) | 8 |
 | 12 | What does the deployed system produce on each ledger? | Each ledger loaded from an Excel workbook and audited through the store: on every benchmark ledger 300 findings, every rule-defined anomaly found, 240 invoices escalated (90 critical, 150 high), no finding on any hard negative or ordinary invoice. | Measured | 3.6 |
 | 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage costs 1.96 times as much per invoice as on 20,000 invoices, because two controls read the vendor's history. | Measured | 5.1 |
@@ -581,7 +583,71 @@ estimates for the benchmark):
 - **Model calls per invoice agree with X4**: 3.00 for C3 and 3.74 for C4 (three agents, plus the challenger when an agent raised a finding).
 - The model time in the source file includes the hours the laptop slept; do not use its totals. Calls and tokens per invoice are unaffected. Without the invoices interrupted by the sleep, the median time per call was C2 4.8, C3 3.8, C4 3.6 and C5 3.2 minutes.
 
-### 7.3 Copilot (one check, not an evaluation)
+### 7.3 Benchmark sample on the integrated GPU: 90 invoices of ledger 202 (Sample)
+
+Source: `results/bench_seed_202/igpu90.md` (per-invoice records
+`C1-igpu90.jsonl` to `C5-igpu90.jsonl`),
+`python -m evaluation.run_full --ledgers bench_seed_202 --ids-file evaluation/bench202_sample_ids.txt --tag igpu90`.
+The sample (`evaluation/bench202_sample_ids.txt`, drawn by
+`python -m evaluation.sample_ids` with seed 0) holds 15 invoices of each
+judgement class J1 to J4, 4 of each of the five hard-negative types and 10
+ordinary invoices, from a ledger on which no prompt was ever tried. The prompts
+are the frozen ones of Section 7.2 (the runner refuses changed prompts).
+
+Run on 21 October 2026 with the same model (`qwen2.5:7b-ctx12k`) on the
+laptop's integrated GPU through Ollama's Vulkan backend (OPERATIONS.md,
+Section 5): about 12.5 hours for all five configurations, one pause of 16
+minutes for another measurement, no failed call in C3 to C5.
+
+| Measure | C1 | C2 | C3 | C4 | C5 |
+|---|---|---|---|---|---|
+| Judgement anomalies found (macro-recall, 60 invoices) | 0.000 | 0.167 | **0.567** [0.486, 0.646] | 0.400 [0.321, 0.481] | 0.400 [0.321, 0.481] |
+| J1 near-duplicate (of 15) | 0 | 0 | 13 | 7 | 7 |
+| J2 structuring across days (of 15) | 0 | 0 | 6 | 2 | 2 |
+| J3 description against the PO (of 15) | 0 | 0 | 0 | 0 | 0 |
+| J4 goods-receipt remark (of 15) | 0 | 10 | 15 | 15 | 15 |
+| Invoice-level recall | 0.000 | 0.917 | 0.683 | 0.533 | 0.533 |
+| Invoice-level precision | – | 0.671 | 0.745 | 0.800 | 0.800 |
+| Hard negatives flagged (of 20) | 0 | 18 | 13 | 8 | 8 |
+| Ordinary invoices flagged (of 10) | 0 | 9 | 1 | 0 | 0 |
+| Model findings naming a violated rule | – | 0.030 | 0.493 [0.389, 0.592] | 0.600 [0.454, 0.757] | 0.600 [0.454, 0.757] |
+| Citation correctness (findings on anomalous invoices) | – | 0.042 | 0.654 | 0.750 | 0.750 |
+| Escalation precision / recall | – / 0.000 | 0.481 / 0.867 | 0.709 / 0.867 | 0.775 / 0.689 | 0.778 / 0.622 |
+| Invoices sent to sampled review | 0 | 0 | 0 | 0 | 4 (3 true anomalies) |
+| High or critical anomalies auto-approved (of 45) | 45 | 6 | 6 | 14 | 14 |
+| Failed stages | 0 | 5 | 0 | 0 | 0 |
+| Model calls per invoice | 0 | 1.16 | 3.00 | 3.61 | 4.94 |
+| Tokens per invoice | 0 | 5,768 | 9,501 | 11,718 | 16,058 |
+
+McNemar's exact test on per-invoice correctness, Holm-adjusted: **C3 against
+C2, 37 invoices right only under C3 and 1 only under C2, p = 8.5 × 10⁻¹⁰**;
+C4 against C3, 11 and 4, p = 0.237; C5 against C4, no difference.
+
+What the sample shows (observations on a sample of one ledger, not estimates
+for the benchmark):
+
+- **The agents with the controls (C3) are better than one prompt (C2)**, and
+  this is the first difference between model configurations that is
+  significant. C2 flags almost every invoice (9 of 10 ordinary, 18 of 20 hard
+  negatives), and 0.030 of its findings name a rule the invoice violates.
+- **The agents found 34 of the 60 judgement anomalies** (0.567, against 0.600
+  on the 34-invoice sample): every goods-receipt remark, 13 of 15
+  near-duplicates, 6 of 15 structuring cases and **no description mismatch**
+  (J3, 0 of 15; 1 of 5 before). Below the expected 0.70 (X2).
+- **0.493 of the agents' findings name a violated rule** (0.375 on the smaller
+  sample), 0.600 after the challenger: still far below the expected 0.90 (X3).
+- **The challenger trades recall for precision again**: false alarms on hard
+  negatives 13 to 8 of 20 and on ordinary invoices 1 to 0, but near-duplicates
+  found 13 to 7 and high or critical anomalies auto-approved 6 to 14. Not
+  significant on 90 invoices (p = 0.237).
+- **Confidence (C5) changed no decision but four**: it sent 4 invoices to
+  sampled review, 3 of them true anomalies, as on the 34-invoice sample.
+- **Model calls per invoice agree with X4** (3.00 for C3, 3.61 for C4, 4.94
+  for C5). Model time in the source file is summed over calls that waited for
+  each other (the three agents run at once on a server that answers one call
+  at a time), so it exceeds the time that passed; use the 12.5 hours above.
+
+### 7.4 Copilot (one check, not an evaluation)
 
 Source: `results/llm_checks.log`. Asked why an escalated invoice of the large
 ledger was flagged, the copilot first named the wrong rule (retrieval by the
@@ -694,7 +760,7 @@ a model audits.
 
 ## 11. Limitations to state in the paper
 
-- The language-model configurations C2 to C5 are measured only on samples of 20 and 34 invoices, with one 7B model on a laptop CPU.
+- The language-model configurations C2 to C5 are measured only on samples of 20, 34 and 90 invoices, with one 7B model on a laptop (CPU and integrated GPU); only C3 against C2 is significant.
 - The controls and their ground truth implement the same written rules; perfect scores on R1 to R10 check the implementation, not whether the rules catch fraud.
 - The ledgers are synthetic, generated by the authors.
 - Pattern reading accepts only the template's wording; the model-assisted path was measured on six short documents written by the authors, and two wrong values passed its check.
