@@ -6,6 +6,8 @@ import { SceneFrame } from "./SceneFrame";
 
 export type { Bar };
 
+const BARS_CENTRE: [number, number, number] = [0, 2.5, -2];     // the bars stand on an arc behind the origin
+
 export function BarField({ bars, onHover }: { bars: Bar[]; onHover?: (b: Bar | null) => void }) {
   const placed = useMemo(() => barLayout(bars), [bars]);
   return (
@@ -38,7 +40,7 @@ export function PolicyBars({ bars }: { bars: Bar[] }) {
   const [hover, setHover] = useState<Bar | null>(null);
   const placed = useMemo(() => barLayout(bars), [bars]);
   return (
-    <SceneFrame label="Cost of frozen thresholds under fourteen policy changes" height={420} camera={[0, 6, 11]} autoRotate={false}>
+    <SceneFrame label="Cost of frozen thresholds under fourteen policy changes" height={420} camera={[0, 6, 12]} target={BARS_CENTRE} autoRotate={false}>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, -2]}>
         <planeGeometry args={[26, 16]} />
         <meshStandardMaterial color="#0b1224" roughness={1} />

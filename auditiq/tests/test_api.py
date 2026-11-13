@@ -9,11 +9,13 @@ import json
 import time
 import zipfile
 
+import numpy as np
 import pytest
 from fastapi.testclient import TestClient
+from test_policy_docs import FakeEmbedder
 from test_policy_llm import client_for, right_reply
 
-from auditiq import api, db, ledger_import, service
+from auditiq import analytics, api, db, ledger_import, retrieval, service, stream
 from auditiq.graph import PRESETS
 from auditiq.policy import POLICY_DIR, load_policy
 from auditiq.policy_pdf import make_sample_pdfs
@@ -65,17 +67,79 @@ def test_status_endpoints_describe_the_store(client):
     assert client.get("/api/openapi.json").json()["info"]["title"] == "AuditIQ API"
 
 
+def test_the_analytics_and_the_rings_describe_the_ledger(client):
+    overview = client.get("/api/overview").json()
+    assert overview["coverage"]["configurations"] == {"C1": 60}
+    assert (overview["coverage"]["controls_run"], overview["coverage"]["judgement_run"]) == (60, 0)
+    assert overview["coverage"]["answer_key"]["false_alarms"] == 0
+    assert overview["activity"] and overview["activity"][0]["stage"] == "scoring"     # the newest step first
+    out = client.get("/api/analytics").json()
+    assert out["invoices"] == 1200 and sum(m["invoices"] for m in out["monthly"]) == 1200
+    assert out["benford"]["n"] == 1200 and len(out["benford"]["first"]["digits"]) == 9
+    assert [n["role"] for n in out["amounts"]["limits"]] == ["Manager", "Senior Manager", "Director", "CFO"]
+    found = client.get("/api/rings", params={"limit": 3}).json()
+    assert len(found["rings"]) <= 3 and found["identity"]["vendors"] == 60
+    assert {n["ring"] for n in found["nodes"]} <= {r["id"] for r in found["rings"]}
+    assert found["tests"]["pairs_tested"] > 0 and found["tests"]["fdr"] == 0.01
+    assert client.get("/api/rings", params={"limit": "many"}).status_code == 422
+
+
+def test_the_analyses_are_kept_until_the_store_changes(client, monkeypatch):
+    calls = []
+    real = analytics.ledger_analytics
+    monkeypatch.setattr(analytics, "ledger_analytics", lambda conn: calls.append(1) or real(conn))
+    first = client.get("/api/analytics").json()
+    assert client.get("/api/analytics").json() == first and len(calls) == 1               # kept
+    reviewed = client.get("/api/overview").json()["reviewed"]
+    item = client.get("/api/queue").json()["items"][0]
+    assert client.post(f"/api/results/{item['result_id']}/decision", json={"decision": "approve", "reviewer": "A. Auditor"}).status_code == 200
+    client.get("/api/analytics")
+    assert len(calls) == 2                                                                  # a decision changes the store
+    assert client.get("/api/overview").json()["reviewed"] == reviewed + 1
+
+
+def test_the_policy_graph_and_asking_it(client):
+    graph = client.get("/api/policy/graph").json()
+    assert graph["version"] == "2.5" and graph["counts"]["clause"] == 16 and graph["counts"]["role"] == 4
+    assert {v["version"] for v in graph["versions"]} == {"2.5", "2.6"}
+    assert client.get("/api/policy/graph", params={"version": "2.6"}).json()["version"] == "2.6"
+    assert client.get("/api/policy/graph", params={"version": "9.9"}).status_code == 404
+    asked = client.get("/api/policy/graph/ask", params={"q": "Who has to approve an invoice of ₹30 lakh?"}).json()
+    assert asked["recognised"]["amounts"] == [3000000.0]
+    assert asked["facts"][0]["data"] == {"amount": 3000000.0, "lowest": "CFO"} and asked["facts"][0]["source"].startswith("5.1 ")
+    assert asked["passages"][0]["section"].startswith("5.1 ") and "role:CFO" in asked["nodes"]
+    assert client.get("/api/policy/graph/ask", params={"q": "  "}).status_code == 400
+    job = client.post("/api/copilot/ask", json={"question": "What changed between version 2.5 and 2.6?"}).json()
+    done = wait(client, job)
+    assert done["status"] == "done" and done["result"]["answer"] is None                  # no model: facts and passages
+    assert len([f for f in done["result"]["facts"] if f["kind"] == "change"]) == 3
+
+
+def test_the_queue_counts_every_level_and_lists_one_level(client):
+    whole = client.get("/api/queue", params={"limit": 5}).json()
+    assert whole["total"] == 40 and len(whole["items"]) == 5                  # the list is cut, the counts are not
+    assert {lv: x["invoices"] for lv, x in whole["levels"].items()} == {"CRITICAL": 20, "HIGH": 20}
+    high = client.get("/api/queue", params={"limit": 2000, "level": "HIGH"}).json()
+    assert high["total"] == len(high["items"]) == 20 and {i["risk_level"] for i in high["items"]} == {"HIGH"}
+    assert high["levels"] == whole["levels"]
+    assert client.get("/api/queue", params={"level": "SEVERE"}).status_code == 422
+
+
 def test_the_review_flow_records_a_decision(client):
     queue = client.get("/api/queue").json()
     assert queue["total"] == 40 and len(queue["items"]) == 40
     first = queue["items"][0]
     assert first["rc"] >= queue["items"][-1]["rc"]                              # highest risk first
+    assert all(item["rules"] for item in queue["items"])                      # each waits for a broken rule
+    assert set(queue["rules"]) == {c for item in queue["items"] for c in item["rules"]}
+    assert all(queue["rules"].values())                                       # titled from the active policy
 
     detail = client.get(f"/api/invoices/{first['invoice_id'].lower()}").json()
     assert detail["records"]["invoice"]["invoice_id"] == first["invoice_id"]
     assert detail["result"]["workflow_status"] == "PENDING_REVIEW" and detail["result"]["pack"]["flags"]
     assert [t["stage"] for t in detail["result"]["trail"]] == ["extraction", "controls", "scoring"]
     assert "benchmark_label" not in detail
+    assert detail["emails"] == []                   # no e-mail has arrived for it
     assert client.get(f"/api/invoices/{first['invoice_id']}?with_label=true").json()["benchmark_label"]["label"] == "anomalous"
 
     result_id = detail["result"]["result_id"]
@@ -90,6 +154,119 @@ def test_the_review_flow_records_a_decision(client):
     assert client.post("/api/results/999999/decision", json={"decision": "approve", "reviewer": "A"}).status_code == 404
     trail = client.get(f"/api/invoices/{first['invoice_id']}").json()["result"]["trail"]
     assert trail[-1]["stage"] == "review" and trail[-1]["actor"] == "A. Auditor"
+
+
+def test_the_stream_status_says_when_no_broker_is_configured(client, monkeypatch):
+    monkeypatch.delenv("AUDITIQ_KAFKA_BOOTSTRAP", raising=False)
+    assert client.get("/api/stream").json() == {"configured": False, "topics": []}
+
+
+def test_the_console_says_what_runs_and_the_stream_needs_a_broker(client, monkeypatch):
+    monkeypatch.delenv("AUDITIQ_KAFKA_BOOTSTRAP", raising=False)
+    system = client.get("/api/system").json()
+    assert system["kafka"] == {"configured": False, "connected": False}
+    assert system["model"] == {"configured": False, "reachable": False}
+    assert system["policy_version"] == "2.5" and system["store"]["ledger"]
+    embeddings = system["embeddings"]
+    assert (embeddings["configured"], embeddings["model"], embeddings["embedded"]) == (False, None, 0) and embeddings["passages"] > 0
+    for answer in (client.post("/api/stream/publish", json={"source": "ledger", "name": "small"}),
+                   client.post("/api/stream/work", json={}),
+                   client.get("/api/stream/peek", params={"kind": "invoice"})):
+        assert answer.status_code == 409 and "AUDITIQ_KAFKA_BOOTSTRAP" in answer.json()["detail"]
+    assert client.post("/api/stream/publish", json={"source": "ftp", "name": "x"}).status_code == 422
+    assert client.post("/api/stream/work", json={"kinds": ["invoice"], "idle_exit": 0}).status_code == 422
+    assert client.get("/api/stream/log").json() == {"messages": []}
+
+
+def test_the_stream_sources_are_the_files_on_the_server(client, monkeypatch, tmp_path):
+    ledger = tmp_path / "data" / "ledger_a"
+    ledger.mkdir(parents=True)
+    (ledger / "invoices.csv").write_text("invoice_id\n", encoding="utf-8")
+    (ledger / "manifest.json").write_text(json.dumps({"counts": {"invoices": 12, "vendors": 3}}), encoding="utf-8")
+    (tmp_path / "data" / "notes").mkdir()                                     # no invoices: not a ledger
+    (tmp_path / ".auditiq").mkdir()
+    (tmp_path / ".auditiq" / "mail.mbox").write_bytes(b"From a@b\n")
+    monkeypatch.setattr(api, "PROJECT_ROOT", tmp_path)
+    assert client.get("/api/stream/sources").json() == {
+        "ledgers": [{"name": "ledger_a", "invoices": 12, "vendors": 3}], "mailboxes": [{"name": "mail.mbox", "bytes": 9}], "policies": []}
+    assert stream.source_path(tmp_path, "ledger", "ledger_a") == ledger
+    for name in ("notes", "../ledger_a", "ledger_b"):                          # only what is listed
+        with pytest.raises(ValueError, match="no ledger named"):
+            stream.source_path(tmp_path, "ledger", name)
+
+
+def test_a_question_is_traced_through_every_step_of_retrieval(client, library, monkeypatch):
+    question = "Who has to approve an invoice of ₹30 lakh?"
+    trace = client.get("/api/rag/trace", params={"q": question, "k": 4}).json()
+    assert (trace["mode"], trace["embedding_model"], trace["query_point"], trace["explained"]) == ("lexical", None, None, [])
+    assert trace["recognised"]["amounts"] == [3000000.0] and trace["facts"][0]["data"]["lowest"] == "CFO"
+    assert {p["version"] for p in trace["passages"]} == {"2.5", None}           # the active version, and documents of every version
+    assert sorted(p["lexical_rank"] for p in trace["passages"]) == list(range(1, len(trace["passages"]) + 1))
+    assert "dense" not in trace["passages"][0]
+    graph = [c for c in trace["context"] if c["from"] == "graph"]
+    assert graph and trace["context"][:len(graph)] == graph and any(c["section"].startswith("5.1 ") for c in graph)
+    assert len(trace["context"]) == max(4, len(graph) + 2)                      # the graph's passages first, then two retrieved
+    assert client.get("/api/rag/trace", params={"q": "  "}).status_code == 400
+
+    conn = db.connect(library)                                                  # with embeddings: dense, fused and drawn
+    retrieval.embed_chunks(conn, FakeEmbedder())
+    conn.close()
+    monkeypatch.setattr(retrieval.EndpointEmbedder, "from_env", classmethod(lambda cls: FakeEmbedder()))
+    dense = client.get("/api/rag/trace", params={"q": "Can a supplier bill us on a weekend?"}).json()
+    assert (dense["mode"], dense["embedding_model"], dense["dense_error"]) == ("dense", "fake-embedder", None)
+    best = min(dense["passages"], key=lambda p: p["dense_rank"])
+    assert any(w in best["text"].lower() for w in ("saturday", "sunday", "weekend"))
+    for p in dense["passages"]:
+        assert p["hybrid"] == pytest.approx(1 / (60 + p["lexical_rank"]) + 1 / (60 + p["dense_rank"]), abs=1e-6)
+        assert len(p["point"]) == 3 and max(abs(x) for x in p["point"]) <= 1
+    assert len(dense["query_point"]) == 3 and len(dense["explained"]) == 3
+
+    class Down(FakeEmbedder):
+        def embed(self, texts, kind="document"):
+            raise RuntimeError("connection refused")
+
+    monkeypatch.setattr(retrieval.EndpointEmbedder, "from_env", classmethod(lambda cls: Down()))
+    down = client.get("/api/rag/trace", params={"q": "Can a supplier bill us on a weekend?"}).json()
+    assert down["mode"] == "lexical" and down["dense_error"] == "RuntimeError: connection refused"   # wording alone
+
+
+def test_the_knowledge_layer_lists_documents_passages_and_the_registry(client, library):
+    k = client.get("/api/knowledge").json()
+    assert {"2.5", "2.6"} <= {d["version"] for d in k["documents"]}
+    assert sum(d["passages"] for d in k["documents"]) == len(k["passages"])
+    assert (k["embedding_model"], k["explained"]) == (None, []) and not any("point" in p for p in k["passages"])
+    assert set(k["registry"]) == {"2.5", "2.6"} and len(k["registry"]["2.5"]) == 16
+    limits = [k["registry"][v]["5.1.1"]["params"]["approval_limits"]["Manager"] for v in ("2.5", "2.6")]
+    assert limits == [100000, 150000]
+    rules = [p for p in k["passages"] if p["kind"] == "clause"]
+    assert rules and all(p["verified"] for p in rules)
+    conn = db.connect(library)
+    retrieval.embed_chunks(conn, FakeEmbedder())
+    conn.close()
+    mapped = client.get("/api/knowledge").json()
+    assert mapped["embedding_model"] == "fake-embedder" and len(mapped["explained"]) == 3
+    assert all(len(p["point"]) == 3 and max(abs(x) for x in p["point"]) <= 1 for p in mapped["passages"])
+
+
+def test_the_ai_layer_describes_the_agents_and_what_the_stored_runs_cost(client):
+    ai = client.get("/api/ai").json()
+    assert ai["policy_version"] == "2.5" and ai["model"] is None
+    assert {a["name"]: a["judges"] for a in ai["agents"]} == {
+        "math_approvals": ["2.1.4", "2.1.5"], "tax_identity": ["2.2.2"], "vendor_intelligence": ["4.1.2"]}
+    assert set(ai["configurations"]) == set(PRESETS) and ai["configurations"]["C5"]["reruns"] == 3
+    controls = next(s for s in ai["stages"] if s["stage"] == "controls")
+    assert (controls["steps"], controls["model_calls"], controls["mean_latency_ms"]) == (60, 0, None)
+    assert ai["traced"] == []                                                   # only the controls ran: nothing to replay
+
+
+def test_the_projection_keeps_three_coordinates():
+    matrix = np.random.default_rng(1).normal(size=(10, 8))
+    coords, projected, explained = retrieval.projection(matrix, matrix[:2])
+    assert coords.shape == (10, 3) and np.abs(coords).max() == pytest.approx(1.0)
+    assert np.allclose(projected, coords[:2])                                   # the same projection for added vectors
+    assert explained == sorted(explained, reverse=True) and 0 < sum(explained) <= 1
+    two, _, _ = retrieval.projection(matrix[:2])                                # fewer than three components
+    assert two.shape == (2, 3) and np.allclose(two[:, 1:], 0)
 
 
 def test_invoices_are_found_and_audited_on_request(client):
@@ -109,7 +286,7 @@ def test_invoices_are_found_and_audited_on_request(client):
     assert client.get("/api/jobs/nope").status_code == 404
 
 
-def test_a_policy_document_is_previewed_adopted_and_applied_to_the_ledger(client):
+def test_a_policy_document_is_previewed_adopted_and_applied_to_the_ledger(client, library):
     refused = client.post("/api/policy/preview", files={"file": ("notes.pdf", b"not a pdf", "application/pdf")})
     assert refused.status_code == 415
     preview = client.post("/api/policy/preview",
@@ -125,14 +302,31 @@ def test_a_policy_document_is_previewed_adopted_and_applied_to_the_ledger(client
     adopted = client.post("/api/policy/adopt", json={"upload_id": body["upload_id"], "activate": True})
     assert adopted.status_code == 200 and adopted.json()["adopted"] and adopted.json()["active"]
     policy = client.get("/api/policy").json()
-    assert policy["active"] == "3.06" and policy["results_under_other_versions"] == 60
+    assert policy["active"] == "3.06"
     limits = next(r for r in policy["rules"] if r["rule"] == "5.1.1")["params"]["approval_limits"]
     assert limits["Manager"] == 50000
+    # Each invoice is judged by the version in force on its date. 3.06 takes effect on 1 April 2026, after every
+    # invoice of this ledger: the 60 results under 2.5 stand.
+    assert [(t["version"], t["from"], t["until"], t["invoices"]) for t in policy["timeline"]] == [
+        ("2.5", "2025-04-01", "2026-04-01", 1200), ("3.06", "2026-04-01", None, 0)]
+    assert (policy["under_other_version"], policy["unaudited"]) == (0, 1140)
 
+    conn = db.connect(library)                                  # ten audited invoices, now dated after the change
+    later = [r[0] for r in conn.execute("SELECT invoice_id FROM latest_results ORDER BY invoice_id LIMIT 10")]
+    conn.executemany("UPDATE invoices SET date = ? WHERE invoice_id = ?", [("2026-04-15", i) for i in later])
+    conn.commit()
+    conn.close()
     state = wait(client, client.post("/api/policy/apply").json(), seconds=300)
-    assert state["status"] == "done" and state["result"]["invoices"] == 1200 and state["done"] == 1200
-    assert client.get("/api/policy").json()["results_under_other_versions"] == 0
+    result = state["result"]
+    assert state["status"] == "done" and (result["invoices"], result["unchanged"]) == (1150, 50)
+    assert [(r["policy_version"], r["invoices"]) for r in result["runs"]] == [("2.5", 1140), ("3.06", 10)]
+    policy = client.get("/api/policy").json()
+    assert (policy["under_other_version"], policy["unaudited"]) == (0, 0)
+    assert [t["invoices"] for t in policy["timeline"]] == [1190, 10]
+    again = wait(client, client.post("/api/policy/apply").json(), seconds=300)["result"]
+    assert (again["invoices"], again["unchanged"]) == (10, 1190)              # only the active version's own invoices
     assert client.post("/api/policy/activate", json={"version": "2.5"}).json() == {"active": "2.5"}
+    assert client.get("/api/policy").json()["under_other_version"] == 10     # 3.06 governs nothing any more
     assert client.post("/api/policy/activate", json={"version": "9.9"}).status_code == 404
 
 
@@ -281,6 +475,8 @@ def test_the_built_frontend_is_served_with_client_side_routes(library, tmp_path,
     assert "<title>AuditIQ</title>" in web.get("/").text
     assert "<title>AuditIQ</title>" in web.get("/review/INV40001").text          # a route of the single-page app
     assert web.get("/assets/app.js").text == "console.log('ok')"
+    assert "immutable" in web.get("/assets/app.js").headers["cache-control"]          # named by their content's hash
+    assert web.get("/").headers["cache-control"] == "no-cache"                         # a new build reaches the browser
     assert web.get("/favicon.svg").text == "<svg/>"
     assert web.get("/api/nothing-here").status_code == 404
     assert "AuditIQ" not in web.get("/../../.env").text or web.get("/../../.env").status_code in (200, 404)
@@ -343,3 +539,23 @@ def test_the_api_simulates_a_previewed_document_as_a_job(client, tmp_path):
     refused = client.post("/api/policy/simulate", json={"upload_id": "not-an-id"})
     assert refused.status_code == 400
 
+
+
+def test_the_audited_ledger_is_served_as_a_graph_and_asked_questions(client):
+    view = client.get("/api/case-graph").json()
+    assert view["counts"]["invoices_with_findings"] == 60 and view["focus"] is None and view["policy_version"] == "2.5"
+    focused = client.get("/api/case-graph", params={"focus": "5.1.1"}).json()
+    assert focused["focus_kind"] == "rule" and any(n["kind"] == "vendor" for n in focused["nodes"])
+    invoice = next(i for i in client.get("/api/queue", params={"limit": 1}).json()["items"])["invoice_id"]
+    one = client.get("/api/case-graph", params={"focus": invoice}).json()
+    assert one["focus_kind"] == "invoice" and {"vendor", "rule", "invoice"} <= {n["kind"] for n in one["nodes"]}
+    assert client.get("/api/case-graph", params={"focus": "nobody"}).status_code == 404
+
+    asked = client.get("/api/case-graph/ask", params={"q": "How many invoices break rule 5.1.1?"}).json()
+    assert asked["facts"][0]["kind"] == "rule" and asked["facts"][0]["data"]["flagged"] == focused["nodes"][0]["invoices"]
+    assert client.get("/api/case-graph/ask", params={"q": f"Why was {invoice} flagged?"}).json()["facts"][0]["kind"] == "invoice"
+    assert client.get("/api/case-graph/ask", params={"q": "  "}).status_code == 400
+
+    done = wait(client, client.post("/api/copilot/ask", json={"question": f"Why was {invoice} flagged?"}).json())
+    assert done["status"] == "done" and done["result"]["answer"] is None                  # no model: the facts are the answer
+    assert done["result"]["case_facts"][0]["kind"] == "invoice" and f"i:{invoice}" in done["result"]["case_nodes"]

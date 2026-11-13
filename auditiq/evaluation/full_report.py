@@ -509,7 +509,9 @@ def application_section() -> list[str]:
         "## 14. Policy change in the application", "", src("application_demo.json", "application_demo.md"), "",
         f"Ledger `{r['ledger']}` in a {r['store']} store, audited with the controls under version 2.5; then the strict "
         f"policy document is adopted as version {r['adopted_version']} and every invoice is audited again. No file of "
-        "the system is edited in between.", "",
+        "the system is edited in between. The second audit names the version, so every invoice is judged under it as "
+        "if it had always applied: in the application each invoice is judged by the version in force on its date, and "
+        "this version takes effect after every invoice of the ledger (14.1).", "",
         *md(["", "Version 2.5", f"After adopting {r['adopted_version']}"], rows),
         "Changes the document makes: " + "; ".join(f"rule {c['clause']} `{c['parameter']}` {c['from']} to {c['to']}"
                                                    for c in r["changes"]) + ".", "",
@@ -911,6 +913,32 @@ def finished(path: Path) -> bool:
     return match is None or (path.parent / f"{match.group(1)}.md").exists()
 
 
+def routing_subsection() -> list[str]:
+    names = ("demo", "huge_v3.12_retroactive", "huge")
+    if not all((RESULTS / f"routing_{name}.json").exists() for name in names):
+        return []
+    demo, retro, now = (load(f"routing_{name}.json") for name in names)
+
+    def row(label: str, x: dict) -> list:
+        return [label, n(x["audited"]), f"{n(x['to_a_person'])} ({pct(x['to_a_person_share'])})",
+                pct(x["sent_to_a_person_that_are_anomalous"]), n(x["clean_sent_to_a_person"]),
+                " / ".join(n(x["risk_levels"][level]) for level in ("CRITICAL", "HIGH", "MEDIUM", "LOW"))]
+
+    return [
+        "### 14.1 Where the audit sends the invoices", "",
+        src(*[f"routing_{name}.{ext}" for name in names for ext in ("md", "json")]), "",
+        "Each invoice is judged by the policy version in force on its date. Before that rule, applying version 3.12, "
+        "which takes effect on 1 April 2026, re-audited every invoice of the 500,000-invoice ledger, dated 1 April 2025 "
+        "to 31 March 2026, under it; the rows below are that run and the ledger's results under the rule. Sent to a "
+        "person means escalated or sampled; the risk level is at least that of the most severe finding held.", "",
+        *md(["Store and policy", "Invoices", "Sent to a person", "Of those, anomalous", "Clean invoices sent",
+             "Critical / high / medium / low"],
+            [row(f"`{demo['dataset']}` (the demonstration store), latest results", demo),
+             row(f"`{retro['dataset']}`, v3.12 applied to every invoice (run {retro['run']})", retro),
+             row(f"`{now['dataset']}`, each invoice under the version in force", now)]),
+    ]
+
+
 def sources_section() -> list[str]:
     files = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*")
                    if p.is_file() and p.suffix in (".json", ".jsonl", ".md") and "figures" not in p.parts
@@ -949,7 +977,7 @@ def render() -> str:
             + stats_section() + protocols_section() + environment_section()
             + ["# Part II. Results", ""]
             + detection_section() + revisions_section() + policy_change_section() + heldout_section() + robustness_section()
-            + application_section() + ledger_runs_section() + scalability_section() + own_wording_section()
+            + application_section() + routing_subsection() + ledger_runs_section() + scalability_section() + own_wording_section()
             + llm_section() + retrieval_section() + history_section()
             + answers_section() + errors_section() + threats_section() + sources_section())
     return "\n".join(head + body).rstrip() + "\n"

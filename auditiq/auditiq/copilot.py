@@ -34,16 +34,24 @@ from pathlib import Path
 from . import db
 from .agents import call_json
 from .audit_pack import render_markdown
+from .case_graph import CaseGraph
 from .llm import ChatClient
+from .policy_graph import PolicyGraph, merge_passages
 from .retrieval import Hit, PolicyIndex
 
 INVOICE_ID = re.compile(r"\bINV\d{3,}\b", re.IGNORECASE)
 
 ANSWER_SYSTEM = """\
-You answer the questions of an auditor about a procurement policy and about audited invoices. Use only the PASSAGES and, when present, the AUDIT RECORD in the user message. The AUDIT RECORD is the authority on what was found for an invoice: name only the rules its findings cite, and never say that an invoice was flagged under a rule the record does not name. If the PASSAGES and the AUDIT RECORD do not contain the answer, say that the documents do not answer the question. After every statement taken from a passage, cite the passage number in square brackets.
+You answer the questions of an auditor about a procurement policy, about audited invoices and about what the audit found in the ledger. Use only what is in the user message: the FACTS, the LEDGER FACTS, the PASSAGES and, when present, the AUDIT RECORD.
+
+- The FACTS are read by code from the policy's clause registry ([F1], [F2], ...) and are exact: prefer them for limits, thresholds, which role may approve an amount and what changed between versions.
+- The LEDGER FACTS ([C1], [C2], ...) are computed by code from the audited ledger and are exact. For a question about vendors, invoices, approvers, rings, counts or amounts in the ledger, answer from them: name every vendor, approver and number the question asks for that they give. They describe the ledger, not the policy, so the PASSAGES need not mention any vendor or approver, and passages that say nothing about the question do not make it unanswerable. Never state a name, count or amount about the ledger that no ledger fact gives.
+- The AUDIT RECORD is the authority on what was found for an invoice: name only the rules its findings cite, and never say that an invoice was flagged under a rule the record does not name.
+
+Cite each fact you use by its label, such as [F1] or [C1], and each passage you use by its number in square brackets. Only if none of the FACTS, the LEDGER FACTS, the PASSAGES and the AUDIT RECORD contain the answer, say that the documents do not answer the question.
 
 Reply with one JSON object and nothing else:
-{"answer": "<a few sentences, with [n] citations>", "passages_used": [<numbers of the passages used>]}"""
+{"answer": "<a few sentences, with [F#], [C#] and [n] citations>", "passages_used": [<numbers of the passages used; an empty list when the answer rests on facts only>]}"""
 
 SQL_SYSTEM = """\
 You write one {dialect} SELECT statement that answers the question of an auditor about the audit database described below.
@@ -76,13 +84,21 @@ def passages_text(hits: list[Hit]) -> str:
 
 
 def answer(question: str, conn: db.Database, index: PolicyIndex, client: ChatClient | None = None,
-           k: int = 4, invoice_id: str | None = None) -> dict:
+           k: int = 4, invoice_id: str | None = None, graph: PolicyGraph | None = None,
+           cases: CaseGraph | None = None) -> dict:
     """Answer a question from the policy documents and, for a named invoice, its stored audit pack.
 
     With a model, the question is first restated in the documents' vocabulary,
     which is what lets a question in everyday words find the right passage.
+    With the policy graph, its facts (limits, the role an amount needs, what
+    changed between versions, what checks a rule) come too, and the passages
+    they cite come before the retrieved ones (docs/POLICY_GRAPH.md).
     """
     hits = index.search(question, k=k, client=client)
+    linked = graph.query(question, index) if graph is not None else None
+    ledger = cases.query(question) if cases is not None else None
+    if linked is not None:
+        hits = merge_passages(linked.passages, hits, k)
     found = invoice_id or (INVOICE_ID.search(question).group(0).upper() if INVOICE_ID.search(question) else None)
     pack = None
     if found:
@@ -95,10 +111,17 @@ def answer(question: str, conn: db.Database, index: PolicyIndex, client: ChatCli
         first = [hit for clause in cited for hit in index.passages_of(clause)]
         hits = (first + [h for h in hits if h.clause_id not in cited])[: max(k, len(first))]
     out = {"question": question, "passages": hits, "invoice_id": found, "audit_pack": pack,
-           "answer": None, "sources": [], "calls": []}
+           "answer": None, "sources": [], "calls": [], "facts": linked.facts if linked else [],
+           "graph_nodes": linked.nodes if linked else [], "case_facts": ledger.facts if ledger else [],
+           "case_nodes": ledger.nodes if ledger else []}
     if client is None:
         return out
-    user = f"QUESTION\n{question}\n\nPASSAGES\n{passages_text(hits)}"
+    user = f"QUESTION\n{question}\n\n"
+    if linked is not None and linked.facts:
+        user += f"FACTS\n{linked.facts_text()}\n\n"
+    if ledger is not None and ledger.facts:
+        user += f"LEDGER FACTS\n{ledger.facts_text()}\n\n"
+    user += f"PASSAGES\n{passages_text(hits)}"
     if found:
         user += "\n\nAUDIT RECORD\n" + (render_markdown(pack) if pack else f"{found} has not been audited.")
     data, calls = call_json(client, [{"role": "system", "content": ANSWER_SYSTEM}, {"role": "user", "content": user}],
@@ -123,7 +146,16 @@ def schema_text(conn: db.Database) -> str:
                  "NOT_SAMPLED, REVIEW_APPROVED, REVIEW_REJECTED or REVIEW_OVERRIDDEN. severity is critical, high, "
                  "medium or low. audit_flags.source is D for a control and L for an LLM agent; "
                  "audit_flags.status is kept or removed. Flags such as blacklisted are 0 or 1. "
-                 "Dates are YYYY-MM-DD.")
+                 "Dates are YYYY-MM-DD. approval_logs.action_taken is exactly 'Approved' or 'Escalated' (capital "
+                 "first letter); approval_logs.amount_limit is the limit of the approver's role, and "
+                 "approval_logs.transaction_id is the invoice_id. audit_flags.clause is a rule number and "
+                 "audit_flags joins to v_latest_results on result_id.")
+    rules = conn.execute("SELECT clause_id, title, severity FROM policy_clauses WHERE version = "
+                         "(SELECT version FROM company_policies WHERE is_active = 1 LIMIT 1) ORDER BY clause_id").fetchall()
+    if rules:
+        lines.append("Rules (audit_flags.clause): " + "; ".join(f"{c} {t} ({s})" for c, t, s in rules)
+                     + ". An invoice approved above its approver's limit is a finding of rule 5.1.1; a vendor "
+                       "registered twice shows as two vendor_master rows with the same pan_number.")
     return "\n".join(lines)
 
 
@@ -210,7 +242,7 @@ def data_question(question: str, target: Path | str, client: ChatClient) -> dict
         conn.close()
     messages = [{"role": "system", "content": system}, {"role": "user", "content": question}]
     out = {"question": question, "sql": None, "explanation": "", "columns": [], "rows": [], "error": None, "calls": []}
-    for _ in range(2):
+    for attempt in range(2):
         data, calls = call_json(client, messages, "sql", stage="copilot", agent="sql", temperature=0.0)
         out["calls"] += calls
         if data is None or not data["sql"] or not isinstance(data["sql"][0], str):
@@ -220,7 +252,18 @@ def data_question(question: str, target: Path | str, client: ChatClient) -> dict
         try:
             out["columns"], out["rows"] = run_select(target, out["sql"])
             out["error"] = None
-            return out
+            if out["rows"] or attempt:
+                if not out["rows"]:
+                    # The statement ran and found nothing: say so, rather than show a model's description of rows
+                    # that do not exist.
+                    out["explanation"] = ("The statement ran and returned no rows. Either nothing matches, or a "
+                                          "condition does not match how the data is written; check the statement.")
+                return out
+            messages = messages + [{"role": "assistant", "content": json.dumps(data)},
+                                   {"role": "user", "content": "That statement returned no rows. A condition may "
+                                                               "not match the values listed in the database "
+                                                               "description. Reply again with a corrected "
+                                                               "statement, or the same one if nothing matches."}]
         except UnsafeQuery as error:
             out["error"] = str(error)
             messages = messages + [{"role": "assistant", "content": json.dumps(data)},

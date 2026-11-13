@@ -218,7 +218,8 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | `python -m auditiq ledger check ledger.xlsx` | check a ledger (an Excel workbook with one sheet per table, or a .zip archive of the five CSV files; every column of the store must be present) without loading it |
 | `python -m auditiq ledger import ledger.xlsx` | replace the ledger, and its audit results, with a checked one; then `run --config C1` |
 | `python -m auditiq ledger export data/large_seed_505 ledger.xlsx` | write a dataset as a workbook, one sheet per table |
-| `python -m auditiq run --config C1` | audit every invoice with the controls |
+| `python -m auditiq run --config C1` | audit every invoice with the controls, each under the policy version in force on its date |
+| `python -m auditiq run --config C1 --policy 3.12` | audit every invoice under one version whatever its date, as if it had always applied (an experiment; the results are stored) |
 | `python -m auditiq run --config C5 --invoice INV40042 INV40043` | audit chosen invoices with the full pipeline |
 | `python -m auditiq audit --invoice INV40042 --config C5 --review` | audit one invoice and decide it at the prompt |
 | `python -m auditiq show --invoice INV40042` | the stored audit pack and audit trail |
@@ -226,10 +227,11 @@ meaning; `--mode lexical` forces the wording-based ranking.
 | `python -m auditiq decide --result 17 --decision approve --reviewer "A. Auditor"` | record a decision; `override` needs `--justification` |
 | `python -m auditiq policy search "bill raised on the weekend"` | passages with document and page |
 | `python -m auditiq policy simulate company_policy.pdf` | what the document would change on the stored ledger, before it is adopted; nothing is stored |
-| `python -m auditiq policy activate 2.6` | switch the policy the next audit applies |
+| `python -m auditiq policy activate 2.6` | make 2.6 the active version: it governs the invoices dated from its effective date on, earlier invoices stay under the version in force then; the command prints which version governs which dates |
+| `python -m auditiq policy apply` | audit again, with the controls, the invoices whose result is not under the version in force on their date, those the active version governs and those never audited |
 | `python -m auditiq user add "A. Auditor" --role reviewer` | a user of the web application and the API; the token is printed once. `user list`, `user disable "A. Auditor"` |
 | `python -m auditiq policy ingest my_policy.pdf` | add a policy PDF for search and citation |
-| `python -m auditiq policy adopt company_policy.pdf --activate` | read the thresholds from a policy PDF in the template's wording and make it the policy the audit applies |
+| `python -m auditiq policy adopt company_policy.pdf --activate` | read the thresholds from a policy PDF in the template's wording and make it the active version (it governs the invoices from its effective date) |
 | `python -m auditiq policy adopt company_policy.pdf --llm` | a policy in its own wording: the model proposes rules and thresholds, code verifies them against the document, and the command shows what it found |
 | `python -m auditiq policy adopt company_policy.pdf --llm --accept-verified --reviewer "A. Auditor"` | confirm the verified values and adopt; supply any other value with `--set 2.1.1.amount_tolerance_pct=0.5` |
 | `python -m auditiq ask "Why is INV40042 high risk?"` | a cited answer |
@@ -276,6 +278,23 @@ docker compose -f deploy/docker-compose.yml exec app python -m auditiq user add 
 
 The application is then at http://127.0.0.1:8000. CI builds and starts it on
 every push and audits a ledger in it (the `container` job).
+
+### Documents through Kafka
+
+A local broker without Docker (Java 17 or later), then the workers; docs/STREAMING.md has the details:
+
+```
+python scripts/kafka_local.py init kafka_2.13-4.3.2.tgz    # the release from downloads.apache.org, SHA-512 checked
+python scripts/kafka_local.py start                        # stop, status, reset
+python -m auditiq setup                                    # the policy versions; the ledger comes by stream
+python -m auditiq stream work --processes 4                # until Ctrl+C
+python -m auditiq stream publish --dataset data/bench_seed_202
+python -m auditiq stream status
+```
+
+PostgreSQL lets several invoice workers write at once; on SQLite their writes take turns. `python -m
+evaluation.stream_eval --backend postgres --workers 1 2 4` measures the stream against the batch audit
+(results/stream/).
 
 ## 8. Reproducing the evaluation
 
@@ -426,6 +445,13 @@ python -m auditiq_bench.overview
 ```
 
 ## 11. Troubleshooting
+
+- `stream ...` says AUDITIQ_KAFKA_BOOTSTRAP is not set: start the local broker (`python scripts/kafka_local.py
+  start`; `init` writes the setting to .env) or set it to a cluster's address.
+- The local broker does not start: `%LOCALAPPDATA%\auditiq\kafka.log` says why; the usual causes are a Java
+  older than 17, or another program on port 9092 or 9093.
+- Invoices stay in the topic and the log says `vendor ... is not known after 60 s`: no worker reads the vendor
+  topic, or the vendor feed was not published.
 
 | Symptom | Cause and remedy |
 |---|---|

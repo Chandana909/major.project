@@ -1,12 +1,14 @@
 # Lint and tests on every push and pull request. The Python tests run on SQLite and,
-# through the service container, on PostgreSQL; no test calls a model; the Python
+# through the service container, on PostgreSQL; the stream tests run against a Kafka
+# broker in another service container (and fail, not skip, if it is missing); no test calls a model; the Python
 # dependencies are audited for known vulnerabilities (pip-audit). The frontend
 # job lints, type-checks, tests and builds the web application. The e2e job runs the
 # whole application in a browser: the API on a new store, serving the built web
 # application, driven by Playwright (auditiq/frontend/e2e). The compose job starts
 # PostgreSQL from deploy/postgres/docker-compose.yml, as a team with Docker would,
 # and runs the tests and an audit against it. The container job builds the image of auditiq/Dockerfile,
-# starts it with PostgreSQL (auditiq/deploy/docker-compose.yml) and audits a ledger in it.
+# starts it with PostgreSQL and Kafka (auditiq/deploy/docker-compose.yml), audits a ledger in it, and sends
+# vendor e-mails through the e-mail topic to the stream workers.
 name: ci
 on:
   push:
@@ -29,9 +31,16 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U auditiq -d auditiq_test"
           --health-interval 5s --health-timeout 3s --health-retries 10
+      kafka:
+        # One node in KRaft mode; the image's own configuration advertises localhost:9092.
+        image: apache/kafka:4.3.2
+        ports:
+          - 9092:9092
     env:
       AUDITIQ_NO_DOTENV: "1"
       AUDITIQ_TEST_DATABASE_URL: postgresql://auditiq:ci-only@localhost:5432/auditiq_test
+      AUDITIQ_TEST_KAFKA_BOOTSTRAP: localhost:9092
+      AUDITIQ_REQUIRE_KAFKA: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -52,6 +61,22 @@ jobs:
           --ignore-vuln CVE-2026-112897 --ignore-vuln CVE-2026-112899
       - name: Create the copilot's read-only role
         run: PGPASSWORD=ci-only psql -h localhost -U auditiq -d auditiq_test -c "CREATE ROLE auditiq_reader NOLOGIN"
+      - name: Wait for the Kafka broker
+        run: |
+          python - <<'EOF'
+          import time
+          from confluent_kafka.admin import AdminClient
+          admin = AdminClient({"bootstrap.servers": "localhost:9092"})
+          for attempt in range(60):
+              try:
+                  print("brokers:", list(admin.list_topics(timeout=5).brokers))
+                  break
+              except Exception as error:
+                  print("waiting for the broker:", error)
+                  time.sleep(2)
+          else:
+              raise SystemExit("the Kafka service container did not answer")
+          EOF
       - run: python -m pytest
 
   frontend:
@@ -169,11 +194,21 @@ jobs:
           curl -fsS -H "Authorization: Bearer ci-token" http://127.0.0.1:8000/api/overview | python3 -c "import json, sys; d = json.load(sys.stdin); assert (d['audited'], d['findings'], d['backend']) == (5000, 300, 'postgres'), d; print('audited', d['audited'], 'findings', d['findings'], 'on', d['backend'])"
           curl -fsS http://127.0.0.1:8000/review | grep -q 'id="root"'
           curl -fsSI http://127.0.0.1:8000/review | grep -qi "content-security-policy: default-src 'self'"
+      - name: Vendor e-mails through the Kafka topic to the stream workers, then read through the API
+        run: |
+          docker compose -f deploy/docker-compose.yml exec -T app python -m auditiq_bench.correspondence --dataset data/bench_seed_101 --out /tmp/mail.mbox
+          docker compose -f deploy/docker-compose.yml exec -T app python -m auditiq stream publish --emails /tmp/mail.mbox
+          for i in $(seq 1 60); do
+            curl -fsS -H "Authorization: Bearer ci-token" http://127.0.0.1:8000/api/stream > stream.json
+            if python3 -c "import json, sys; t = {x['kind']: x for x in json.load(open('stream.json'))['topics']}; e = t['email']; sys.exit(not (e['messages'] > 0 and e['lag'] == 0))"; then break; fi
+            sleep 2
+          done
+          python3 -c "import json; t = {x['kind']: x for x in json.load(open('stream.json'))['topics']}; e = t['email']; assert e['messages'] > 2000 and e['lag'] == 0 and e['outcomes'] == {'stored': e['messages']}, e; print('e-mails through Kafka:', e)"
       - if: failure()
         # The last lines of each container as annotations, which can be read without signing in.
         run: |
           docker compose -f deploy/docker-compose.yml ps -a
-          for service in app postgres; do
+          for service in app workers kafka postgres; do
             docker compose -f deploy/docker-compose.yml logs --no-color --tail 15 $service 2>&1 | tail -n 15 | while IFS= read -r line; do echo "::notice title=$service::${line:0:400}"; done
           done
       - if: always()

@@ -25,6 +25,10 @@ USE = {
     "pilot": "Development. The only ledger on which prompts and settings may be tried.",
     "policy_swap": "The policy-swap experiment: the same ledger audited under policy v2.5 and v2.6.",
     "large": "The ledger the application is demonstrated on, and precision at a realistic anomaly rate.",
+    "final": "The ledger of the application and of the demonstrations: 25,000 invoices with compound frauds, "
+             "planted shell vendors and approver rings, at a fraud rate of about 9%.",
+    "collusion": "Vendor collusion rings: vendors and approvers linked by a shared PAN or GSTIN. 707 is the one "
+                 "to develop on; 808 is held out.",
 }
 
 # How each class is injected. A test requires one entry per class of the taxonomy.

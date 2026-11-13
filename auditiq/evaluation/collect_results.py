@@ -237,6 +237,18 @@ def history_cap() -> dict:
             "sources": [source("history_cap.md")], "command": "python -m evaluation.history_cap"}
 
 
+def routing() -> dict:
+    stores = {name: load(f"routing_{name}.json") for name in ("demo", "huge_v3.12_retroactive", "huge")}
+    keep = ("dataset", "run", "audited", "routes", "risk_levels", "to_a_person", "to_a_person_share",
+            "approved_with_findings", "answer_key", "sent_to_a_person_that_are_anomalous", "clean_sent_to_a_person")
+    return {"label": "measured",
+            "question": "Where does the audit send the invoices, against the answer key: with each invoice judged by "
+                        "the policy version in force on its date, and with a later version applied to every invoice?",
+            "stores": {name: {k: r[k] for k in keep if k in r} for name, r in stores.items()},
+            "sources": [source(f"routing_{name}.{ext}") for name in stores for ext in ("md", "json")],
+            "command": "python -m evaluation.routing --db <store> --name <name> [--run <run id>]"}
+
+
 def revisions() -> dict:
     r = load("revisions.json")
     return {"label": "measured",
@@ -290,6 +302,30 @@ def huge_ledger() -> dict:
                                                       "application.json", "size.json")]
                    + ([source(f"{folder}/api.json")] if web else []),
         "command": "python -m evaluation.huge"}}
+
+
+def kafka_ingestion() -> dict:
+    """The ledger through the Kafka topics (evaluation.stream_eval), on each backend measured."""
+    runs = {}
+    for backend in ("sqlite", "postgres"):
+        name = f"stream/bench_seed_202_{backend}"
+        if (RESULTS / f"{name}.json").exists():
+            r = load(f"{name}.json")
+            runs[backend] = {
+                "invoices": r["invoices"], "emails": r["emails"], "partitions": r["partitions"],
+                "batch_seconds": r["batch"]["seconds"], "batch_f1": r["batch"]["detection"]["f1"],
+                "by_workers": [{k: run.get(k) for k in ("workers", "seconds", "seconds_of_each_run", "invoices_per_second", "latency_ms",
+                                                    "same_findings_as_batch", "emails_linked_right", "errors")}
+                               | {"f1": run["detection"]["f1"]} for run in r["runs"]]}
+    if not runs:
+        return {}
+    return {"kafka_ingestion": {
+        "label": "measured",
+        "question": "Does a ledger streamed through the four Kafka topics end with the findings of the batch audit, "
+                    "and how does the stream scale with invoice workers?",
+        "backends": runs,
+        "sources": [source(f"stream/bench_seed_202_{b}.{x}") for b in runs for x in ("json", "md")],
+        "command": "python -m evaluation.stream_eval --backend postgres --workers 1 2 4"}}
 
 
 def model_runs(path: str, label: str, question: str, command: str,
@@ -353,6 +389,7 @@ def build() -> dict:
             "held_out_policy_documents": heldout(),
             "robustness_of_the_reader": robustness(),
             "policy_change_in_the_application": application(),
+            "routing_under_the_policy_in_force": routing(),
             "every_ledger_through_the_deployed_system": ledger_runs(),
             "scalability_of_the_control_stage": scalability(),
             "policies_in_their_own_wording": own_wording(),
@@ -370,6 +407,7 @@ def build() -> dict:
             **igpu_sample(),
             **full_runs(),
             **huge_ledger(),
+            **kafka_ingestion(),
         }),
     }
 

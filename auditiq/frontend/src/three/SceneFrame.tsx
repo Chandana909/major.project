@@ -19,17 +19,21 @@ class SceneBoundary extends Component<{ fallback: ReactNode; children: ReactNode
   }
 }
 
+const ORIGIN: [number, number, number] = [0, 0, 0];
+
 interface SceneFrameProps {
   label: string;
   height?: number;
   camera?: [number, number, number];
+  /** The point the camera looks at and turns around. */
+  target?: [number, number, number];
   autoRotate?: boolean;
   fallback?: ReactNode;
   children: ReactNode;
 }
 
 /** A 3D view with orbit controls, a dark background and a fallback when WebGL is missing. */
-export function SceneFrame({ label, height = 420, camera = [0, 7, 15], autoRotate = true, fallback, children }: SceneFrameProps) {
+export function SceneFrame({ label, height = 420, camera = [0, 7, 15], target = ORIGIN, autoRotate = true, fallback, children }: SceneFrameProps) {
   const fallbackView = (
     <div className="scene-fallback" style={{ height }} role="note">
       {fallback ?? <span>This 3D view needs WebGL, which this browser does not provide. The tables on this page show the same data.</span>}
@@ -48,6 +52,7 @@ export function SceneFrame({ label, height = 420, camera = [0, 7, 15], autoRotat
           {children}
           <OrbitControls
             makeDefault
+            target={target}
             enablePan={false}
             autoRotate={autoRotate}
             autoRotateSpeed={0.35}

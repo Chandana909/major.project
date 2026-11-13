@@ -1,0 +1,141 @@
+{
+ "dataset": "bench_seed_202",
+ "invoices": 5000,
+ "emails": 2105,
+ "backend": "postgres",
+ "partitions": 4,
+ "repeats": 3,
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, 12 logical CPUs, Windows 10",
+ "kafka": "127.0.0.1:9092",
+ "batch": {
+  "seconds": 7.7,
+  "detection": {
+   "tp": 300,
+   "fp": 0,
+   "fn": 120,
+   "precision": 1.0,
+   "recall": 0.7142857142857143,
+   "f1": 0.8333333333333334
+  }
+ },
+ "runs": [
+  {
+   "workers": 1,
+   "partitions": 4,
+   "published_seconds": 0.74,
+   "seconds": 27.2,
+   "invoices_per_second": 183.8,
+   "latency_ms": {
+    "median": 16213.0,
+    "p95": 26753,
+    "max": 26772
+   },
+   "invoices_per_partition": [
+    1435,
+    1307,
+    1107,
+    1151
+   ],
+   "errors": 0,
+   "worker_exit_code": 0,
+   "worker_output_tail": "",
+   "detection": {
+    "tp": 300,
+    "fp": 0,
+    "fn": 120,
+    "precision": 1.0,
+    "recall": 0.7142857142857143,
+    "f1": 0.8333333333333334
+   },
+   "same_findings_as_batch": 5000,
+   "differing_invoices": 0,
+   "differing_clauses": {},
+   "differing_examples": [],
+   "emails_linked_right": 2102,
+   "seconds_of_each_run": [
+    32.91,
+    27.2,
+    26.38
+   ]
+  },
+  {
+   "workers": 2,
+   "partitions": 4,
+   "published_seconds": 0.72,
+   "seconds": 23.22,
+   "invoices_per_second": 215.3,
+   "latency_ms": {
+    "median": 14001.5,
+    "p95": 20891,
+    "max": 22878
+   },
+   "invoices_per_partition": [
+    1435,
+    1307,
+    1107,
+    1151
+   ],
+   "errors": 0,
+   "worker_exit_code": 0,
+   "worker_output_tail": "",
+   "detection": {
+    "tp": 300,
+    "fp": 0,
+    "fn": 120,
+    "precision": 1.0,
+    "recall": 0.7142857142857143,
+    "f1": 0.8333333333333334
+   },
+   "same_findings_as_batch": 5000,
+   "differing_invoices": 0,
+   "differing_clauses": {},
+   "differing_examples": [],
+   "emails_linked_right": 2101,
+   "seconds_of_each_run": [
+    23.22,
+    23.3,
+    22.66
+   ]
+  },
+  {
+   "workers": 4,
+   "partitions": 4,
+   "published_seconds": 0.6,
+   "seconds": 18.04,
+   "invoices_per_second": 277.2,
+   "latency_ms": {
+    "median": 12947.5,
+    "p95": 17572,
+    "max": 17588
+   },
+   "invoices_per_partition": [
+    1435,
+    1307,
+    1107,
+    1151
+   ],
+   "errors": 0,
+   "worker_exit_code": 0,
+   "worker_output_tail": "",
+   "detection": {
+    "tp": 300,
+    "fp": 0,
+    "fn": 120,
+    "precision": 1.0,
+    "recall": 0.7142857142857143,
+    "f1": 0.8333333333333334
+   },
+   "same_findings_as_batch": 5000,
+   "differing_invoices": 0,
+   "differing_clauses": {},
+   "differing_examples": [],
+   "emails_linked_right": 2101,
+   "seconds_of_each_run": [
+    18.46,
+    18.04,
+    17.24
+   ]
+  }
+ ],
+ "measured_at": "2026-10-28 00:05"
+}

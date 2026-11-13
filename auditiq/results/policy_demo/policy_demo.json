@@ -1,0 +1,1045 @@
+{
+ "ledger": "final_seed_2025",
+ "invoices": 25000,
+ "produced": "2026-11-13 10:17",
+ "policies": {
+  "Baseline v2.5": {
+   "version": "2.5",
+   "story": "The procurement SOP of the project.",
+   "shows": "",
+   "seconds": 1.62,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 1835,
+    "escalated": 1658,
+    "approved": 23342,
+    "amount_escalated": 762029168.44,
+    "levels": {
+     "CRITICAL": 868,
+     "HIGH": 790,
+     "MEDIUM": 143,
+     "LOW": 23199
+    },
+    "findings": 2442,
+    "by_rule": {
+     "2.1.1": 141,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.1.1": 141,
+     "4.2.1": 70,
+     "4.3.1": 71,
+     "4.4.1": 141,
+     "5.1.1": 601
+    },
+    "distinct_scores": 8,
+    "score_values": {
+     "5": 34,
+     "10": 143,
+     "50": 780,
+     "60": 10,
+     "70": 852,
+     "75": 5,
+     "80": 8,
+     "90": 3
+    },
+    "histogram": {
+     "1-10": 177,
+     "11-30": 0,
+     "31-50": 780,
+     "51-69": 10,
+     "70-79": 857,
+     "80-89": 8,
+     "90-100": 3
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1835,
+    "frauds_escalated": 1658,
+    "frauds_missed": 0,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 0,
+    "clean_escalated": 0
+   },
+   "values": 0,
+   "values_read": 0,
+   "changes": 0
+  },
+  "Lean Growth Edition": {
+   "version": "5.01",
+   "story": "The company has tripled its order volume in two years. Approvals were the bottleneck, so the limits are raised, price differences up to 3% are tolerated and the business works six days a week.",
+   "shows": "Fewer findings and a lighter review queue, and the price: frauds that sit inside the wider limits and tolerances are no longer found.",
+   "seconds": 1.47,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 1295,
+    "escalated": 1157,
+    "approved": 23843,
+    "amount_escalated": 304180385.11,
+    "levels": {
+     "CRITICAL": 387,
+     "HIGH": 770,
+     "MEDIUM": 109,
+     "LOW": 23734
+    },
+    "findings": 1709,
+    "by_rule": {
+     "2.1.1": 135,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.2.1": 34,
+     "4.3.1": 11,
+     "4.4.1": 141,
+     "5.1.1": 111
+    },
+    "distinct_scores": 7,
+    "score_values": {
+     "5": 29,
+     "10": 109,
+     "50": 759,
+     "60": 11,
+     "70": 384,
+     "80": 2,
+     "90": 1
+    },
+    "histogram": {
+     "1-10": 138,
+     "11-30": 0,
+     "31-50": 759,
+     "51-69": 11,
+     "70-79": 384,
+     "80-89": 2,
+     "90-100": 1
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1295,
+    "frauds_escalated": 1157,
+    "frauds_missed": 540,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 0,
+    "clean_escalated": 0
+   },
+   "values": 14,
+   "values_read": 14,
+   "changes": 6,
+   "file": "Lean_Growth_v5.01.pdf",
+   "change_list": [
+    {
+     "clause": "2.1.1",
+     "parameter": "amount_tolerance_pct",
+     "from": 1.0,
+     "to": 3.0
+    },
+    {
+     "clause": "4.1.1",
+     "parameter": "max_invoices_per_vendor_per_day",
+     "from": 3,
+     "to": 5
+    },
+    {
+     "clause": "4.2.1",
+     "parameter": "non_business_days",
+     "from": [
+      "Saturday",
+      "Sunday"
+     ],
+     "to": [
+      "Sunday"
+     ]
+    },
+    {
+     "clause": "4.2.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "low"
+    },
+    {
+     "clause": "4.3.1",
+     "parameter": "round_amount_multiple",
+     "from": 10000,
+     "to": 50000
+    },
+    {
+     "clause": "5.1.1",
+     "parameter": "approval_limits",
+     "from": {
+      "Manager": 100000,
+      "Senior Manager": 500000,
+      "Director": 2500000,
+      "CFO": 10000000
+     },
+     "to": {
+      "Manager": 250000,
+      "Senior Manager": 1000000,
+      "Director": 5000000,
+      "CFO": 20000000
+     }
+    }
+   ],
+   "against_baseline": {
+    "decisions_moved": 715,
+    "route_changes": {
+     "escalate -> approve": 501
+    },
+    "score_higher": 0,
+    "score_lower": 707,
+    "newly_flagged": 0,
+    "cleared": 540
+   }
+  },
+  "Strict Controls Edition": {
+   "version": "5.02",
+   "story": "After a fraud that went through on invoices just under the approval limits, the company lowers every limit by a tenth, cuts the tolerance to half a percent, allows two invoices per vendor and day, and treats weekend dates, round sums and malformed tax numbers as serious.",
+   "shows": "More findings and about twice as many invoices held for review: the cost of safety is a reviewer's time, and it includes invoices the baseline would have accepted.",
+   "seconds": 1.7,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 3297,
+    "escalated": 3263,
+    "approved": 21737,
+    "amount_escalated": 1179382782.77,
+    "levels": {
+     "CRITICAL": 2096,
+     "HIGH": 1167,
+     "MEDIUM": 34,
+     "LOW": 21703
+    },
+    "findings": 3981,
+    "by_rule": {
+     "2.1.1": 173,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.1.1": 414,
+     "4.2.1": 70,
+     "4.3.1": 71,
+     "4.4.1": 141,
+     "5.1.1": 1835
+    },
+    "distinct_scores": 6,
+    "score_values": {
+     "10": 34,
+     "50": 1153,
+     "60": 14,
+     "70": 2076,
+     "80": 15,
+     "90": 5
+    },
+    "histogram": {
+     "1-10": 34,
+     "11-30": 0,
+     "31-50": 1153,
+     "51-69": 14,
+     "70-79": 2076,
+     "80-89": 15,
+     "90-100": 5
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1835,
+    "frauds_escalated": 1801,
+    "frauds_missed": 0,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 1348,
+    "clean_escalated": 1348
+   },
+   "values": 14,
+   "values_read": 14,
+   "changes": 8,
+   "file": "Strict_Controls_v5.02.pdf",
+   "change_list": [
+    {
+     "clause": "2.1.1",
+     "parameter": "amount_tolerance_pct",
+     "from": 1.0,
+     "to": 0.5
+    },
+    {
+     "clause": "3.1.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "high"
+    },
+    {
+     "clause": "3.1.2",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "high"
+    },
+    {
+     "clause": "4.1.1",
+     "parameter": "max_invoices_per_vendor_per_day",
+     "from": 3,
+     "to": 2
+    },
+    {
+     "clause": "4.2.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "high"
+    },
+    {
+     "clause": "4.3.1",
+     "parameter": "round_amount_multiple",
+     "from": 10000,
+     "to": 5000
+    },
+    {
+     "clause": "4.3.1",
+     "parameter": "severity",
+     "from": "low",
+     "to": "medium"
+    },
+    {
+     "clause": "5.1.1",
+     "parameter": "approval_limits",
+     "from": {
+      "Manager": 100000,
+      "Senior Manager": 500000,
+      "Director": 2500000,
+      "CFO": 10000000
+     },
+     "to": {
+      "Manager": 90000,
+      "Senior Manager": 450000,
+      "Director": 2250000,
+      "CFO": 9000000
+     }
+    }
+   ],
+   "against_baseline": {
+    "decisions_moved": 1524,
+    "route_changes": {
+     "approve -> escalate": 1605
+    },
+    "score_higher": 1688,
+    "score_lower": 0,
+    "newly_flagged": 1462,
+    "cleared": 0
+   }
+  },
+  "Tax Compliance First Edition": {
+   "version": "5.03",
+   "story": "The tax office is auditing input tax credit. Thresholds are unchanged, but an invoice that carries a wrong, malformed or foreign GSTIN cannot support a credit claim, so every GST identity rule is critical.",
+   "shows": "The same invoices are found as under the baseline, but their priority changes: tax-identity findings move to the top of the queue and the scores of the affected invoices rise.",
+   "seconds": 1.5,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 1835,
+    "escalated": 1754,
+    "approved": 23246,
+    "amount_escalated": 774424115.92,
+    "levels": {
+     "CRITICAL": 1440,
+     "HIGH": 314,
+     "MEDIUM": 47,
+     "LOW": 23199
+    },
+    "findings": 2442,
+    "by_rule": {
+     "2.1.1": 141,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.1.1": 141,
+     "4.2.1": 70,
+     "4.3.1": 71,
+     "4.4.1": 141,
+     "5.1.1": 601
+    },
+    "distinct_scores": 8,
+    "score_values": {
+     "5": 34,
+     "10": 47,
+     "50": 314,
+     "70": 1339,
+     "80": 75,
+     "85": 5,
+     "90": 18,
+     "100": 3
+    },
+    "histogram": {
+     "1-10": 81,
+     "11-30": 0,
+     "31-50": 314,
+     "51-69": 0,
+     "70-79": 1339,
+     "80-89": 80,
+     "90-100": 21
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1835,
+    "frauds_escalated": 1754,
+    "frauds_missed": 0,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 0,
+    "clean_escalated": 0
+   },
+   "values": 14,
+   "values_read": 14,
+   "changes": 4,
+   "file": "Tax_Compliance_First_v5.03.pdf",
+   "change_list": [
+    {
+     "clause": "2.1.1",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    },
+    {
+     "clause": "3.1.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "critical"
+    },
+    {
+     "clause": "3.1.2",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "critical"
+    },
+    {
+     "clause": "3.1.3",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    }
+   ],
+   "against_baseline": {
+    "decisions_moved": 0,
+    "route_changes": {
+     "approve -> escalate": 96
+    },
+    "score_higher": 663,
+    "score_lower": 0,
+    "newly_flagged": 0,
+    "cleared": 0
+   }
+  },
+  "Manufacturing Plant Edition": {
+   "version": "5.04",
+   "story": "The plant runs six days a week and buys in larger lots. Saturday is a business day, orders are bigger, limits rise by half and a difference of 2% on the PO is tolerated for bulk materials.",
+   "shows": "Saturday invoices stop being exceptions and a larger share of the invoices are within authority: a policy fitted to the business removes noise without a large loss of coverage.",
+   "seconds": 1.48,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 1530,
+    "escalated": 1369,
+    "approved": 23631,
+    "amount_escalated": 537262921.12,
+    "levels": {
+     "CRITICAL": 649,
+     "HIGH": 720,
+     "MEDIUM": 124,
+     "LOW": 23507
+    },
+    "findings": 2046,
+    "by_rule": {
+     "2.1.1": 141,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.1.1": 5,
+     "4.2.1": 34,
+     "4.3.1": 71,
+     "4.4.1": 141,
+     "5.1.1": 377
+    },
+    "distinct_scores": 8,
+    "score_values": {
+     "5": 37,
+     "10": 124,
+     "50": 708,
+     "60": 12,
+     "70": 639,
+     "75": 4,
+     "80": 5,
+     "90": 1
+    },
+    "histogram": {
+     "1-10": 161,
+     "11-30": 0,
+     "31-50": 708,
+     "51-69": 12,
+     "70-79": 643,
+     "80-89": 5,
+     "90-100": 1
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1530,
+    "frauds_escalated": 1369,
+    "frauds_missed": 305,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 0,
+    "clean_escalated": 0
+   },
+   "values": 14,
+   "values_read": 14,
+   "changes": 4,
+   "file": "Manufacturing_Plant_v5.04.pdf",
+   "change_list": [
+    {
+     "clause": "2.1.1",
+     "parameter": "amount_tolerance_pct",
+     "from": 1.0,
+     "to": 2.0
+    },
+    {
+     "clause": "4.1.1",
+     "parameter": "max_invoices_per_vendor_per_day",
+     "from": 3,
+     "to": 4
+    },
+    {
+     "clause": "4.2.1",
+     "parameter": "non_business_days",
+     "from": [
+      "Saturday",
+      "Sunday"
+     ],
+     "to": [
+      "Sunday"
+     ]
+    },
+    {
+     "clause": "5.1.1",
+     "parameter": "approval_limits",
+     "from": {
+      "Manager": 100000,
+      "Senior Manager": 500000,
+      "Director": 2500000,
+      "CFO": 10000000
+     },
+     "to": {
+      "Manager": 150000,
+      "Senior Manager": 750000,
+      "Director": 3750000,
+      "CFO": 15000000
+     }
+    }
+   ],
+   "against_baseline": {
+    "decisions_moved": 395,
+    "route_changes": {
+     "escalate -> approve": 289
+    },
+    "score_higher": 0,
+    "score_lower": 382,
+    "newly_flagged": 0,
+    "cleared": 305
+   }
+  },
+  "Fraud Prevention Edition": {
+   "version": "5.05",
+   "story": "Thresholds are unchanged. Internal Audit re-ranks the rules by how a fraud looks: mismatches between invoice, order and receipt, and splitting and timing patterns outrank formal errors.",
+   "shows": "The same findings with a new order: fraud patterns reach critical, formal errors drop out of review.",
+   "seconds": 1.64,
+   "summary": {
+    "invoices": 25000,
+    "with_findings": 1835,
+    "escalated": 1705,
+    "approved": 23295,
+    "amount_escalated": 770800230.31,
+    "levels": {
+     "CRITICAL": 1455,
+     "HIGH": 250,
+     "MEDIUM": 34,
+     "LOW": 23261
+    },
+    "findings": 2442,
+    "by_rule": {
+     "2.1.1": 141,
+     "2.1.2": 291,
+     "2.1.3": 141,
+     "2.2.1": 141,
+     "3.1.1": 71,
+     "3.1.2": 70,
+     "3.1.3": 563,
+     "4.1.1": 141,
+     "4.2.1": 70,
+     "4.3.1": 71,
+     "4.4.1": 141,
+     "5.1.1": 601
+    },
+    "distinct_scores": 7,
+    "score_values": {
+     "5": 96,
+     "10": 34,
+     "50": 250,
+     "70": 1361,
+     "80": 86,
+     "90": 5,
+     "100": 3
+    },
+    "histogram": {
+     "1-10": 130,
+     "11-30": 0,
+     "31-50": 250,
+     "51-69": 0,
+     "70-79": 1361,
+     "80-89": 86,
+     "90-100": 8
+    }
+   },
+   "truth": {
+    "frauds": 1835,
+    "frauds_with_a_finding": 1835,
+    "frauds_escalated": 1705,
+    "frauds_missed": 0,
+    "clean_invoices": 22725,
+    "clean_with_a_finding": 0,
+    "clean_escalated": 0
+   },
+   "values": 14,
+   "values_read": 14,
+   "changes": 8,
+   "file": "Fraud_Prevention_v5.05.pdf",
+   "change_list": [
+    {
+     "clause": "2.1.1",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    },
+    {
+     "clause": "2.1.2",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    },
+    {
+     "clause": "2.1.3",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    },
+    {
+     "clause": "3.1.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "low"
+    },
+    {
+     "clause": "3.1.2",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "low"
+    },
+    {
+     "clause": "4.1.1",
+     "parameter": "severity",
+     "from": "high",
+     "to": "critical"
+    },
+    {
+     "clause": "4.2.1",
+     "parameter": "severity",
+     "from": "medium",
+     "to": "high"
+    },
+    {
+     "clause": "4.3.1",
+     "parameter": "severity",
+     "from": "low",
+     "to": "medium"
+    }
+   ],
+   "against_baseline": {
+    "decisions_moved": 0,
+    "route_changes": {
+     "approve -> escalate": 47
+    },
+    "score_higher": 744,
+    "score_lower": 96,
+    "newly_flagged": 0,
+    "cleared": 0
+   }
+  }
+ },
+ "showcase": [
+  {
+   "invoice_id": "INV43977",
+   "amount": 640000.0,
+   "outcomes": {
+    "Baseline v2.5": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Lean Growth Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3"
+     ],
+     "score": 50,
+     "level": "HIGH",
+     "route": "escalate"
+    },
+    "Strict Controls Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 80,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Tax Compliance First Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 85,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Manufacturing Plant Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1"
+     ],
+     "score": 50,
+     "level": "HIGH",
+     "route": "escalate"
+    },
+    "Fraud Prevention Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 90,
+     "level": "CRITICAL",
+     "route": "escalate"
+    }
+   }
+  },
+  {
+   "invoice_id": "INV42229",
+   "amount": 250000.0,
+   "outcomes": {
+    "Baseline v2.5": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Lean Growth Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1"
+     ],
+     "score": 50,
+     "level": "HIGH",
+     "route": "escalate"
+    },
+    "Strict Controls Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 80,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Tax Compliance First Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 85,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Manufacturing Plant Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Fraud Prevention Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 90,
+     "level": "CRITICAL",
+     "route": "escalate"
+    }
+   }
+  },
+  {
+   "invoice_id": "INV42051",
+   "amount": 210000.0,
+   "outcomes": {
+    "Baseline v2.5": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Lean Growth Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3"
+     ],
+     "score": 50,
+     "level": "HIGH",
+     "route": "escalate"
+    },
+    "Strict Controls Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 80,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Tax Compliance First Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 85,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Manufacturing Plant Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Fraud Prevention Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 90,
+     "level": "CRITICAL",
+     "route": "escalate"
+    }
+   }
+  },
+  {
+   "invoice_id": "INV47346",
+   "amount": 320000.0,
+   "outcomes": {
+    "Baseline v2.5": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Lean Growth Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "5.1.1"
+     ],
+     "score": 70,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Strict Controls Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 80,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Tax Compliance First Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 85,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Manufacturing Plant Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Fraud Prevention Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 90,
+     "level": "CRITICAL",
+     "route": "escalate"
+    }
+   }
+  },
+  {
+   "invoice_id": "INV51379",
+   "amount": 310000.0,
+   "outcomes": {
+    "Baseline v2.5": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Lean Growth Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "5.1.1"
+     ],
+     "score": 70,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Strict Controls Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 80,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Tax Compliance First Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 85,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Manufacturing Plant Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 75,
+     "level": "CRITICAL",
+     "route": "escalate"
+    },
+    "Fraud Prevention Edition": {
+     "rules": [
+      "2.1.2",
+      "3.1.3",
+      "4.3.1",
+      "5.1.1"
+     ],
+     "score": 90,
+     "level": "CRITICAL",
+     "route": "escalate"
+    }
+   }
+  }
+ ],
+ "refused": {
+  "file": "Draft_Incomplete_v5.99.pdf",
+  "usable": false,
+  "problems": [
+   "Rule 4.4.1 (blocked vendor) is not in the document; the system needs every rule it executes to be stated",
+   "Rule 5.1.1: no table of approval limits by role was found"
+  ]
+ }
+}

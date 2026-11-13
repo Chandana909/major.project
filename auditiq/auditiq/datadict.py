@@ -40,6 +40,10 @@ GROUPS = [
     ("Access", "Who may use the REST API, and with which role (docs/SECURITY.md). Created with "
                "`python -m auditiq user add`; the application never reads a token, only its hash.",
      ["api_users"]),
+    ("Ingestion", "What arrives through the Kafka topics (docs/STREAMING.md): the vendors' e-mails, and where each "
+                  "worker stands in its topic. The ledger tables above are written by the workers too, from the "
+                  "vendor and invoice topics.",
+     ["emails", "email_mentions", "stream_offsets", "stream_log"]),
 ]
 
 TABLES: dict[str, dict] = {
@@ -180,7 +184,7 @@ TABLES: dict[str, dict] = {
         "columns": {
             "version": "Version of the policy, for example `2.5`.",
             "policy_name": "Title of the policy.",
-            "effective_date": "First day the version is in force.",
+            "effective_date": "First day the version is in force: the version judges the invoices dated from then until the next governing version takes effect (`db.policy_timeline`).",
             "markdown_content": "The policy as text. This is what the agents read; it is rendered from the "
                                 "registry, so a threshold appears in the text exactly as the controls apply it.",
             "registry": "The clause registry as JSON: every clause with its title, severity, kind and "
@@ -390,9 +394,10 @@ TABLES: dict[str, dict] = {
         "source": "`setup`",
         "used": "`python -m auditiq status` and the dashboard.",
         "columns": {
-            "key": "Name of the fact. `dataset` is the name of the loaded ledger; `schema` identifies the version "
-                   "of the schema the database has (on PostgreSQL also whether the copilot's read-only role has "
-                   "its grants), so that a connection to an up-to-date database changes nothing.",
+            "key": "Name of the fact. `dataset` is the name of the loaded ledger; `labels_policy` is the policy "
+                   "version its benchmark labels were written for (from the dataset's manifest); `schema` identifies "
+                   "the version of the schema the database has (on PostgreSQL also whether the copilot's read-only "
+                   "role has its grants), so that a connection to an up-to-date database changes nothing.",
             "value": "Its value.",
         },
     },
@@ -412,6 +417,70 @@ TABLES: dict[str, dict] = {
         },
     },
 }
+
+TABLES.update({
+    "emails": {
+        "summary": "One row per vendor e-mail received.",
+        "source": "The Kafka topic `auditiq.email` (`stream work`), as MIME messages; synthetic ones come from "
+                  "`python -m auditiq_bench.correspondence`",
+        "used": "The invoice page of the web application shows an invoice's e-mails.",
+        "columns": {
+            "message_id": "The message's `Message-ID` header.",
+            "sender": "Address in the `From` header, in lower case.",
+            "sender_domain": "The part of `sender` after the `@`.",
+            "recipient": "Address in the `To` header.",
+            "subject": "The `Subject` header.",
+            "sent_at": "The `Date` header, as a timestamp.",
+            "body": "The plain-text body.",
+            "invoice_id": "The invoice the e-mail names (by its invoice number, in the subject first), or empty "
+                          "while that invoice has not arrived.",
+            "vendor_id": "The vendor of that invoice.",
+            "received_at": "When the e-mail was stored.",
+        },
+    },
+    "email_mentions": {
+        "summary": "One row per invoice-like number an e-mail contains.",
+        "source": "Written with the e-mail",
+        "used": "An e-mail can arrive before the invoice it names; when an invoice arrives, the e-mails that "
+                "mention its number are linked to it.",
+        "columns": {
+            "message_id": "The e-mail.",
+            "mention": "A token of letters and digits, as written, such as `INV-ROU-0146`.",
+        },
+    },
+    "stream_offsets": {
+        "summary": "Where each consumer group stands in each partition of its topic.",
+        "source": "The stream workers, in the same transaction as what the messages wrote",
+        "used": "A worker resumes from here after a restart or a rebalance, so each message changes the database "
+                "exactly once; a worker whose partition has moved past its batch rolls the batch back.",
+        "columns": {
+            "consumer_group": "The group, such as `auditiq-invoice-workers`.",
+            "topic": "The topic, such as `auditiq.invoice`.",
+            "partition_no": "The partition.",
+            "next_offset": "Offset of the next message to process.",
+        },
+    },
+    "stream_log": {
+        "summary": "One row per message processed from a topic.",
+        "source": "The stream workers",
+        "used": "`python -m auditiq stream status`, `GET /api/stream`, and the time from publication to result "
+                "measured by `evaluation.stream_eval`.",
+        "columns": {
+            "topic": "The topic.",
+            "partition_no": "The partition.",
+            "kafka_offset": "The message's offset in the partition.",
+            "doc_key": "The message key: the vendor id for vendors and invoices, the Message-ID for e-mails, the "
+                       "file name for policy documents.",
+            "produced_ms": "When the message was published (Kafka's create time), in milliseconds since 1970.",
+            "processed_ms": "When it was processed, in milliseconds since 1970.",
+            "outcome": "`stored`, `audited`, `adopted`, `refused` (a policy document the controls cannot execute) "
+                       "or `error`.",
+            "detail": "What came of it: the route and number of findings, the invoice an e-mail was linked to, "
+                      "the policy version, or why it failed.",
+            "result_id": "For an audited invoice, its result.",
+        },
+    },
+})
 
 VIEW_NOTES = {
     "v_latest_results": {

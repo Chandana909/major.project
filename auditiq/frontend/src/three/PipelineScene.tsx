@@ -96,12 +96,20 @@ export function PipelineScene({ stages, active }: { stages: Stage[]; active: str
     <SceneFrame label="The audit pipeline in 3D" height={470} camera={[0, 6.8, 11.8]} autoRotate={false}>
       <gridHelper args={[24, 24, "#1e293b", "#111a2e"]} position={[0, -0.2, 0]} />
       <PipelineGraph stages={stages} active={active} />
-      {stages.map((s, i) => (
-        <Html key={s.id} position={AGENTS.has(s.id) ? [positions[s.id][0] + 1.55, positions[s.id][1], positions[s.id][2]] : [positions[s.id][0], positions[s.id][1] + (i % 2 ? -0.95 : 0.8), positions[s.id][2]]} center
-              className={`scene-label stage ${on.has(s.id) ? "" : "muted"}`}>
-          {s.label}
-        </Html>
-      ))}
+      {stages.map((s, i) => {
+        const [x, y, z] = positions[s.id];
+        const muted = on.has(s.id) ? "" : "muted";
+        // An agent's label starts at the right edge of its box; the others sit above or below, alternately.
+        return AGENTS.has(s.id) ? (
+          <Html key={s.id} position={[x + 0.85, y, z]} className={`scene-label stage side ${muted}`} style={{ transform: "translate(0, -50%)" }}>
+            {s.label}
+          </Html>
+        ) : (
+          <Html key={s.id} position={[x, y + (i % 2 ? -0.95 : 0.8), z]} center className={`scene-label stage ${muted}`}>
+            {s.label}
+          </Html>
+        );
+      })}
     </SceneFrame>
   );
 }

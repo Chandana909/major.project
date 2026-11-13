@@ -1,0 +1,61 @@
+{
+ "dataset": "huge_seed_606",
+ "run": null,
+ "audited": 500000,
+ "routes": {
+  "escalate": 5712,
+  "sample": 0,
+  "approve": 494288
+ },
+ "risk_levels": {
+  "CRITICAL": 2142,
+  "HIGH": 3570,
+  "MEDIUM": 1071,
+  "LOW": 493217
+ },
+ "configurations": {
+  "C1": 500000
+ },
+ "to_a_person": 5712,
+ "to_a_person_share": 0.0114,
+ "approved_with_findings": 1428,
+ "policy": {
+  "timeline": [
+   {
+    "from": "2025-04-01",
+    "version": "2.5"
+   },
+   {
+    "from": "2026-04-01",
+    "version": "3.12"
+   }
+  ],
+  "results": [
+   {
+    "made_under": "2.5",
+    "in_force": "2.5",
+    "invoices": 500000
+   }
+  ],
+  "not_under_the_version_in_force": 0
+ },
+ "answer_key": {
+  "anomalous": {
+   "escalate": 5712,
+   "sample": 0,
+   "approve": 4284
+  },
+  "clean": {
+   "escalate": 0,
+   "sample": 0,
+   "approve": 489284
+  },
+  "hard_negative": {
+   "escalate": 0,
+   "sample": 0,
+   "approve": 720
+  }
+ },
+ "sent_to_a_person_that_are_anomalous": 1.0,
+ "clean_sent_to_a_person": 0
+}

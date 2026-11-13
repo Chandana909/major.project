@@ -91,6 +91,17 @@ def datasheet(name: str, purpose: str, manifest: dict, tables: dict[str, pd.Data
         lines += ["", "Hard negatives are clean invoices built to resemble an anomaly:", "",
                   "| Type | Description | Invoices |", "|---|---|---|"]
         lines += [f"| {h} | {HARD_NEGATIVE_TYPES[h]} | {n} |" for h, n in negatives if n]
+    if manifest.get("rings"):
+        lines += ["", "## Planted collusion", "",
+                  "The rings below were planted; the detector never reads them. An approver ring: the approver passes "
+                  "the listed invoices of its vendors above the limit of the role (Rule 5.1.1), among ordinary "
+                  "invoices of the same vendors. Shell vendors: two vendor records of one legal entity; where "
+                  "invoices are listed, they are invoices of the second record under the registration of the first "
+                  "(Rule 3.1.3).", "",
+                  "| Ring | Kind | Approver | Vendors | Invoices with a finding |", "|---|---|---|---|---|"]
+        lines += [f"| {r['id']} | {'approver and vendors' if r['kind'] == 'approver' else 'shell vendors, shared ' + r['shares']} "
+                  f"| {(r['approver'] + ' (' + r['role'] + ')') if r['approver'] else ''} | {', '.join(r['vendors'])} "
+                  f"| {len(r['invoices'])} |" for r in manifest["rings"]]
     if "alt_policy_version" in manifest:
         lines += ["", f"Every anomalous invoice of this dataset is clean under policy v{manifest['alt_policy_version']} "
                       "(`alt_label` in `labels.csv`), and every other invoice is clean under both versions."]

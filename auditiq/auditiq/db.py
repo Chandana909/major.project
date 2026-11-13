@@ -282,6 +282,45 @@ CREATE TABLE IF NOT EXISTS api_users (
   disabled       {flag} NOT NULL DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS emails (
+  message_id    TEXT PRIMARY KEY,
+  sender        TEXT,
+  sender_domain TEXT,
+  recipient     TEXT,
+  subject       TEXT,
+  sent_at       {timestamp},
+  body          TEXT,
+  invoice_id    TEXT,
+  vendor_id     TEXT,
+  received_at   {timestamp}
+);
+CREATE INDEX IF NOT EXISTS idx_emails_invoice ON emails(invoice_id);
+CREATE TABLE IF NOT EXISTS email_mentions (
+  message_id TEXT NOT NULL,
+  mention    TEXT NOT NULL,
+  PRIMARY KEY (message_id, mention)
+);
+CREATE INDEX IF NOT EXISTS idx_email_mentions ON email_mentions(mention);
+CREATE TABLE IF NOT EXISTS stream_offsets (
+  consumer_group TEXT NOT NULL,
+  topic          TEXT NOT NULL,
+  partition_no   INTEGER NOT NULL,
+  next_offset    BIGINT NOT NULL,
+  PRIMARY KEY (consumer_group, topic, partition_no)
+);
+CREATE TABLE IF NOT EXISTS stream_log (
+  topic        TEXT NOT NULL,
+  partition_no INTEGER NOT NULL,
+  kafka_offset BIGINT NOT NULL,
+  doc_key      TEXT,
+  produced_ms  BIGINT,
+  processed_ms BIGINT,
+  outcome      TEXT NOT NULL,
+  detail       TEXT,
+  result_id    BIGINT,
+  PRIMARY KEY (topic, partition_no, kafka_offset)
+);
+
 {view} v_latest_results AS
 SELECT r.*, u.configuration, u.policy_version, u.model
 FROM latest_results m
@@ -297,10 +336,19 @@ JOIN vendor_master v ON v.vendor_id = l.vendor_id
 WHERE l.workflow_status = 'PENDING_REVIEW';
 """
 
+# Seconds a SQLite connection waits for another's lock before failing. A store has one writer at a time, and a
+# reader (the web application analysing a large ledger) can hold its lock for half a minute: an audit run that
+# gave up after the default 5 s would stop half done.
+LOCK_WAIT = 60.0
+# AUDITIQ_SQLITE_JOURNAL chooses the journal of a SQLite store. Unset, SQLite's own default (a rollback journal:
+# a reader and a writer wait for each other) stays. "wal" lets the web application read while workers write,
+# which a live run needs; a write-ahead log wants a local disk, so not a folder a sync client rewrites.
+SQLITE_JOURNALS = ("wal", "delete", "truncate")
 LEDGER_TABLES = ["vendor_master", "purchase_orders", "goods_receipts", "invoices", "approval_logs"]
 ALL_TABLES = LEDGER_TABLES + ["company_policies", "policy_clauses", "policy_parameters", "policy_documents",
                               "policy_chunks", "audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail",
-                              "review_decisions", "benchmark_labels", "meta", "api_users"]
+                              "review_decisions", "benchmark_labels", "meta", "api_users", "emails",
+                              "email_mentions", "stream_offsets", "stream_log"]
 VIEWS = ["v_latest_results", "v_review_queue"]
 BOOLEAN_COLUMNS = {"is_active", "blacklisted", "blacklist_status"}
 NULLABLE_REFERENCES = {"po_id", "grn_id"}
@@ -510,12 +558,20 @@ def connect(target: Path | str | None = None, read_only: bool = False) -> Databa
         # A connection is used by one caller at a time, but a web request may open it on one worker thread and
         # use it on another; SQLite's same-thread check would refuse that.
         if read_only:
-            raw = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False)
+            raw = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True, check_same_thread=False,
+                                  timeout=LOCK_WAIT)
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
-            raw = sqlite3.connect(path, check_same_thread=False)
+            raw = sqlite3.connect(path, check_same_thread=False, timeout=LOCK_WAIT)
         raw.row_factory = sqlite3.Row
         raw.execute("PRAGMA foreign_keys = ON")
+        journal = os.environ.get("AUDITIQ_SQLITE_JOURNAL", "").strip().lower()
+        if journal and not read_only:
+            if journal not in SQLITE_JOURNALS:
+                raise ValueError(f"AUDITIQ_SQLITE_JOURNAL is {journal!r}; one of {', '.join(SQLITE_JOURNALS)}")
+            raw.execute(f"PRAGMA journal_mode = {journal}")
+            if journal == "wal":
+                raw.execute("PRAGMA synchronous = NORMAL")      # safe with a write-ahead log, and much faster
         log.debug("opened SQLite database %s%s", path, " (read-only)" if read_only else "")
         db = Database(raw, "sqlite", str(path))
     if not read_only:
@@ -534,13 +590,17 @@ def load_dataset(db: Database, dataset: Path, replace: bool = True) -> dict[str,
     names = LEDGER_TABLES + (["labels"] if (dataset / "labels.csv").exists() else [])
     frames = {name: pd.read_csv(dataset / f"{name}.csv", dtype=str, keep_default_na=False, encoding="utf-8")
               for name in names}
-    return load_frames(db, frames, dataset.name, replace=replace)
+    manifest = dataset / "manifest.json"
+    labels_policy = json.loads(manifest.read_text(encoding="utf-8")).get("policy_version") if manifest.exists() else None
+    return load_frames(db, frames, dataset.name, replace=replace, labels_policy=labels_policy)
 
 
-def load_frames(db: Database, frames: dict[str, pd.DataFrame], name: str, replace: bool = True) -> dict[str, int]:
-    """Load the record tables of a ledger given as text frames (see ``load_dataset``); ``name`` is recorded."""
+def load_frames(db: Database, frames: dict[str, pd.DataFrame], name: str, replace: bool = True,
+                labels_policy: str | None = None) -> dict[str, int]:
+    """Load the record tables of a ledger given as text frames (see ``load_dataset``); ``name`` is recorded, and
+    with labels the policy version they were written for (``labels_policy``, from the dataset's manifest)."""
     if replace:
-        for table in ["review_decisions", "audit_trail", "audit_flags", "latest_results", "audit_results",
+        for table in ["email_mentions", "emails", "review_decisions", "audit_trail", "audit_flags", "latest_results", "audit_results",
                       "audit_runs",
                       "benchmark_labels", "approval_logs", "invoices", "goods_receipts", "purchase_orders",
                       "vendor_master"]:
@@ -551,29 +611,48 @@ def load_frames(db: Database, frames: dict[str, pd.DataFrame], name: str, replac
         frame = frames[source]
         kinds = db.columns(table)
         frame = frame[[c for c in frame.columns if c in kinds]]
-        rows = []
-        for record in frame.itertuples(index=False):
-            row = []
-            for column, value in zip(frame.columns, record):
-                if column in BOOLEAN_COLUMNS:
-                    value = int(value.strip().lower() in ("true", "t", "1"))
-                elif column in NULLABLE_REFERENCES and value == "":
-                    value = None
-                elif kinds[column] == "number":
-                    value = float(value) if value != "" else None
-                elif kinds[column] == "integer":
-                    value = int(float(value)) if value != "" else None
-                elif kinds[column] in ("date", "timestamp") and value == "":
-                    value = None
-                row.append(value)
-            rows.append(row)
+        rows = [[typed(kinds[column], column, value) for column, value in zip(frame.columns, record)]
+                for record in frame.itertuples(index=False)]
         marks = ", ".join("?" for _ in frame.columns)
         db.executemany(f"INSERT INTO {table} ({', '.join(frame.columns)}) VALUES ({marks})", rows)
         counts[table] = len(rows)
     db.execute("INSERT INTO meta (key, value) VALUES ('dataset', ?) "
                "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (name,))
+    if "labels" in frames and labels_policy:
+        db.execute("INSERT INTO meta (key, value) VALUES ('labels_policy', ?) "
+                   "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (labels_policy,))
+    elif replace:
+        db.execute("DELETE FROM meta WHERE key = 'labels_policy'")
     db.commit()
     return counts
+
+
+def typed(kind: str, column: str, value: str):
+    """A ledger value given as text (a CSV cell, a field of a feed record) as the column stores it."""
+    if column in BOOLEAN_COLUMNS:
+        return int(str(value).strip().lower() in ("true", "t", "1"))
+    if column in NULLABLE_REFERENCES and value == "":
+        return None
+    if kind == "number":
+        return float(value) if value != "" else None
+    if kind == "integer":
+        return int(float(value)) if value != "" else None
+    if kind in ("date", "timestamp") and value == "":
+        return None
+    return value
+
+
+def upsert_records(db: Database, table: str, key: str, records: list[dict]) -> None:
+    """Insert ledger records given as text, or update the stored record with the same key."""
+    if not records:
+        return
+    kinds = db.columns(table)
+    columns = [c for c in records[0] if c in kinds]
+    updates = ", ".join(f"{c} = excluded.{c}" for c in columns if c != key)
+    db.executemany(
+        f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join('?' for _ in columns)}) "
+        f"ON CONFLICT ({key}) DO UPDATE SET {updates}",
+        [[typed(kinds[c], c, r.get(c, "")) for c in columns] for r in records])
 
 
 def _row(row, fields: list[str]) -> dict | None:
@@ -662,6 +741,63 @@ def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
     return transactions
 
 
+def extract_arrived(db: Database, invoice_ids: list[str]) -> list[dict]:
+    """Evidence for invoices that arrive on a stream, as `extract_many` gives it for a ledger, with one difference:
+    the vendor history of an invoice holds only the vendor's invoices that come before it in ledger order (date,
+    then id). That is the order in which a vendor's invoices arrive, so an invoice is audited against what was
+    known when it arrived, and the result does not depend on how the stream was cut into batches.
+    """
+    if not invoice_ids:
+        return []
+    marks = lambda values: ", ".join("?" for _ in values)  # noqa: E731
+    invoices = {r["invoice_id"]: r for r in db.execute(
+        f"SELECT * FROM invoices WHERE invoice_id IN ({marks(invoice_ids)})", invoice_ids).fetchall()}
+    unknown = [i for i in invoice_ids if i not in invoices]
+    if unknown:
+        raise KeyError(f"invoice {unknown[0]} is not in the database")
+    vendor_ids = sorted({r["vendor_id"] for r in invoices.values()})
+    vendors = {r["vendor_id"]: _row(r, VENDOR_FIELDS) for r in db.execute(
+        f"SELECT * FROM vendor_master WHERE vendor_id IN ({marks(vendor_ids)})", vendor_ids).fetchall()}
+    po_ids = sorted({r["po_id"] for r in invoices.values() if r["po_id"]})
+    grn_ids = sorted({r["grn_id"] for r in invoices.values() if r["grn_id"]})
+    po = {r["po_id"]: _row(r, PO_FIELDS) for r in db.execute(
+        f"SELECT * FROM purchase_orders WHERE po_id IN ({marks(po_ids)})", po_ids).fetchall()} if po_ids else {}
+    grn = {r["grn_id"]: _row(r, GRN_FIELDS) for r in db.execute(
+        f"SELECT * FROM goods_receipts WHERE grn_id IN ({marks(grn_ids)})", grn_ids).fetchall()} if grn_ids else {}
+    logs: dict[str, list] = {}
+    for entry in db.execute(f"SELECT * FROM approval_logs WHERE transaction_id IN ({marks(invoice_ids)}) "
+                            "ORDER BY timestamp, log_id", invoice_ids).fetchall():
+        logs.setdefault(entry["transaction_id"], []).append(entry)
+    # The vendors' invoices, oldest first, each with the approver of its last approval.
+    approver: dict[str, tuple] = {}
+    for entry in db.execute(
+            "SELECT a.transaction_id, a.approver_role, a.approver_name FROM approval_logs a "
+            f"JOIN invoices i ON i.invoice_id = a.transaction_id WHERE i.vendor_id IN ({marks(vendor_ids)}) "
+            "AND a.action_taken = 'Approved' ORDER BY a.timestamp, a.log_id", vendor_ids).fetchall():
+        approver[entry["transaction_id"]] = (entry["approver_role"], entry["approver_name"])
+    by_vendor: dict[str, list[dict]] = {}
+    fields = ", ".join(dict.fromkeys(["vendor_id", *HISTORY_FIELDS]))
+    for r in db.execute(f"SELECT {fields} FROM invoices WHERE vendor_id IN ({marks(vendor_ids)}) "
+                        "ORDER BY date, invoice_id", vendor_ids).fetchall():
+        role, name = approver.get(r["invoice_id"], (None, None))
+        by_vendor.setdefault(r["vendor_id"], []).append({**_row(r, HISTORY_FIELDS), "approver_role": role,
+                                                        "approver_name": name})
+    transactions = []
+    for invoice_id in invoice_ids:
+        r = invoices[invoice_id]
+        own = (r["date"], invoice_id)
+        earlier = [h for h in by_vendor.get(r["vendor_id"], []) if (h["date"], h["invoice_id"]) < own]
+        transactions.append({
+            "invoice": _row(r, INVOICE_FIELDS),
+            "po": po.get(r["po_id"]),
+            "grn": grn.get(r["grn_id"]),
+            "vendor": vendors.get(r["vendor_id"]),
+            "approvals": [_row(e, LOG_FIELDS) for e in logs.get(invoice_id, [])],
+            "vendor_history": History(earlier, VendorIndex(earlier)),
+        })
+    return transactions
+
+
 def invoice_ids(db: Database, only_unaudited: bool = False, limit: int | None = None) -> list[str]:
     sql = "SELECT i.invoice_id FROM invoices i"
     if only_unaudited:
@@ -674,8 +810,10 @@ def invoice_ids(db: Database, only_unaudited: bool = False, limit: int | None = 
 
 # ------------------------------------------------------------------ policy
 def store_policy(db: Database, policy: Policy, active: bool = False) -> None:
-    """Insert or replace one policy version: text, registry, clauses and parameters."""
+    """Insert or replace one policy version: text, registry, clauses and parameters. Replacing the active version
+    keeps it active: which version is active changes only when asked (``active``, set_active_policy)."""
     registry = policy.registry
+    was_active = bool(db.scalar("SELECT is_active FROM company_policies WHERE version = ?", (policy.version,)))
     db.execute("DELETE FROM company_policies WHERE version = ?", (policy.version,))
     db.execute("INSERT INTO company_policies (version, policy_name, effective_date, markdown_content, registry, "
                "is_active) VALUES (?, ?, ?, ?, ?, 0)",
@@ -687,7 +825,7 @@ def store_policy(db: Database, policy: Policy, active: bool = False) -> None:
     db.executemany("INSERT INTO policy_parameters (version, clause_id, param_name, param_value) VALUES (?, ?, ?, ?)",
                    [(policy.version, clause_id, name, json.dumps(value))
                     for clause_id, c in policy.clauses.items() for name, value in c["params"].items()])
-    if active:
+    if active or was_active:
         set_active_policy(db, policy.version, commit=False)
     db.commit()
 
@@ -709,6 +847,102 @@ def read_policy(db: Database, version: str | None = None) -> Policy:
     if row is None:
         raise KeyError("no active policy in the database" if version is None else f"no policy version {version}")
     return Policy(json.loads(row["registry"]), row["markdown_content"])
+
+
+# -------------------------------------------------- the policy in force on a date
+def _day(value) -> str:
+    """A date as YYYY-MM-DD text ('' for none), whatever the backend returned."""
+    return str(value)[:10] if value else ""
+
+
+def _version_order(version: str) -> tuple:
+    return tuple((0, int(part), "") if part.isdigit() else (1, 0, part) for part in str(version).split("."))
+
+
+def policy_timeline(db: Database) -> list[tuple[str, str]]:
+    """The versions that govern the ledger, as (effective date, version) in date order.
+
+    An invoice is judged by the policy in force on its date, not by whatever version is active when it is
+    audited: adopting a stricter policy must not turn the invoices approved under the old one into breaches.
+    The active version governs from its effective date; before that date, each earlier version governs from
+    its own. A stored version that takes effect on or after the active one's date without being active (a
+    draft, or a version adopted and later replaced) governs nothing. Of two earlier versions with the same
+    date, the later version number governs. Empty without an active version.
+    """
+    rows = db.execute("SELECT version, effective_date, is_active FROM company_policies").fetchall()
+    active = next((r for r in rows if r["is_active"]), None)
+    if active is None:
+        return []
+    start = _day(active["effective_date"])
+    if not start:                           # no stated date: the active version governs every invoice
+        return [("", active["version"])]
+    earlier: dict[str, str] = {}
+    for r in rows:
+        day = _day(r["effective_date"])
+        if r["is_active"] or not day or day >= start:
+            continue
+        if day not in earlier or _version_order(r["version"]) > _version_order(earlier[day]):
+            earlier[day] = r["version"]
+    return sorted(earlier.items()) + [(start, active["version"])]
+
+
+def version_in_force(timeline: list[tuple[str, str]], day) -> str | None:
+    """The version that governs an invoice of this date: the last to take effect on or before it. An invoice
+    older than every version is governed by the first; one without a date by the active version."""
+    if not timeline:
+        return None
+    day = _day(day)
+    if not day:
+        return timeline[-1][1]
+    governing = timeline[0][1]
+    for start, version in timeline:
+        if start <= day:
+            governing = version
+    return governing
+
+
+def in_force_sql(timeline: list[tuple[str, str]], date_column: str) -> tuple[str, list[str]]:
+    """A SQL expression giving, for each row, the version in force on ``date_column`` (as version_in_force)."""
+    if not timeline:
+        return "NULL", []
+    cases, params = [f"WHEN {date_column} IS NULL THEN CAST(? AS TEXT)"], [timeline[-1][1]]
+    for start, version in reversed(timeline[1:]):
+        cases.append(f"WHEN CAST({date_column} AS TEXT) >= CAST(? AS TEXT) THEN CAST(? AS TEXT)")
+        params += [start, version]
+    return f"(CASE {' '.join(cases)} ELSE CAST(? AS TEXT) END)", params + [timeline[0][1]]
+
+
+def versions_in_force(db: Database, invoice_ids: list[str] | None = None) -> dict[str, str]:
+    """Invoice id -> the policy version in force on its date, for the given invoices (all when None)."""
+    timeline = policy_timeline(db)
+    if not timeline:
+        return {}
+    wanted = None if invoice_ids is None else set(invoice_ids)
+    return {invoice_id: version_in_force(timeline, day)
+            for invoice_id, day in db.execute("SELECT invoice_id, CAST(date AS TEXT) FROM invoices")
+            if wanted is None or invoice_id in wanted}
+
+
+def timeline_summary(db: Database) -> list[dict]:
+    """Each governing version with the period it governs (``from`` inclusive, ``until`` exclusive), how many
+    invoices of the ledger fall in it, how many of those were last audited under another version (their result
+    does not follow the policy of their date) and how many were never audited."""
+    timeline = policy_timeline(db)
+    if not timeline:
+        return []
+    expr, params = in_force_sql(timeline, "i.date")
+    counts = {version: (int(n), int(other or 0), int(never or 0)) for version, n, other, never in db.execute(
+        f"SELECT {expr} AS v, COUNT(*), "
+        f"SUM(CASE WHEN l.invoice_id IS NOT NULL AND l.policy_version <> {expr} THEN 1 ELSE 0 END), "
+        "SUM(CASE WHEN l.invoice_id IS NULL THEN 1 ELSE 0 END) "
+        "FROM invoices i LEFT JOIN v_latest_results l ON l.invoice_id = i.invoice_id GROUP BY 1", params + params)}
+    out = []
+    for k, (start, version) in enumerate(timeline):
+        n, other, never = counts.get(version, (0, 0, 0))
+        out.append({"version": version, "from": start or None,
+                    "until": timeline[k + 1][0] if k + 1 < len(timeline) else None,
+                    "invoices": n, "under_other_version": other, "unaudited": never})
+    return out
 
 
 # ------------------------------------------------------------ audit results

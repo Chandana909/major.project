@@ -158,17 +158,23 @@ def test_policy_page_adopts_a_document_and_applies_it_to_the_ledger(app):
     assert conn.scalar("SELECT COUNT(*) FROM policy_chunks WHERE version = '3.06' AND verified = 1") == 16
     conn.close()
 
-    # The stored results were produced under version 2.5; the page says so and offers to audit again.
-    assert "60 of 60 audited invoices" in app.warning[0].value
-    button(app, "Audit the ledger under version 3.06").click().run()
+    # Version 3.06 takes effect on 1 April 2026, after every invoice of this ledger: the results under 2.5 stand,
+    # and the page says which version governs which dates.
+    assert not app.warning
+    assert any("v2.5 governs invoices dated 2025-04-01 until 2026-04-01 (1,200)" in c.value for c in app.caption)
+    conn = db.connect(app.db_path)                              # ten audited invoices, now dated after the change
+    later = [r[0] for r in conn.execute("SELECT invoice_id FROM latest_results ORDER BY invoice_id LIMIT 10")]
+    conn.executemany("UPDATE invoices SET date = ? WHERE invoice_id = ?", [("2026-04-15", i) for i in later])
+    conn.commit()
+    conn.close()
+    app.run()
+    assert "10 of 60 audited invoices were last audited under another policy version" in app.warning[0].value
+    button(app, "Audit them under the version in force on their date").click().run()
     assert not app.exception, app.exception
-    assert "1,200 invoices audited under version 3.06" in app.success[0].value
+    assert "10 invoices audited under the version in force on their date" in app.success[0].value
     conn = db.connect(app.db_path)
     latest = dict(conn.execute("SELECT policy_version, COUNT(*) FROM v_latest_results GROUP BY policy_version").fetchall())
-    assert latest == {"3.06": 1200}
-    limit_findings = conn.scalar("SELECT COUNT(*) FROM audit_flags f JOIN v_latest_results l ON l.result_id = f.result_id "
-                                 "WHERE f.clause = '5.1.1'")
-    assert limit_findings > 30                                                   # 30 under version 2.5 in this ledger
+    assert latest == {"2.5": 50, "3.06": 10}
     conn.close()
     assert not app.warning                                                       # nothing is stale any more
 

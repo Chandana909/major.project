@@ -1,0 +1,353 @@
+{
+ "ledger": "final_seed_2025",
+ "score_spread": {
+  "invoices": 25000,
+  "with_finding": 1835,
+  "distinct": 8,
+  "most_common_score": 70.0,
+  "most_common_share": 0.4643051771117166,
+  "histogram": {
+   "0": 23165,
+   "1\u201310": 177,
+   "11\u201320": 0,
+   "21\u201330": 0,
+   "31\u201340": 0,
+   "41\u201350": 780,
+   "51\u201360": 10,
+   "61\u201370": 852,
+   "71\u201380": 13,
+   "81\u201390": 3,
+   "91\u2013100": 0
+  },
+  "values": {
+   "5.0": 34,
+   "10.0": 143,
+   "50.0": 780,
+   "60.0": 10,
+   "70.0": 852,
+   "75.0": 5,
+   "80.0": 8,
+   "90.0": 3
+  },
+  "levels": {
+   "LOW": 23199,
+   "CRITICAL": 868,
+   "HIGH": 790,
+   "MEDIUM": 143
+  },
+  "routes": {
+   "approve": 23342,
+   "escalate": 1658
+  },
+  "passed": true
+ },
+ "rule_clauses": [
+  {
+   "clause": "2.1.1",
+   "labelled": 141,
+   "flagged": 141,
+   "tp": 141,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "2.1.2",
+   "labelled": 291,
+   "flagged": 291,
+   "tp": 291,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "2.1.3",
+   "labelled": 141,
+   "flagged": 141,
+   "tp": 141,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "2.2.1",
+   "labelled": 141,
+   "flagged": 141,
+   "tp": 141,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "3.1.1",
+   "labelled": 71,
+   "flagged": 71,
+   "tp": 71,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "3.1.2",
+   "labelled": 70,
+   "flagged": 70,
+   "tp": 70,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "3.1.3",
+   "labelled": 563,
+   "flagged": 563,
+   "tp": 563,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "4.1.1",
+   "labelled": 141,
+   "flagged": 141,
+   "tp": 141,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "4.2.1",
+   "labelled": 70,
+   "flagged": 70,
+   "tp": 70,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "4.3.1",
+   "labelled": 71,
+   "flagged": 71,
+   "tp": 71,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "4.4.1",
+   "labelled": 141,
+   "flagged": 141,
+   "tp": 141,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  },
+  {
+   "clause": "5.1.1",
+   "labelled": 601,
+   "flagged": 601,
+   "tp": 601,
+   "fp": 0,
+   "fn": 0,
+   "precision": 1.0,
+   "recall": 1.0
+  }
+ ],
+ "judgement_clauses": [
+  {
+   "clause": "2.1.4",
+   "labelled": 141,
+   "flagged": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 141,
+   "precision": null,
+   "recall": 0.0
+  },
+  {
+   "clause": "2.1.5",
+   "labelled": 141,
+   "flagged": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 141,
+   "precision": null,
+   "recall": 0.0
+  },
+  {
+   "clause": "2.2.2",
+   "labelled": 141,
+   "flagged": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 141,
+   "precision": null,
+   "recall": 0.0
+  },
+  {
+   "clause": "4.1.2",
+   "labelled": 141,
+   "flagged": 0,
+   "tp": 0,
+   "fp": 0,
+   "fn": 141,
+   "precision": null,
+   "recall": 0.0
+  }
+ ],
+ "invoices": {
+  "rule_invoices": 1835,
+  "exact": 1835,
+  "exact_share": 1.0,
+  "hard_negatives": 300,
+  "hard_negatives_flagged": 0,
+  "clean": 22425,
+  "clean_flagged": 0,
+  "clean_flag_rate": 0.0
+ },
+ "by_violations": [
+  {
+   "violations": 1,
+   "invoices": 1717,
+   "mean_score": 39.93011065812463,
+   "min_score": 0.0,
+   "max_score": 70.0,
+   "distinct": 5,
+   "flagged": 1277
+  },
+  {
+   "violations": 2,
+   "invoices": 395,
+   "mean_score": 57.037974683544306,
+   "min_score": 50.0,
+   "max_score": 70.0,
+   "distinct": 2,
+   "flagged": 395
+  },
+  {
+   "violations": 3,
+   "invoices": 153,
+   "mean_score": 66.99346405228758,
+   "min_score": 50.0,
+   "max_score": 80.0,
+   "distinct": 4,
+   "flagged": 153
+  },
+  {
+   "violations": 4,
+   "invoices": 10,
+   "mean_score": 78.5,
+   "min_score": 70.0,
+   "max_score": 90.0,
+   "distinct": 3,
+   "flagged": 10
+  }
+ ],
+ "rings": {
+  "detected": 7,
+  "planted": [
+   {
+    "id": "RING-01",
+    "kind": "identity",
+    "vendors": 2,
+    "approver": null,
+    "vendors_found": 1.0,
+    "approver_found": null,
+    "found": true
+   },
+   {
+    "id": "RING-02",
+    "kind": "identity",
+    "vendors": 2,
+    "approver": null,
+    "vendors_found": 1.0,
+    "approver_found": null,
+    "found": true
+   },
+   {
+    "id": "RING-03",
+    "kind": "identity",
+    "vendors": 2,
+    "approver": null,
+    "vendors_found": 1.0,
+    "approver_found": null,
+    "found": true
+   },
+   {
+    "id": "RING-04",
+    "kind": "identity",
+    "vendors": 2,
+    "approver": null,
+    "vendors_found": 1.0,
+    "approver_found": null,
+    "found": true
+   },
+   {
+    "id": "RING-05",
+    "kind": "approver",
+    "vendors": 4,
+    "approver": "Qasim Pandey",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   },
+   {
+    "id": "RING-06",
+    "kind": "approver",
+    "vendors": 5,
+    "approver": "Frado Deep",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   },
+   {
+    "id": "RING-07",
+    "kind": "approver",
+    "vendors": 5,
+    "approver": "Ubika Gour",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   },
+   {
+    "id": "RING-08",
+    "kind": "approver",
+    "vendors": 4,
+    "approver": "Orinder Merchant",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   },
+   {
+    "id": "RING-09",
+    "kind": "approver",
+    "vendors": 4,
+    "approver": "Lakshit Pau",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   },
+   {
+    "id": "RING-10",
+    "kind": "approver",
+    "vendors": 3,
+    "approver": "Meera Kapoor",
+    "vendors_found": 1.0,
+    "approver_found": true,
+    "found": true
+   }
+  ],
+  "recovered": 10,
+  "detected_outside_planted": 0
+ }
+}

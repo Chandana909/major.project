@@ -40,8 +40,8 @@ ANSWERS = {
     422: "the parameters or the body are not valid, or the document cannot be executed; `detail` lists why",
     503: "the database cannot be reached",
 }
-TAG_TITLES = {"status": "Status", "review": "Review", "policy": "Policy", "ledger": "Ledger",
-              "copilot": "Copilot", "jobs": "Jobs", "results": "Results"}
+TAG_TITLES = {"status": "Status", "stream": "Stream (Kafka)", "analytics": "Analytics", "review": "Review", "policy": "Policy", "ledger": "Ledger",
+              "copilot": "Ask AI (copilot)", "jobs": "Jobs", "results": "Results"}
 
 
 def type_name(annotation) -> str:

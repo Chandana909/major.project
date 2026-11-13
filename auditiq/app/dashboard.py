@@ -212,11 +212,11 @@ def audit_new_ledger(conn) -> None:
     st.warning(f"None of the {invoices:,} invoices of this ledger has been audited yet.")
     if st.button("Audit every invoice with the controls"):
         bar = st.progress(0.0, text="Auditing")
-        run_id = service.audit_invoices(
-            conn, PRESETS["C1"], db.read_policy(conn), None, db.invoice_ids(conn), note="ledger audited from the dashboard",
+        runs = service.audit_in_force(
+            conn, PRESETS["C1"], None, db.invoice_ids(conn), note="ledger audited from the dashboard",
             progress=lambda done, total: bar.progress(done / total, text=f"Auditing: {done:,} of {total:,}")
             if done % 200 == 0 or done == total else None)
-        summary = service.run_summary(conn, run_id)
+        summary = service.runs_summary(conn, runs)
         st.session_state["notice"] = (f"{summary['invoices']:,} invoices audited with the controls: "
                                       f"{summary['flags']:,} findings, "
                                       f"{summary['states'].get(db.PENDING_REVIEW, 0):,} waiting for review.")
@@ -285,8 +285,8 @@ def page_invoice(conn) -> None:
                                                              "on a laptop CPU that takes minutes.")
         if st.button("Audit this invoice now"):
             with st.spinner(f"Auditing with {config}"):
-                service.audit_invoices(conn, PRESETS[config], db.read_policy(conn),
-                                       client if PRESETS[config].agents != "none" else None, [invoice_id])
+                service.audit_in_force(conn, PRESETS[config], client if PRESETS[config].agents != "none" else None,
+                                       [invoice_id])
             st.rerun()
     with right:
         st.subheader("Records")
@@ -419,23 +419,30 @@ def adopt_with_model(conn, path: Path) -> None:
 
 
 def apply_policy_to_ledger(conn, active: str) -> None:
-    """Audit every invoice again with the controls, so that the stored results follow the active policy."""
+    """Each invoice is judged by the policy version in force on its date. Offer to audit again, with the controls,
+    the invoices whose latest result is under another version than that one."""
     audited = scalar(conn, "SELECT COUNT(*) FROM v_latest_results")
-    stale = scalar(conn, "SELECT COUNT(*) FROM v_latest_results WHERE policy_version <> ?", (active,))
+    timeline = db.timeline_summary(conn)
+    st.caption(" · ".join(f"v{t['version']} governs invoices dated {t['from'] or 'any day'}"
+                          + (f" until {t['until']}" if t["until"] else " onward") + f" ({t['invoices']:,})"
+                          for t in timeline))
+    stale = sum(t["under_other_version"] for t in timeline)
     if not audited or not stale:
         return
-    st.warning(f"{stale:,} of {audited:,} audited invoices were last audited under another policy version than "
-               f"{active}. Their results do not yet follow the active policy.")
-    if st.button(f"Audit the ledger under version {active} (controls only)"):
-        ids = db.invoice_ids(conn)
+    st.warning(f"{stale:,} of {audited:,} audited invoices were last audited under another policy version than the "
+               "one in force on their date. Their results do not follow the policy of their date.")
+    if st.button("Audit them under the version in force on their date (controls only)"):
+        governing = db.versions_in_force(conn)
+        latest = dict(conn.execute("SELECT invoice_id, policy_version FROM v_latest_results").fetchall())
+        ids = sorted(i for i, v in latest.items() if governing.get(i) != v)
         bar = st.progress(0.0, text="Auditing")
-        run_id = service.audit_invoices(
-            conn, PRESETS["C1"], db.read_policy(conn), None, ids, note=f"policy version {active} applied from the dashboard",
+        runs = service.audit_in_force(
+            conn, PRESETS["C1"], None, ids, note=f"policy version {active} applied from the dashboard",
             progress=lambda done, total: bar.progress(done / total, text=f"Auditing: {done:,} of {total:,}")
             if done % 200 == 0 or done == total else None)
-        summary = service.run_summary(conn, run_id)
-        st.session_state["notice"] = (f"{summary['invoices']:,} invoices audited under version {active}: "
-                                      f"{summary['flags']:,} findings, "
+        summary = service.runs_summary(conn, runs)
+        st.session_state["notice"] = (f"{summary['invoices']:,} invoices audited under the version in force on "
+                                      f"their date: {summary['flags']:,} findings, "
                                       f"{summary['states'].get(db.PENDING_REVIEW, 0):,} waiting for review.")
         st.rerun()
 
@@ -448,7 +455,7 @@ def page_policy(conn) -> None:
         return
     active = scalar(conn, "SELECT version FROM company_policies WHERE is_active = 1")
     choice = st.selectbox("Active version", versions, index=versions.index(active),
-                          help="The version that the next audit applies.")
+                          help="The current version: it governs the invoices dated from its effective date on.")
     if choice != active and st.button(f"Make version {choice} active"):
         db.set_active_policy(conn, choice)
         st.rerun()

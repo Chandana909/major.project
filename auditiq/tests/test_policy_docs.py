@@ -314,3 +314,43 @@ def test_a_data_question_runs_the_models_select_and_repairs_a_rejected_one(libra
     check = db.connect(library, read_only=True)
     assert check.scalar("SELECT COUNT(*) FROM invoices") == 1200
     check.close()
+
+
+def test_the_data_question_prompt_names_the_real_values_and_the_rules(library):
+    conn = db.connect(library, read_only=True)
+    schema = copilot.schema_text(conn)
+    conn.close()
+    assert "'Approved' or 'Escalated'" in schema                      # not 'approve': the value a model guessed
+    assert "5.1.1 Approval limit (critical)" in schema and "3.1.3 GSTIN vendor match" in schema
+
+
+def test_a_statement_that_finds_nothing_is_retried_once_and_never_described_as_having_rows(library):
+    wrong = {"sql": ["SELECT approver_name FROM approval_logs WHERE action_taken = 'approve'"],
+             "explanation": "The rows show the approvers."}
+    client = ScriptedClient(lambda *_: json.dumps(wrong))
+    out = copilot.data_question("Who approves?", library, client)
+    assert out["rows"] == [] and len(client.calls) == 2 and "no rows" in client.calls[1]["messages"][-1]["content"]
+    assert "returned no rows" in out["explanation"] and "The rows show" not in out["explanation"]
+
+    replies = iter([wrong, {"sql": ["SELECT COUNT(*) AS n FROM approval_logs WHERE action_taken = 'Approved'"],
+                            "explanation": "Approvals."}])
+    fixed = copilot.data_question("How many approvals?", library, ScriptedClient(lambda *_: json.dumps(next(replies))))
+    assert fixed["error"] is None and fixed["rows"][0][0] > 0 and fixed["explanation"] == "Approvals."
+
+
+def test_the_ledger_facts_are_in_the_prompt_the_model_receives(lib):
+    from auditiq.case_graph import CaseGraph
+
+    target = lib.scalar("SELECT invoice_id FROM benchmark_labels WHERE class_id = 'R7' ORDER BY invoice_id LIMIT 1")
+    service.audit_invoices(lib, PRESETS["C1"], db.read_policy(lib), None, [target])
+    client = ScriptedClient(lambda messages, temperature, sample: json.dumps(
+        {"answer": "One invoice breaks it [C1].", "passages_used": []}))
+    out = copilot.answer("How many invoices break rule 5.1.1?", lib, PolicyIndex.from_db(lib), client,
+                         cases=CaseGraph.from_db(lib))
+    answer_call = next(c for c in client.calls if "LEDGER FACTS" in c["messages"][0]["content"])    # not the restatement
+    sent = answer_call["messages"][-1]["content"]
+    assert "LEDGER FACTS\n[C1] Rule 5.1.1" in sent and sent.index("LEDGER FACTS") < sent.index("PASSAGES")
+    assert out["case_facts"][0].data["flagged"] == 1 and out["answer"] == "One invoice breaks it [C1]."
+    without = ScriptedClient(lambda *_: json.dumps({"answer": "x", "passages_used": []}))
+    copilot.answer("How many invoices break rule 5.1.1?", lib, PolicyIndex.from_db(lib), without)
+    assert all("LEDGER FACTS" not in c["messages"][-1]["content"] for c in without.calls)          # nothing invented when no graph is given

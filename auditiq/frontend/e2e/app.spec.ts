@@ -110,7 +110,7 @@ test("an invoice is found by its vendor and by its number, and audited again on 
   await expect(page.getByRole("heading", { name: new RegExp(invoice) })).toContainText(/Approved|Escalated|Sampled review/);
 });
 
-test("a policy document is previewed, adopted and applied to the ledger", async ({ page }) => {
+test("a policy document is previewed, adopted, and governs the invoices from its effective date", async ({ page }) => {
   await page.goto("/policy");
   await expect(page.getByRole("heading", { name: "Policy", exact: true })).toBeVisible();
   await page.getByLabel("Policy PDF").setInputFiles(POLICY);
@@ -119,8 +119,13 @@ test("a policy document is previewed, adopted and applied to the ledger", async 
   await page.getByRole("button", { name: "Adopt version 4.10" }).click();
   await expect(page.locator(".notice")).toHaveText(/Policy version 4\.10 adopted from Company_Policy_v4\.10\.pdf and made active\./);
 
-  await page.getByRole("button", { name: "Audit the ledger under v4.10" }).click();
-  await expect(page.locator(".notice")).toHaveText(/^5,000 invoices audited under the active version: [\d,]+ findings, [\d,]+ waiting for review\.$/);
+  // 4.10 takes effect on 1 October 2026, and 2.6 (stored by setup) on 1 April 2026: both after every invoice of this
+  // ledger, whose results under 2.5 stand.
+  const timeline = page.getByRole("table", { name: "Which version governs which invoices" });
+  await expect(timeline.getByRole("row", { name: /v2\.5 from 2025-04-01 until 2026-04-01 5,000 audited under it/ })).toBeVisible();
+  await expect(timeline.getByRole("row", { name: /v2\.6 from 2026-04-01 until 2026-10-01 0 no invoice yet/ })).toBeVisible();
+  await expect(timeline.getByRole("row", { name: /v4\.10 from 2026-10-01 onward 0 no invoice yet/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Audit them under the version in force" })).toHaveCount(0);
   await page.goto("/");
   await expect(page.locator(".page-head")).toContainText("v4.10");
 });
@@ -144,16 +149,18 @@ test("the measured results are shown", async ({ page }) => {
 test("the pipeline is drawn for every configuration", async ({ page }) => {
   await page.goto("/pipeline");
   await expect(page.getByRole("heading", { name: "The pipeline" })).toBeVisible();
+  await expect(page.getByRole("img", { name: /^Architecture of AuditIQ/ })).toBeVisible();
+  const configurations = page.getByRole("tablist", { name: "Configuration", exact: true });   // not "Highlight a configuration"
   for (const config of ["C1", "C2", "C3", "C4", "C5"]) {
-    await page.getByRole("tab", { name: config, exact: true }).click();
-    await expect(page.getByRole("tab", { name: config, exact: true })).toHaveAttribute("aria-selected", "true");
+    await configurations.getByRole("tab", { name: config, exact: true }).click();
+    await expect(configurations.getByRole("tab", { name: config, exact: true })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("canvas").first()).toBeVisible();
   }
 });
 
-test("the copilot works without a model and says what needs one", async ({ page }) => {
-  await page.goto("/copilot");
-  await expect(page.getByRole("heading", { name: "Copilot" })).toBeVisible();
+test("Ask AI works without a model and says what needs one", async ({ page }) => {
+  await page.goto("/ask");
+  await expect(page.getByRole("heading", { name: "Ask AI" })).toBeVisible();
   await expect(page.getByRole("tab", { name: /data/i })).toBeDisabled();
 });
 

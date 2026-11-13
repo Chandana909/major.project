@@ -1,24 +1,29 @@
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
 import type { VendorPoint } from "../api/types";
-import { count, riskColor, rupeesCompact } from "../lib/format";
-import { layoutVendors, type PlacedVendor } from "./layout";
+import { BLACKLISTED_COLOR, count, riskColor, rupeesCompact } from "../lib/format";
+import { layoutVendors, type Placed, type PlacedVendor, type Sector } from "./layout";
 import { SceneFrame } from "./SceneFrame";
 
 const dummy = new THREE.Object3D();
 const tint = new THREE.Color();
 
-/** The vendor field: one instanced sphere per vendor and a stem for each vendor with invoices waiting for review. */
-export function VendorField({ placed, onHover, onSelect }: {
-  placed: PlacedVendor[];
-  onHover?: (vendor: PlacedVendor | null) => void;
-  onSelect?: (vendor: PlacedVendor) => void;
+/** A point of a constellation: its colour, whether a stem joins it to the floor, whether it pulses. */
+export type FieldPoint = Placed & { color: string; stem: boolean; pulse: boolean };
+
+/** One instanced sphere per point, a stem for each point that asks for one, and a gentle pulse where asked. */
+export function PointField<T extends FieldPoint>({ points, name, onHover, onSelect }: {
+  points: T[];
+  name: string;
+  onHover?: (point: T | null) => void;
+  onSelect?: (point: T) => void;
 }) {
+  const placed = points;
   const spheres = useRef<THREE.InstancedMesh>(null);
   const stems = useRef<THREE.InstancedMesh>(null);
-  const waiting = useMemo(() => placed.filter((v) => v.waiting > 0), [placed]);
+  const waiting = useMemo(() => placed.filter((v) => v.stem), [placed]);
 
   useLayoutEffect(() => {
     const mesh = spheres.current;
@@ -28,7 +33,7 @@ export function VendorField({ placed, onHover, onSelect }: {
       dummy.scale.setScalar(v.size);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
-      mesh.setColorAt(i, tint.set(v.blacklisted ? "#a78bfa" : riskColor(v.max_risk)));
+      mesh.setColorAt(i, tint.set(v.color));
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
@@ -46,13 +51,12 @@ export function VendorField({ placed, onHover, onSelect }: {
     }
   }, [placed, waiting]);
 
-  // Vendors with invoices waiting for review pulse gently.
   useFrame(({ clock }) => {
     const mesh = spheres.current;
     if (!mesh) return;
     const pulse = 1 + 0.18 * Math.sin(clock.elapsedTime * 3);
     placed.forEach((v, i) => {
-      if (!v.waiting) return;
+      if (!v.pulse) return;
       dummy.position.set(...v.position);
       dummy.scale.setScalar(v.size * pulse);
       dummy.updateMatrix();
@@ -69,7 +73,7 @@ export function VendorField({ placed, onHover, onSelect }: {
       <instancedMesh
         ref={spheres}
         args={[undefined, undefined, Math.max(placed.length, 1)]}
-        name="vendors"
+        name={name}
         onPointerMove={(e) => {
           e.stopPropagation();
           onHover?.(pick(e));
@@ -93,7 +97,20 @@ export function VendorField({ placed, onHover, onSelect }: {
   );
 }
 
-function Floor() {
+/** The vendor field: a vendor with invoices waiting for review has a stem and pulses; blacklisted ones are violet. */
+export function VendorField({ placed, onHover, onSelect }: {
+  placed: PlacedVendor[];
+  onHover?: (vendor: (PlacedVendor & FieldPoint) | null) => void;
+  onSelect?: (vendor: PlacedVendor & FieldPoint) => void;
+}) {
+  const points = useMemo(
+    () => placed.map((v) => ({ ...v, color: v.blacklisted ? BLACKLISTED_COLOR : riskColor(v.max_risk), stem: v.waiting > 0, pulse: v.waiting > 0 })),
+    [placed],
+  );
+  return <PointField points={points} name="vendors" onHover={onHover} onSelect={onSelect} />;
+}
+
+export function Floor() {
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
@@ -105,6 +122,19 @@ function Floor() {
   );
 }
 
+/** The name of each sector, just outside the floor. */
+export function SectorLabels({ sectors, label = (s) => s.name }: { sectors: Sector[]; label?: (s: Sector) => ReactNode }) {
+  return (
+    <>
+      {sectors.map((s) => (
+        <Html key={s.name} position={[Math.cos(s.angle) * 11.6, 0.2, Math.sin(s.angle) * 11.6]} center className="scene-label">
+          {label(s)}
+        </Html>
+      ))}
+    </>
+  );
+}
+
 /** Every vendor of the ledger as a point in 3D. */
 export function RiskConstellation({ vendors, onSelect }: { vendors: VendorPoint[]; onSelect?: (v: VendorPoint) => void }) {
   const { placed, categories } = useMemo(() => layoutVendors(vendors), [vendors]);
@@ -113,11 +143,7 @@ export function RiskConstellation({ vendors, onSelect }: { vendors: VendorPoint[
     <SceneFrame label={`Risk constellation of ${vendors.length} vendors`} height={460} camera={[0, 9, 17]}>
       <Floor />
       <VendorField placed={placed} onHover={setHover} onSelect={onSelect} />
-      {categories.map((c) => (
-        <Html key={c.name} position={[Math.cos(c.angle) * 11.6, 0.2, Math.sin(c.angle) * 11.6]} center className="scene-label">
-          {c.name}
-        </Html>
-      ))}
+      <SectorLabels sectors={categories} />
       {hover && (
         <Html position={hover.position} center distanceFactor={14} className="scene-tooltip" zIndexRange={[20, 0]}>
           <strong>{hover.vendor_name}</strong>

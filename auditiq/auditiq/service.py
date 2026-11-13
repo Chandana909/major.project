@@ -31,6 +31,19 @@ def workflow_status(route: str, invoice_id: str, sample_rate: float) -> str:
     return db.PENDING_REVIEW
 
 
+def store_result(conn: db.Database, run_id: int, state: dict, config: PipelineConfig, policy: Policy,
+                 model: str | None, citations: dict, sample_rate: float = 1.0) -> int:
+    """Store one audited invoice (not committed): cite where each flagged clause stands in the policy documents,
+    decide its workflow state, and save the result. Returns the result id."""
+    for flag in state["audit_pack"]["flags"]:
+        source = citations.get(flag["clause"])
+        if source:
+            flag["citation"] = {"document": source["document"], "page": source["page"]}
+    result = to_result(state, config, policy, model)
+    status = workflow_status(result["route"], result["invoice_id"], sample_rate)
+    return db.save_result(conn, run_id, state, result, status, commit=False)
+
+
 def audit_invoices(conn: db.Database, config: PipelineConfig, policy: Policy,
                    client: ChatClient | None, invoice_ids: list[str], *, sample_rate: float = 1.0,
                    workers: int = 1, note: str = "",
@@ -48,13 +61,7 @@ def audit_invoices(conn: db.Database, config: PipelineConfig, policy: Policy,
 
     def store(state: dict) -> None:
         nonlocal done
-        for flag in state["audit_pack"]["flags"]:
-            source = citations.get(flag["clause"])
-            if source:
-                flag["citation"] = {"document": source["document"], "page": source["page"]}
-        result = to_result(state, config, policy, model)
-        status = workflow_status(result["route"], result["invoice_id"], sample_rate)
-        db.save_result(conn, run_id, state, result, status, commit=False)
+        store_result(conn, run_id, state, config, policy, model, citations, sample_rate)
         done += 1
         if done % 200 == 0:
             conn.commit()
@@ -91,6 +98,58 @@ def audit_invoices(conn: db.Database, config: PipelineConfig, policy: Policy,
     db.finish_run(conn, run_id)
     log.info("run %d: finished, %d result(s) stored", run_id, done)
     return run_id
+
+
+def audit_in_force(conn: db.Database, config: PipelineConfig, client: ChatClient | None, invoice_ids: list[str],
+                   *, progress: Callable[[int, int], None] | None = None, **options) -> list[int]:
+    """Audit invoices, each under the policy version in force on its date (``db.policy_timeline``): one run per
+    version, in the order the versions took effect. Returns the run ids. ``audit_invoices`` with a policy of
+    one's choosing audits every invoice under that policy instead, whatever its date (an experiment, a what-if)."""
+    timeline = db.policy_timeline(conn)
+    if not timeline:
+        raise KeyError("no active policy in the database")
+    governing = db.versions_in_force(conn, invoice_ids)
+    groups: dict[str, list[str]] = {}
+    for invoice_id in invoice_ids:
+        if invoice_id not in governing:
+            raise KeyError(f"invoice {invoice_id} is not in the database")
+        groups.setdefault(governing[invoice_id], []).append(invoice_id)
+    order = [version for _, version in timeline]
+    runs, base, total = [], 0, len(invoice_ids)
+    for version in sorted(groups, key=order.index):
+        group = groups[version]
+        step = (lambda done, _of, base=base: progress(base + done, total)) if progress else None
+        runs.append(audit_invoices(conn, config, db.read_policy(conn, version), client, group, progress=step,
+                                   **options))
+        base += len(group)
+    return runs
+
+
+def out_of_line(conn: db.Database) -> tuple[list[str], int]:
+    """The invoices to audit so that every result follows the policy timeline: those the active version governs
+    (its parameters may have changed), those last audited under a version that does not govern their date, and
+    those never audited. Returns them, and how many invoices keep their results."""
+    active = conn.scalar("SELECT version FROM company_policies WHERE is_active = 1")
+    governing = db.versions_in_force(conn)
+    latest = dict(conn.execute("SELECT invoice_id, policy_version FROM v_latest_results").fetchall())
+    ids = sorted(i for i, v in governing.items() if v == active or latest.get(i) != v)
+    return ids, len(governing) - len(ids)
+
+
+def runs_summary(conn: db.Database, run_ids: list[int]) -> dict:
+    """The totals of several runs, and per run its policy version and size."""
+    parts = [run_summary(conn, run_id) for run_id in run_ids]
+    versions = dict(conn.execute(
+        f"SELECT run_id, policy_version FROM audit_runs WHERE run_id IN ({', '.join('?' for _ in run_ids)})",
+        run_ids).fetchall()) if run_ids else {}
+    states: dict[str, int] = {}
+    for part in parts:
+        for state, n in part["states"].items():
+            states[state] = states.get(state, 0) + n
+    totals = {key: sum(part[key] for part in parts)
+              for key in ("invoices", "flags", "llm_calls", "prompt_tokens", "completion_tokens", "failed_stages")}
+    return {"runs": [{"run_id": part["run_id"], "policy_version": versions.get(part["run_id"]),
+                      "invoices": part["invoices"]} for part in parts], **totals, "states": states}
 
 
 def run_summary(conn: db.Database, run_id: int) -> dict:

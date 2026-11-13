@@ -54,7 +54,9 @@ auditiq/                  the Python project (run every command from here)
 | `scoring.py` | Confidence from re-runs, the risk scores R0 and Rc, and the route (approve, sample, escalate) | `route()` |
 | `audit_pack.py` | The record of one audited transaction, as stored and as shown | `render_markdown()` |
 | `corrections.py` | The revision each control finding requires (amend, re-approve, reject, hold, obtain, verify), computed from its evidence and the policy | `correct()`, `apply()` |
-| `service.py` | Batch audit over the store: extract, run the graph, store every result, set the workflow status | `audit_invoices()` |
+| `service.py` | Batch audit over the store: extract, run the graph, store every result, set the workflow status | `audit_invoices()`, `store_result()` |
+| `stream.py` | The Kafka ingestion layer: the four topics, the publisher, the stateless workers (exactly-once storage, waiting for a vendor, re-audit of a completed same-day group), the status (docs/STREAMING.md) | `ensure_topics()`, `Publisher`, `Worker`, `status()` |
+| `emails.py` | Vendor e-mails: parse a MIME message, link it to the invoice it names (also when the invoice arrives later), store it | `store()`, `link_waiting()` |
 
 **The policy.** A document in, an executable policy out.
 
@@ -67,12 +69,16 @@ auditiq/                  the Python project (run every command from here)
 | `policy_llm.py` | Reads a document in its own wording: the model proposes values with quotes, the code verifies each quote, a person confirms |
 | `simulation.py` | What a policy document would do to the stored ledger before it is adopted: a dry run of the controls under both policies |
 | `retrieval.py` | Policy search: lexical ranking, question rewriting by the model, embeddings, and the hybrid of the two |
+| `analytics.py` | Forensic analytics of the ledger (Benford, amounts against the limits, concentration, approvers, monthly and category views) and the coverage of the latest results against the answer key (docs/ANALYTICS.md) |
+| `policy_graph.py` | The policy as a knowledge graph built by code (registry, documents, the code that checks each rule) and the facts it derives for a question; used by Ask AI (docs/POLICY_GRAPH.md) |
+| `case_graph.py` | The audited ledger as a knowledge graph built by code (vendors, invoices with findings, rules, approvers, rings) and the facts it derives for a question; used by Ask AI (docs/CASE_GRAPH.md) |
+| `rings.py` | Collusion rings: identity links and approval links tested against the rate of the approver's role with a false-discovery-rate correction; the watch list (docs/ANALYTICS.md) |
 
 **The store and the data.**
 
 | Module | Responsibility |
 |---|---|
-| `db.py` | The database on SQLite or PostgreSQL: one schema, the ledger, the policy store, results, flags, trail, review decisions, the views; extraction from the store (`extract_one`, `extract_many`) |
+| `db.py` | The database on SQLite or PostgreSQL: one schema, the ledger, the policy store, results, flags, trail, review decisions, the views, the e-mails and the stream's offsets and log; extraction from the store (`extract_one`, `extract_many`, and `extract_arrived` for an invoice on the stream) |
 | `datadict.py` | The meaning of every table and column; writes `docs/DATA_DICTIONARY.md` |
 | `ledger_import.py` | Reads a ledger from a folder, a zip archive of CSV files or an Excel workbook, and checks it before it replaces the stored one |
 
@@ -80,8 +86,8 @@ auditiq/                  the Python project (run every command from here)
 
 | Module | Responsibility |
 |---|---|
-| `cli.py` | The `auditiq` command: `setup`, `ledger`, `policy`, `run`, `audit`, `show`, `queue`, `decide`, `ask`, `ask-data`, `serve`, `export`, `status`, `user`, `graph`, `check-llm` |
-| `api.py` | The REST API (FastAPI): who is asking and what each role may do (`principal`, `require`), its background jobs and the rules that keep them apart, the security headers; serves the built web application |
+| `cli.py` | The `auditiq` command: `setup`, `ledger`, `policy`, `run`, `audit`, `show`, `queue`, `decide`, `ask`, `ask-data`, `serve`, `export`, `status`, `user`, `stream`, `graph`, `check-llm` |
+| `api.py` | The REST API (FastAPI): who is asking and what each role may do (`principal`, `require`), its background jobs and the rules that keep them apart, the cache of the read-only analyses (`StoreCache`), the security headers; serves the built web application |
 | `apidoc.py` | Writes `docs/API.md` from the application |
 | `copilot.py` | Questions about the policy (answered from passages, with citations) and about the data (one checked, read-only SELECT) |
 | `app/dashboard.py` | The Streamlit dashboard |
@@ -104,8 +110,11 @@ and their ground truth (`generator.py`, `export.py`, `validate.py`,
 
 **An invoice, from the ledger to the review queue** (`auditiq run --config C1`).
 
-1. `cli.cmd_run` opens the store and calls `service.audit_invoices` with the
-   configuration, the active policy and the invoice ids.
+1. `cli.cmd_run` opens the store and calls `service.audit_in_force`, which
+   groups the invoices by the policy version in force on their dates
+   (`db.policy_timeline`) and calls `service.audit_invoices` once per version
+   with the configuration and the invoice ids (`--policy` calls it directly,
+   with one version for every invoice).
 2. `db.extract_many` reads the five ledger tables once and builds one
    transaction per invoice; each vendor's invoices are indexed once
    (`history.VendorIndex`) and shared by its transactions.
@@ -274,6 +283,9 @@ with its label (measured, pilot or sample) and its command.
 | `test_policy_docs.py` | PDFs, ingestion, search, the copilot and every guard of its SQL |
 | `test_policy_llm.py` | reading a policy in its own wording, with a scripted model |
 | `test_llm.py` | the model client: cache, retries, a reply that is not a completion, the context guard |
+| `test_policy_graph.py` | the graph holds every rule with its checker, page and parameters; amounts read as money; routing, the structuring band and round amounts; changes between versions; sets and remits; Ask AI given the facts; the graph evaluation |
+| `test_analytics.py` | the analytics add up to the ledger, Benford and concentration against direct counts, the coverage and the answer key under its own policy version, the binomial tail and the false-discovery rate, rings formed only by links that pass the tests |
+| `test_stream.py` | the Kafka layer against a real broker: a streamed ledger ends with the batch audit's findings on both backends, exactly once, waiting for a vendor, bad messages, policy documents, two workers sharing partitions; e-mail linking |
 | `test_api.py` | every endpoint on both backends, users and roles, the shared token, uploads, jobs and their conflicts, the security headers and the Content-Security-Policy |
 | `test_cli.py` | the command line end to end; every connection a command opens is closed |
 | `test_dashboard.py` | the Streamlit pages, headless |

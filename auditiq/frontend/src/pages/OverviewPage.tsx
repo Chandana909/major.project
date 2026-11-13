@@ -2,12 +2,25 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api, waitForJob } from "../api/client";
 import type { Job, LedgerLoad } from "../api/types";
-import { BarList, Empty, ErrorBox, JobProgress, Kpi, Loading, Panel } from "../components/ui";
-import { count, rupeesCompact, stateLabel } from "../lib/format";
+import { MonthlyChart, VendorMatrix } from "../components/charts";
+import { ActivityLog, CoveragePanel, EscalationPreview, ForensicSignals, TopRiskVendors } from "../components/OverviewPanels";
+import { Badge, Empty, ErrorBox, JobProgress, Kpi, Loading, Panel, StackedBar } from "../components/ui";
+import { BLACKLISTED_COLOR, count, RISK_COLORS, rupeesCompact, SEVERITY_COLORS, stateLabel } from "../lib/format";
 import { notifyStoreChanged, useApi } from "../lib/useApi";
 import { RiskConstellation } from "../three/RiskConstellation";
 
-const SEVERITY_COLOR: Record<string, string> = { critical: "#f87171", high: "#fb923c", medium: "#fbbf24", low: "#94a3b8" };
+/** "5.6%" of a whole, or a dash when there is no whole. */
+function share(part: number | undefined, whole: number): string {
+  return whole ? `${(((part ?? 0) / whole) * 100).toFixed(1)}%` : "–";
+}
+
+/** The time between two stored timestamps, in seconds or minutes. */
+function duration(start: string | null, end: string | null): string {
+  if (!start || !end) return "–";
+  const seconds = (Date.parse(end.replace(" ", "T")) - Date.parse(start.replace(" ", "T"))) / 1000;
+  if (!Number.isFinite(seconds) || seconds < 0) return "–";
+  return seconds < 120 ? `${seconds.toFixed(0)} s` : `${(seconds / 60).toFixed(1)} min`;
+}
 
 type AuditSummary = { invoices: number; flags: number; states: Record<string, number> };
 
@@ -112,6 +125,8 @@ function LedgerPanel({ onChanged }: { onChanged: () => void }) {
 export function OverviewPage() {
   const overview = useApi(() => api.overview());
   const map = useApi(() => api.riskMap());
+  const analytics = useApi(() => api.analytics());
+  const queue = useApi(() => api.queue(8));
   const navigate = useNavigate();
   const o = overview.data;
 
@@ -119,6 +134,7 @@ export function OverviewPage() {
     <div className="page">
       <header className="page-head">
         <div>
+          <span className="eyebrow">Audit · Overview</span>
           <h1>Audit overview</h1>
           <p className="muted">
             {o ? <>Ledger <strong>{o.ledger ?? "none loaded"}</strong> · active policy <strong>v{o.policy_version ?? "–"}</strong> · {o.backend}</> : "Every invoice of the ledger, checked against the policy in force."}
@@ -135,14 +151,46 @@ export function OverviewPage() {
       {!o && overview.loading && <Loading what="Reading the audit" />}
 
       {o && (
-        <div className="kpis">
-          <Kpi label="Invoices in the ledger" value={count(o.invoices)} hint={`${count(o.vendors)} vendors`} />
-          <Kpi label="Audited" value={count(o.audited)} hint={`${o.invoices ? ((o.audited / o.invoices) * 100).toFixed(0) : 0}% of the ledger`} tone="accent" />
-          <Kpi label="Approved automatically" value={count(o.states.AUTO_APPROVED ?? 0)} tone="good" />
-          <Kpi label="Waiting for review" value={count(o.states.PENDING_REVIEW ?? 0)} tone="warn" hint={o.states.NOT_SAMPLED ? `${count(o.states.NOT_SAMPLED)} sampled, not selected` : undefined} />
-          <Kpi label="Findings" value={count(o.findings)} tone="bad" />
-          <Kpi label="Reviewed" value={count(o.reviewed)} />
+        <div className="kpis six">
+          <Kpi label="Invoices in the ledger" value={count(o.invoices)} hint={`${count(o.vendors)} vendors · ${(o.invoices / Math.max(1, o.vendors)).toFixed(1)} invoices each`} />
+          <Kpi label="Audited" value={count(o.audited)} hint={`${o.invoices ? ((o.audited / o.invoices) * 100).toFixed(0) : 0}% of the ledger`} tone="accent" share={o.invoices ? o.audited / o.invoices : 0} />
+          <Kpi label="Approved automatically" value={count(o.states.AUTO_APPROVED ?? 0)} tone="good" hint={`${share(o.states.AUTO_APPROVED, o.audited)} of the audited`} share={(o.states.AUTO_APPROVED ?? 0) / Math.max(1, o.audited)} />
+          <Kpi label="Waiting for review" value={count(o.states.PENDING_REVIEW ?? 0)} tone="warn" hint={o.states.NOT_SAMPLED ? `${count(o.states.NOT_SAMPLED)} sampled, not selected` : `${share(o.states.PENDING_REVIEW, o.audited)} of the audited`} share={(o.states.PENDING_REVIEW ?? 0) / Math.max(1, o.audited)} />
+          <Kpi label="Findings" value={count(o.findings)} tone="bad" hint={`${((o.findings / Math.max(1, o.audited)) * 100).toFixed(1)} per 100 invoices · ${o.findings_by_rule.length} rules`} />
+          <Kpi label="Reviewed" value={count(o.reviewed)} hint={`of ${count((o.states.PENDING_REVIEW ?? 0) + o.reviewed)} sent to a reviewer`} share={o.reviewed / Math.max(1, (o.states.PENDING_REVIEW ?? 0) + o.reviewed)} />
         </div>
+      )}
+
+      {o && <ForensicSignals o={o} vendors={map.data?.vendors ?? null} />}
+
+      {o?.coverage && <CoveragePanel coverage={o.coverage} audited={o.audited} />}
+
+      {o && (
+        <Panel title="Composition of the audit" subtitle="The latest result of every audited invoice: the level of its weighted risk, the route it took, and where it stands in the workflow.">
+          <div className="stacked-grid">
+            <StackedBar
+              label="Risk level"
+              parts={(["CRITICAL", "HIGH", "MEDIUM", "LOW"] as const).map((k) => ({ key: k, label: k.charAt(0) + k.slice(1).toLowerCase(), value: o.risk_levels[k] ?? 0, color: RISK_COLORS[k] }))}
+            />
+            <StackedBar
+              label="Route"
+              parts={[
+                { key: "escalate", label: "Escalated", value: o.routes.escalate ?? 0, color: RISK_COLORS.CRITICAL },
+                { key: "sample", label: "Sampled", value: o.routes.sample ?? 0, color: RISK_COLORS.MEDIUM },
+                { key: "approve", label: "Approved", value: o.routes.approve ?? 0, color: RISK_COLORS.LOW },
+              ]}
+            />
+            <StackedBar
+              label="Workflow"
+              parts={Object.entries(o.states).map(([state, n]) => ({
+                key: state,
+                label: stateLabel(state),
+                value: n,
+                color: state === "PENDING_REVIEW" ? RISK_COLORS.HIGH : state === "AUTO_APPROVED" ? RISK_COLORS.LOW : state.startsWith("REVIEW_") ? "#6366f1" : "#94a3b8",
+              }))}
+            />
+          </div>
+        </Panel>
       )}
 
       <Panel
@@ -160,35 +208,71 @@ export function OverviewPage() {
           map.loading && <Loading what="Placing the vendors" />
         )}
         <div className="legend">
-          <span><i style={{ background: "#34d399" }} /> risk below 30</span>
-          <span><i style={{ background: "#fbbf24" }} /> 30 to 49</span>
-          <span><i style={{ background: "#fb923c" }} /> 50 to 69</span>
-          <span><i style={{ background: "#f87171" }} /> 70 and above</span>
-          <span><i style={{ background: "#a78bfa" }} /> blacklisted</span>
+          <span><i style={{ background: RISK_COLORS.LOW }} /> risk below 30</span>
+          <span><i style={{ background: RISK_COLORS.MEDIUM }} /> 30 to 49</span>
+          <span><i style={{ background: RISK_COLORS.HIGH }} /> 50 to 69</span>
+          <span><i style={{ background: RISK_COLORS.CRITICAL }} /> 70 and above</span>
+          <span><i style={{ background: BLACKLISTED_COLOR }} /> blacklisted</span>
         </div>
       </Panel>
 
+      <div className="grid-2">
+        <Panel title="Vendor risk matrix" subtitle="Each vendor: invoices across, the share of its invoices with findings up, size by spend, colour by its highest risk. Click a vendor to see its invoices.">
+          <ErrorBox error={map.error} onRetry={map.reload} />
+          {map.data ? <VendorMatrix vendors={map.data.vendors} onSelect={(v) => navigate(`/invoice?q=${encodeURIComponent(v.vendor_name)}`)} /> : map.loading && <Loading what="Plotting the vendors" />}
+        </Panel>
+        <Panel title="Monthly anomaly trend" subtitle="Invoices per month and how many had findings or went to a reviewer." actions={<Link className="btn btn-ghost" to="/analytics">All analytics</Link>}>
+          <ErrorBox error={analytics.error} onRetry={analytics.reload} />
+          {analytics.data ? <MonthlyChart rows={analytics.data.monthly} /> : analytics.loading && <Loading what="Counting the months" />}
+        </Panel>
+      </div>
+
       {o && (
         <div className="grid-2">
-          <Panel title="Findings by rule" subtitle="Findings kept in the latest result of each invoice.">
+          <Panel title="Findings by rule" subtitle="Findings kept in the latest result of each invoice, most frequent first.">
             {o.findings_by_rule.length ? (
-              <BarList
-                rows={o.findings_by_rule.map((f) => ({
-                  key: `${f.rule}-${f.source}-${f.severity}`,
-                  label: (
-                    <>
-                      <strong>{f.rule}</strong> {f.title} <span className="muted">({f.source})</span>
-                    </>
-                  ),
-                  value: f.findings,
-                  color: SEVERITY_COLOR[f.severity],
-                }))}
-              />
+              <table className="table compact">
+                <thead>
+                  <tr>
+                    <th>Rule</th>
+                    <th>Check</th>
+                    <th>Severity</th>
+                    <th>Source</th>
+                    <th className="num">Findings</th>
+                    <th className="share-col">Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {o.findings_by_rule.map((f) => (
+                    <tr key={`${f.rule}-${f.source}-${f.severity}`}>
+                      <td className="mono strong">{f.rule}</td>
+                      <td>{f.title}</td>
+                      <td>
+                        <span className="sev">
+                          <i style={{ background: SEVERITY_COLORS[f.severity] }} />
+                          {f.severity}
+                        </span>
+                      </td>
+                      <td>
+                        <Badge tone={f.source === "agent" ? "violet" : "neutral"}>{f.source}</Badge>
+                      </td>
+                      <td className="num strong">{count(f.findings)}</td>
+                      <td className="share-col">
+                        <span className="inline-bar">
+                          <i style={{ width: `${(f.findings / Math.max(1, o.findings)) * 100}%`, background: SEVERITY_COLORS[f.severity] }} />
+                        </span>
+                        <span className="muted small">{((f.findings / Math.max(1, o.findings)) * 100).toFixed(1)}%</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
               <Empty>No finding yet. Audit the ledger with <code>python -m auditiq run --config C1</code>.</Empty>
             )}
           </Panel>
           <div className="stack">
+            {queue.data && queue.data.items.length > 0 && <EscalationPreview items={queue.data.items} total={queue.data.total} titles={queue.data.rules} />}
             <Panel title="Vendors with the most invoices waiting">
               {o.vendors_waiting.length ? (
                 <table className="table compact">
@@ -215,17 +299,14 @@ export function OverviewPage() {
                 <Empty>Nothing is waiting for review.</Empty>
               )}
             </Panel>
-            <Panel title="Outcome of the latest audit">
-              <BarList
-                rows={Object.entries(o.states).map(([state, n]) => ({
-                  key: state,
-                  label: stateLabel(state),
-                  value: n,
-                  color: state === "PENDING_REVIEW" ? "#fb923c" : state === "AUTO_APPROVED" ? "#34d399" : "#818cf8",
-                }))}
-              />
-            </Panel>
           </div>
+        </div>
+      )}
+
+      {o && (
+        <div className="grid-2">
+          {o.activity && o.activity.length > 0 ? <ActivityLog rows={o.activity} /> : <Panel title="Activity"><Empty>Nothing has been audited yet.</Empty></Panel>}
+          {map.data && <TopRiskVendors vendors={map.data.vendors} />}
         </div>
       )}
 
@@ -240,18 +321,22 @@ export function OverviewPage() {
                 <th>Model</th>
                 <th className="num">Invoices</th>
                 <th>Started</th>
+                <th className="num">Duration</th>
                 <th>Note</th>
               </tr>
             </thead>
             <tbody>
               {o.runs.map((r) => (
                 <tr key={r.run_id}>
-                  <td>{r.run_id}</td>
-                  <td>{r.configuration}</td>
+                  <td className="mono">#{r.run_id}</td>
+                  <td>
+                    <Badge tone="accent">{r.configuration}</Badge>
+                  </td>
                   <td>v{r.policy_version}</td>
                   <td>{r.model ?? <span className="muted">no model</span>}</td>
                   <td className="num">{count(r.invoices)}</td>
-                  <td>{r.started_at ?? "–"}</td>
+                  <td className="mono small">{r.started_at ?? "–"}</td>
+                  <td className="num">{duration(r.started_at, r.finished_at)}</td>
                   <td className="muted">{r.note || "–"}</td>
                 </tr>
               ))}
@@ -264,6 +349,8 @@ export function OverviewPage() {
         onChanged={() => {
           overview.reload();
           map.reload();
+          analytics.reload();
+          queue.reload();
           notifyStoreChanged();
         }}
       />

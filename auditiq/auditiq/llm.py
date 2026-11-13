@@ -52,6 +52,12 @@ class LLMSettings:
     # default 4,096 tokens) cut an oversize prompt without saying so.
     context_tokens: int | None = None
 
+    @staticmethod
+    def configured(env_file: Path | None = PROJECT_ROOT / ".env") -> bool:
+        """Whether a chat model is configured (AUDITIQ_LLM_BASE_URL and AUDITIQ_LLM_MODEL)."""
+        load_env(env_file)
+        return bool(os.environ.get("AUDITIQ_LLM_BASE_URL") and os.environ.get("AUDITIQ_LLM_MODEL"))
+
     @classmethod
     def from_env(cls, env_file: Path | None = PROJECT_ROOT / ".env") -> "LLMSettings":
         load_env(env_file)

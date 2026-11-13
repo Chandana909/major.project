@@ -10,11 +10,11 @@ type Turn =
   | { kind: "data"; question: string; answer: DataAnswer };
 
 const EXAMPLES = {
-  ask: ["Why was INV51287 flagged, and which rule applies?", "Can a supplier bill us on a Sunday?", "What happens to a vendor whose GST registration is suspended?"],
+  ask: ["Can a supplier bill us on a Sunday?", "What happens to a vendor whose GST registration is suspended?"],
   data: ["Which five vendors have the most invoices waiting for review?", "How many invoices were escalated under rule 5.1.1?"],
 };
 
-export function CopilotPage() {
+export function AskPage() {
   const health = useApi(() => api.health());
   const [mode, setMode] = useState<"ask" | "data">("ask");
   const [question, setQuestion] = useState("");
@@ -23,6 +23,10 @@ export function CopilotPage() {
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const hasModel = Boolean(health.data?.model);
+  // The first invoice waiting for review in this ledger: an example question about a real, audited invoice.
+  const waiting = useApi(() => api.queue(1), []);
+  const first = waiting.data?.items[0]?.invoice_id;
+  const examples = mode === "ask" && first ? [`Why was ${first} flagged, and which rule applies?`, ...EXAMPLES.ask] : EXAMPLES[mode];
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,7 +53,8 @@ export function CopilotPage() {
     <div className="page">
       <header className="page-head">
         <div>
-          <h1>Copilot</h1>
+          <span className="eyebrow">Governance · Ask AI</span>
+          <h1>Ask AI</h1>
           <p className="muted">
             Questions about the policy and about audited invoices are answered from the policy documents and the audit record, with citations. Questions about the data become one checked, read-only query.
           </p>
@@ -70,14 +75,14 @@ export function CopilotPage() {
           </button>
         </div>
         <form className="ask" onSubmit={submit}>
-          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder={EXAMPLES[mode][0]} aria-label="Question" />
+          <textarea value={question} onChange={(e) => setQuestion(e.target.value)} rows={2} placeholder={examples[0]} aria-label="Question" />
           {mode === "ask" && <input value={invoice} onChange={(e) => setInvoice(e.target.value)} placeholder="Invoice id (optional)" aria-label="Invoice id" />}
           <button className="btn btn-primary" type="submit" disabled={Boolean(job)}>
             Ask
           </button>
         </form>
         <div className="examples">
-          {EXAMPLES[mode].map((x) => (
+          {examples.map((x) => (
             <button key={x} className="chip" onClick={() => setQuestion(x)}>
               {x}
             </button>
@@ -91,7 +96,36 @@ export function CopilotPage() {
         <Panel key={i} title={t.question}>
           {t.kind === "ask" ? (
             <>
-              {t.answer.answer ? <p className="answer">{t.answer.answer}</p> : <p className="muted">No written answer: the passages that match the question are below.</p>}
+              {t.answer.answer ? <p className="answer">{t.answer.answer}</p> : <p className="muted">No written answer: the facts and passages that match the question are below.</p>}
+              {t.answer.facts && t.answer.facts.length > 0 && (
+                <div>
+                  <h3 className="sub">Facts from the policy graph ({t.answer.facts.length})</h3>
+                  <ol className="graph-facts">
+                    {t.answer.facts.map((f, j) => (
+                      <li key={j}>
+                        <span className="fact-label">F{j + 1}</span>
+                        <div>
+                          {f.text}
+                          {f.source && <span className="cite">{f.source}</span>}
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+              {t.answer.case_facts && t.answer.case_facts.length > 0 && (
+                <div>
+                  <h3 className="sub">Facts from the audit graph ({t.answer.case_facts.length})</h3>
+                  <ol className="graph-facts">
+                    {t.answer.case_facts.map((f, j) => (
+                      <li key={j}>
+                        <span className="fact-label">C{j + 1}</span>
+                        <div>{f.text}</div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
               {t.answer.sources.length > 0 && (
                 <p className="small">
                   Sources:{" "}

@@ -190,19 +190,28 @@ def route(r0: float, rc: float, options: ScoringOptions = DEFAULT) -> str:
     return "approve"
 
 
-def risk_level(score_value: float) -> str:
-    if score_value >= 70:
-        return "CRITICAL"
-    if score_value >= 50:
-        return "HIGH"
-    if score_value >= 30:
-        return "MEDIUM"
-    return "LOW"
+LEVELS = ("LOW", "MEDIUM", "HIGH", "CRITICAL")
+
+
+def risk_level(score_value: float, flags: list[dict] = ()) -> str:
+    """The band of the score (70 critical, 50 high, 30 medium, below that low), and at least the level of the most
+    severe of ``flags`` (the findings held with confidence).
+
+    The floors already lift a critical or a high finding into its band. A medium finding has no floor: alone it
+    scores 10, in the lowest band, so without the second part an invoice that breaks a medium rule would carry
+    the same level as a clean one, and MEDIUM would need three such findings to appear at all. The level does
+    not change the score or the route of equation (5).
+    """
+    band = "CRITICAL" if score_value >= 70 else "HIGH" if score_value >= 50 else "MEDIUM" if score_value >= 30 else "LOW"
+    worst = max((LEVELS.index(f["severity"].upper()) for f in flags if str(f.get("severity", "")).upper() in LEVELS),
+                default=0)
+    return LEVELS[max(LEVELS.index(band), worst)]
 
 
 def score(flags: list[dict], options: ScoringOptions = DEFAULT) -> dict:
-    """Score one transaction. Each flag must be normalized and carry ``confidence``."""
+    """Score one transaction. Each flag must be normalized and, with confidence in use, carry ``confidence``."""
     r0 = count_score(flags, options)
     rc = weighted_score(flags, options) if options.use_confidence else r0
-    return {"r0": r0, "rc": rc, "route": route(r0, rc, options), "risk_level": risk_level(rc),
+    held = [f for f in flags if f["confidence"] >= options.theta - EPS] if options.use_confidence else flags
+    return {"r0": r0, "rc": rc, "route": route(r0, rc, options), "risk_level": risk_level(rc, held),
             "threshold": options.tau}

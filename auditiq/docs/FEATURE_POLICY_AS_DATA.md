@@ -250,8 +250,14 @@ python -m auditiq policy adopt policy/variants/Company_Policy_v3.12.pdf --activa
 ```
 
 ```bash
-python -m auditiq run --config C1
+python -m auditiq run --config C1 --policy 3.12
 ```
+
+Version 3.12 takes effect on 1 April 2026. Activated, it governs the invoices
+dated from then on; `run --config C1` audits each invoice under the version in
+force on its date, so the invoices of the generated ledgers, all dated before
+it, stay under 2.5. `--policy 3.12` audits every invoice under it, as if it
+had always applied, which is the test of this section.
 
 ```bash
 python -m evaluation.policy_change
@@ -338,11 +344,15 @@ against the policy in force, one bar per policy). LaTeX table:
 The same change through the deployed path, on the 20,000-invoice ledger in a
 new SQLite store. `python -m evaluation.application_demo` loads the ledger,
 audits it under version 2.5, adopts the strict policy document as the active
-version and audits again, and writes `results/application_demo.md`. By hand:
+version and audits again, and writes `results/application_demo.md`. The second
+audit puts every invoice under the strict document, as if it had always applied
+(the script passes the policy to the audit): in the application each invoice is
+judged by the version in force on its date, and 3.12 takes effect after every
+invoice of this ledger. By hand:
 
 ```bash
 python -m auditiq policy adopt policy/variants/Company_Policy_v3.12.pdf --activate
-python -m auditiq run --config C1
+python -m auditiq run --config C1 --policy 3.12
 ```
 
 | | Version 2.5 | After adopting the strict policy (3.12) |

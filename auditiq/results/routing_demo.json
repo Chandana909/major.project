@@ -1,0 +1,59 @@
+{
+ "dataset": "bench_seed_202",
+ "run": null,
+ "audited": 5000,
+ "routes": {
+  "escalate": 277,
+  "sample": 4,
+  "approve": 4719
+ },
+ "risk_levels": {
+  "CRITICAL": 105,
+  "HIGH": 172,
+  "MEDIUM": 45,
+  "LOW": 4678
+ },
+ "configurations": {
+  "C1": 4909,
+  "C3": 1,
+  "C5": 90
+ },
+ "to_a_person": 281,
+ "to_a_person_share": 0.0562,
+ "approved_with_findings": 60,
+ "policy": {
+  "timeline": [
+   {
+    "from": "2025-04-01",
+    "version": "2.5"
+   }
+  ],
+  "results": [
+   {
+    "made_under": "2.5",
+    "in_force": "2.5",
+    "invoices": 5000
+   }
+  ],
+  "not_under_the_version_in_force": 0
+ },
+ "answer_key": {
+  "anomalous": {
+   "escalate": 270,
+   "sample": 3,
+   "approve": 147
+  },
+  "clean": {
+   "escalate": 0,
+   "sample": 0,
+   "approve": 4460
+  },
+  "hard_negative": {
+   "escalate": 7,
+   "sample": 1,
+   "approve": 112
+  }
+ },
+ "sent_to_a_person_that_are_anomalous": 0.9715,
+ "clean_sent_to_a_person": 0
+}

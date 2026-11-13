@@ -2,7 +2,7 @@ import { api } from "../api/client";
 import type { Interval } from "../api/types";
 import { Badge, Empty, ErrorBox, Kpi, Loading, Panel } from "../components/ui";
 import { count, ratio } from "../lib/format";
-import { BENCH, meanOver, v } from "../lib/results";
+import { classMean, ledgersBySize, meanOver } from "../lib/results";
 import { useApi } from "../lib/useApi";
 import { PolicyBars } from "../three/PolicyBars";
 
@@ -18,7 +18,7 @@ function withInterval(x: Interval | undefined): string {
 
 function heat(value: number | null): string {
   if (value === null) return "transparent";
-  return `rgba(45, 212, 191, ${0.08 + value * 0.62})`;
+  return `rgba(13, 148, 136, ${0.05 + value * 0.45})`;
 }
 
 function ScalabilityChart({ points }: { points: { workers: number; invoices_per_second: number }[] }) {
@@ -28,10 +28,20 @@ function ScalabilityChart({ points }: { points: { workers: number; invoices_per_
   const x = (n: number) => pad + ((n - 1) / Math.max(maxX - 1, 1)) * (w - 2 * pad);
   const y = (n: number) => h - pad - (n / maxY) * (h - 2 * pad);
   const path = points.map((p, i) => `${i ? "L" : "M"}${x(p.workers)},${y(p.invoices_per_second)}`).join(" ");
+  const area = `${path} L${x(points[points.length - 1].workers)},${h - pad} L${x(points[0].workers)},${h - pad} Z`;
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="chart" role="img" aria-label="Throughput against worker processes">
+      <defs>
+        <linearGradient id="throughput-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#047857" stopOpacity="0.18" />
+          <stop offset="1" stopColor="#047857" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0.25, 0.5, 0.75].map((f) => (
+        <line key={f} x1={pad} x2={w - pad} y1={pad / 2 + f * (h - pad - pad / 2)} y2={pad / 2 + f * (h - pad - pad / 2)} className="grid" />
+      ))}
+      <path d={area} className="area" />
       <line x1={pad} y1={h - pad} x2={w - pad} y2={h - pad} className="axis" />
-      <line x1={pad} y1={pad / 2} x2={pad} y2={h - pad} className="axis" />
       <path d={path} className="line" />
       {points.map((p) => (
         <g key={p.workers}>
@@ -58,6 +68,7 @@ export function ResultsPage() {
     <div className="page">
       <header className="page-head">
         <div>
+          <span className="eyebrow">Engineering · Results</span>
           <h1>Results</h1>
           <p className="muted">
             Every number on this page was produced by a script of the repository and is read from <code>results/</code>. Runs with a local model on small samples are marked as such: they show that the stages work, not how well a model audits.
@@ -90,7 +101,7 @@ export function ResultsPage() {
             {r.scalability && <Kpi label="Throughput, 8 processes" value={`${count(r.scalability.by_workers[r.scalability.by_workers.length - 1].invoices_per_second)}/s`} hint="control stage, one laptop" />}
           </div>
 
-          <Panel title="Detection on the benchmark ledgers" subtitle="Whole ledgers of 5,000 invoices, 8.4% anomalous. 95% bootstrap intervals. The classical detectors use thresholds chosen on other folds.">
+          <Panel title="Detection on the benchmark ledgers" subtitle="Whole ledgers: the three benchmark ledgers of 5,000 invoices (8.4% anomalous), and the ledgers of 20,000 and 500,000 invoices at a realistic rate (2%). 95% bootstrap intervals. The classical detectors use thresholds chosen on other folds.">
             <div className="scroll-x">
               <table className="table">
                 <thead>
@@ -105,7 +116,7 @@ export function ResultsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(r.benchmark).flatMap(([ledger, data]) =>
+                  {ledgersBySize(r).map((ledger) => [ledger, r.benchmark[ledger]] as const).flatMap(([ledger, data]) =>
                     SYSTEMS.map((s) => (
                       <tr key={`${ledger}-${s}`} className={s === "C1" ? "highlight" : ""}>
                         <td>{s === "C0-IF" ? ledger : ""}</td>
@@ -139,8 +150,7 @@ export function ResultsPage() {
                     <tr key={s}>
                       <td>{SYSTEM_NAME[s]}</td>
                       {CLASSES.map((c) => {
-                        const vals = BENCH.map((d) => v(r.benchmark[d]?.per_class[s]?.[c])).filter((x): x is number => x !== null);
-                        const mean = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+                        const mean = classMean(r, s, c);
                         return (
                           <td key={c} style={{ background: heat(mean) }}>
                             {mean === null ? "–" : mean.toFixed(2)}
@@ -251,7 +261,7 @@ export function ResultsPage() {
             )}
           </div>
 
-          <Panel title="Real-model pilots and sample" subtitle="Small samples with a local 7B model on a laptop CPU: pilots on the development ledger, and 34 invoices of benchmark ledger 101 that no prompt was tried on. They show that every stage works and what an invoice costs; they are too small to compare the configurations.">
+          <Panel title="Real-model pilots and sample" subtitle="Samples with a local 7B model on a laptop: pilots on the development ledger, 34 invoices of benchmark ledger 101 (CPU) and 90 of ledger 202 (integrated GPU), on which no prompt was tried. On the 90 invoices the agents (C3) are significantly better than one prompt (C2); the samples are too small for accuracy estimates.">
             {Object.keys(r.pilots).length ? (
               <div className="scroll-x">
                 <table className="table compact">

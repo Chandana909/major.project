@@ -84,7 +84,7 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 2 | Does the audit follow the policy in force? | 0 wrong decisions in 560,000 audits (14 documents) and 0 in 800,000 audits (20 held-out documents). | Measured | 3.2, 3.3 |
 | 3 | How wrong is a system whose thresholds are not updated? | Up to 30.7% of 40,000 invoices decided against the policy in force (strict policy); up to 19.9% on the held-out documents. | Measured | 3.2, 3.3 |
 | 4 | Does the reader refuse what it cannot execute? | 16 edited documents: 7 of 7 harmless edits read correctly, 9 of 9 defective or ambiguous documents refused with the reason. (Before a fix made on 18 October, 2 ambiguous documents were adopted; see 3.4.) | Measured | 3.4 |
-| 5 | What does a policy change do in the application? | Strict policy on 20,000 invoices: findings 300 to 6,546; invoices waiting for review 240 to 6,353. No code edited. | Measured | 3.5 |
+| 5 | What does a policy change do in the application? | Strict policy on 20,000 invoices: findings 300 to 6,546; invoices waiting for review 240 to 6,353. No code edited. Every invoice is audited under the strict document as if it had always applied; in the application a version governs from its effective date (3.9). | Measured | 3.5 |
 | 6 | How do the controls compare with anomaly detectors? | F1 0.833 at precision 1.000, against 0.536 (isolation forest) and 0.498 (one-class SVM); false positives on hard negatives 0.000 against 0.403 and 0.481. | Measured | 4 |
 | 7 | And at a realistic anomaly rate (2.1%)? | F1 0.833 against 0.211 and 0.429. | Measured | 4 |
 | 8 | How fast is the control stage? | About 18 µs per invoice on 5,000 to 40,000 invoices; 18.4 µs on 500,000 with the vendor index (31.7 before it); 172,226 invoices per second with 8 processes (speed-up 3.04). | Measured | 5 |
@@ -95,6 +95,9 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 13 | Do the results hold on a ledger of 500,000 invoices? | Controls F1 0.833 at precision 1.000, against 0.192 (isolation forest) and 0.431 (one-class SVM); 0 wrong decisions in 7,000,000 audits under 14 policy documents, while a frozen system decides up to 31.2% against the policy in force; the deployed path loads the ledger in 36 s and audits and stores every invoice in 708 s. The control stage takes 18.4 µs per invoice (31.7 before the vendor index of the code review), and the web application serves the ledger with every page answering within 5.5 s. | Measured | 5.1 |
 | 14 | Does the system make the revisions the findings require? (AuditBench) | Every one of 1,200 control findings on four ledgers gets a computed revision; 600 of 600 amendments and re-approvals resolve their finding without raising another. | Measured | 3.7 |
 | 15 | Can a policy be evaluated before it is adopted? (Liu et al.) | A dry run over the ledger predicts what a document would change: for the strict policy 6,353 invoices for review, the number its adoption then produces. | Measured | 3.8 |
+| 16 | Does a ledger streamed through Kafka give the batch audit's findings, and does it scale? | 5,000 invoices, 250 vendors and 2,105 e-mails through four topics: every invoice has the batch audit's findings (F1 0.833) on SQLite and PostgreSQL, with 1, 2 or 4 workers, no message in error; on PostgreSQL 4 workers finish in 18.04 s against 27.2 s for one (1.51 times faster). | Measured | 5.2 |
+| 17 | Does a knowledge graph of the policy give a model what questions that join several facts need? | 23 held-out questions: the evidence was complete for 22 with the graph and the lexical ranker (what Ask AI is given) and for 21 with the graph alone, against at most 13 for a passage ranker (lexical, dense or hybrid); the graph stated the derived answer (the role an amount needs, what changed, what checks a rule) for 17 of 19. | Measured (small; questions by the authors) | 8 |
+| 18 | Does the audit send the right invoices to a person? | Demonstration store (5,000 invoices of ledger 202): 281 (5.6%) sent to a person, 97.2% of them anomalous, 0 clean. 500,000-invoice ledger with a later policy (v3.12) applied to every invoice: 160,068 (32.0%), 4.7% anomalous; with each invoice under the version in force on its date: 5,712 (1.1%), 100.0% anomalous. | Measured | 3.9 |
 
 ## 2. Data
 
@@ -326,7 +329,9 @@ amount now also names the role the corrected amount needs, and all 600 pass.
 
 Liu et al. name policy evaluation among the uses of multi-agent systems in
 finance. `auditiq/simulation.py` audits every invoice of the stored ledger
-under the active policy and under a new document, in memory, and reports the
+under the version in force on its date and under a new document, in memory, as
+if the document had always applied, and reports how many invoices it would
+govern if adopted (those dated from its effective date) and the
 difference: decisions moved, invoices newly flagged and cleared, route changes,
 findings by rule and the money newly held for review. Nothing is stored. It is
 in the API (`POST /api/policy/simulate`, a job), the command line
@@ -344,6 +349,34 @@ approved, is what adopting the document and auditing the ledger then produce
 (Section 3.5). A test checks on both backends that the predicted routes and the
 findings per rule equal those of the audit under the new policy
 (`tests/test_simulation.py`).
+
+### 3.9 Each invoice under the policy in force (Measured)
+
+Source: `results/routing_demo.md`, `results/routing_huge_v3.12_retroactive.md`,
+`results/routing_huge.md`; `python -m evaluation.routing --db <store> --name <name> [--run <run id>]`.
+
+An invoice is judged by the policy version in force on its date
+(`db.policy_timeline`, docs/ARCHITECTURE.md). Before this rule (CODE_REVIEW.md,
+finding 22) the application audited every invoice under the version active when
+the audit ran. On the 500,000-invoice ledger, dated 1 April 2025 to 31 March
+2026, version 3.12, which takes effect on 1 April 2026 and halves the Manager
+and Senior Manager limits, had been applied to every invoice (run 2). Sent to a
+person means escalated or sampled.
+
+| Store and policy | Invoices | Sent to a person | Of those, anomalous | Clean invoices sent | Critical / high / medium / low |
+|---|---|---|---|---|---|
+| Demonstration store (ledger 202), latest results | 5,000 | 281 (5.6%) | 97.2% | 0 | 105 / 172 / 45 / 4,678 |
+| 500,000-invoice ledger, v3.12 applied to every invoice (run 2) | 500,000 | 160,068 (32.0%) | 4.7% | 152,117 | 150,570 / 9,498 / 0 / 339,932 |
+| 500,000-invoice ledger, each invoice under the version in force | 500,000 | 5,712 (1.1%) | 100.0% | 0 | 2,142 / 3,570 / 1,071 / 493,217 |
+
+On the demonstration store, the 8 hard negatives sent to a person
+were flagged by the agents of its 90-invoice C5 sample; of the 147 anomalies
+it approves, 60 break rules of medium or low severity (found by the controls,
+approved with the finding recorded) and 87 break judgement rules, which the
+controls do not check (the invoices audited with C1). The risk level is at
+least that of the most severe finding held with confidence (CODE_REVIEW.md,
+finding 23), so the 45 invoices with a medium finding are MEDIUM; scores and
+routes are those of equation (5).
 
 ## 4. Controls against classical anomaly detectors
 
@@ -553,6 +586,55 @@ cost of an invoice no longer depends on its vendor's history** (median 11.4 to
 `huge.md`). The remaining 1.26 times is the larger ledger in memory; the cause
 has not been tested.
 
+### 5.2 Kafka ingestion (Measured)
+
+Command: `python -m evaluation.stream_eval` (Section 13, step 17); sources:
+`auditiq/results/stream/bench_seed_202_sqlite.md` and `..._postgres.md`;
+design: `auditiq/docs/STREAMING.md`. The 5,000 invoices of ledger 202, its 250
+vendors and 2,105 synthetic vendor e-mails (`auditiq_bench.correspondence`,
+seed 7) were published as one burst to four topics of 4 partitions on a local
+Kafka 4.3.2 broker, with the workers waiting; the time runs to the last stored
+result. Invoice workers audit with C1. Each setting was run three times; the
+table gives the median run and the times of all three.
+
+| Backend | Invoice workers | Seconds to the last result, median (all three runs) | Invoices/s | Latency median / p95 (s) | Same findings as the batch audit | F1 | E-mails linked to their invoice | Messages in error |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| SQLite | 1 | 21.92 (19.35, 24.75, 21.92) | 228.1 | 12.8 / 21.2 | 5,000 of 5,000 | 0.833 | 2,100 of 2,105 | 0 |
+| SQLite | 2 | 17.56 (19.97, 17.56, 16.95) | 284.8 | 11.0 / 16.2 | 5,000 of 5,000 | 0.833 | 2,102 of 2,105 | 0 |
+| PostgreSQL | 1 | 27.2 (32.91, 27.2, 26.38) | 183.8 | 16.2 / 26.8 | 5,000 of 5,000 | 0.833 | 2,102 of 2,105 | 0 |
+| PostgreSQL | 2 | 23.22 (23.22, 23.3, 22.66) | 215.3 | 14.0 / 20.9 | 5,000 of 5,000 | 0.833 | 2,101 of 2,105 | 0 |
+| PostgreSQL | 4 | 18.04 (18.46, 18.04, 17.24) | 277.2 | 12.9 / 17.6 | 5,000 of 5,000 | 0.833 | 2,101 of 2,105 | 0 |
+
+**The stream ends with the batch audit's findings.** In every run, every one of
+the 5,000 invoices has the same findings as a batch audit of the ledger (F1
+0.833, precision 1.000, recall 0.714, as in Section 4), on both backends and
+with 1, 2 or 4 workers, with no message in error. Getting there took one
+change: an invoice on the stream is audited against the invoices that came
+before it, and the first invoices of a same-day split are within the daily
+limit when they arrive. Without re-auditing them when a later invoice
+completes the group, a development run of the same script on 27 October (its
+file was overwritten by the runs above) lost the 4.1.1 finding of 21 invoices,
+and F1 was 0.798.
+
+**More workers, less time.** On SQLite one worker took 21.92 s (228.1 invoices/s; its three runs from 19.35 to 24.75 s) and two took 17.56 s (16.95 to 19.97 s). A worker on SQLite holds the write lock for its whole batch, audits included, so what a second worker gains comes from outside the lock, such as fetching and decoding the next batch; that was not measured separately. On PostgreSQL 1, 2 and 4 workers took 27.2, 23.22 and 18.04 s (183.8, 215.3 and 277.2 invoices/s): 1.51 times faster with four workers, on a laptop that also runs the broker and the database. One worker is slower on PostgreSQL than on SQLite: each statement is a round trip to a server rather than a call into a library (the likely reason; not measured separately).
+Latency is the time from publication to the stored result for a burst
+published at once, mostly time waiting in the topic; it is not the time to
+audit one invoice. A batch audit of the same ledger in one process takes
+6.76 to 7.7 s: the stream pays for Kafka, a transaction per batch, the
+per-message log and the vendor wait, in exchange for invoices that are audited
+as they arrive and workers that can be added.
+
+**E-mails.** E-mails and invoices arrive through different topics; an e-mail
+that comes first is linked when its invoice arrives. In every run 2,100 to 2,102 of the 2,105 e-mails were linked to the invoice they were written about. The rest
+name an invoice number that two invoices of the same day share. Without the
+advisory lock that serialises the linking on PostgreSQL, 4 workers linked
+1,569 of 2,105 in a development run on 27 October, before the lock was added
+(its file was overwritten; the race is described in STREAMING.md, Section 5).
+
+One laptop (Intel Core i5-1235U, 12 logical CPUs) ran the broker, the database
+and the workers; OneDrive and other load move the times by tens of percent
+between runs, which is why each setting was run three times.
+
 ## 6. Policies written in their own wording
 
 Source: `results/policy_llm.md`, `python -m evaluation.policy_llm_eval`. Pattern
@@ -760,6 +842,30 @@ Embeddings `nomic-embed-text`; rewriting `qwen2.5-coder:7b`.
 
 Sixteen questions per cell: neighbouring cells differ by one or two questions.
 
+**Policy graph** (Measured, small). Source: `results/graph_retrieval.md`,
+`python -m evaluation.graph_eval --db <store> --out results/graph_retrieval.md`,
+on a store with v2.5 active, v2.6 stored and the three sample documents ingested
+and embedded. 32 questions by the authors that join several facts (an amount and
+the limits, two versions of a rule, a rule and what checks it, sets of rules):
+9 used while the graph's recognition of questions was built (dev) and 23 written
+afterwards and never used to change it (test). Evidence: every passage the answer
+rests on is in the context a model is given. Derived: the graph's facts state the
+answer, checked against their values. docs/POLICY_GRAPH.md.
+
+| Method (five passages per ranker) | Dev evidence | Test evidence | Test derived answer | Test context (characters) |
+|---|---|---|---|---|
+| Lexical, active version | 4/9 | 11/23 | – | 1,580 |
+| Lexical, every version | 3/9 | 13/23 | – | 1,480 |
+| Dense | 4/9 | 12/23 | – | 1,525 |
+| Hybrid | 3/9 | 12/23 | – | 1,701 |
+| Graph | 8/9 | 21/23 | 17/19 | 1,164 |
+| Graph + lexical (Ask AI) | 8/9 | 22/23 | 17/19 | 2,092 |
+
+The two derived answers missed: a question asking whether a tolerance was
+"relaxed" (a word of change the graph does not know) and one that named no rule
+title, for which the graph listed all three changes instead of the one asked.
+What the model then answers from this context is not measured.
+
 **Vendor-history cap** (Measured). Source: `results/history_cap.md`,
 `python -m evaluation.history_cap`. An agent sees at most 40 of a vendor's
 other invoices per selection rule. In the five ledgers the check covers (the
@@ -776,12 +882,13 @@ experimental results.
 |---|---|
 | Pipeline | LangGraph state graph; configurations C1 to C5 are subsets of its stages |
 | Store | SQLite or PostgreSQL 17, same schema; every result, finding (with evidence), challenger removal and trail entry is stored; results are never replaced |
-| REST API | FastAPI, 24 endpoints, background jobs, users with roles (viewer, reviewer, admin) or a shared token, a Content-Security-Policy for the web pages, checks on every upload |
+| REST API | FastAPI, 38 endpoints, background jobs, users with roles (viewer, reviewer, admin) or a shared token, a Content-Security-Policy for the web pages, checks on every upload |
 | Ledger loading | A folder, an Excel workbook or a zip archive of CSV files, checked before it replaces the ledger; a workbook typed by hand is audited exactly like the CSV ledger (tested) |
-| Web application | React and TypeScript, three 3D views in React Three Fiber (vendor risk, pipeline, policy change), with a table beside every 3D view |
-| Tests | 395 Python tests on SQLite and PostgreSQL (391 pass, 4 skipped on the laptop: a time-zone test Windows cannot run and SQLite runs of PostgreSQL-only checks); 30 frontend tests including the 3D scenes; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
-| Deployment | `Dockerfile` (the application in one image) and `deploy/docker-compose.yml` (with PostgreSQL), built and run in CI |
-| Continuous integration | GitHub Actions, five jobs on every push (the fifth builds the container image, starts it with PostgreSQL and audits a ledger in it); the first four: Python (ruff, tests on both backends); frontend (lint, types, tests, build, dependency audit); the browser tests; and PostgreSQL started from the compose file, with every test run against it and a ledger set up and audited in it |
+| Web application | React and TypeScript, four 3D views in React Three Fiber (vendor risk, the review queue, the pipeline, policy change), with a table beside every 3D view; the Kafka topics' state on the pipeline page; an invoice's vendor e-mails on its page; a console page for each layer (Kafka streams with the live topology, publishing and the workers; the agents with a replay of an audit; the knowledge base with the embedding map; the knowledge graph; RAG retrieval step by step) |
+| Kafka ingestion | Four partitioned topics (invoices, the vendor feed, vendor e-mails, policy documents) read by stateless workers per consumer group; each message stored exactly once (offsets kept with the data); a local broker without Docker (`scripts/kafka_local.py`, Kafka 4.3.2); a broker in CI and in the compose file (Section 5.2, docs/STREAMING.md) |
+| Tests | 478 Python tests on SQLite and PostgreSQL, 8 of them against a Kafka broker (skipped without one); 59 frontend tests including the 3D scenes, the architecture diagram, the policy graph and the console pages; 10 end-to-end tests of the whole application in Chromium (Playwright); no test calls a model |
+| Deployment | `Dockerfile` (the application in one image) and `deploy/docker-compose.yml` (with PostgreSQL, a Kafka broker and the stream workers), built and run in CI |
+| Continuous integration | GitHub Actions, five jobs on every push (the fifth builds the container image, starts it with PostgreSQL and Kafka, audits a ledger in it and sends vendor e-mails through the e-mail topic to the workers); the first four: Python (ruff, tests on both backends and against a Kafka broker); frontend (lint, types, tests, build, dependency audit); the browser tests; and PostgreSQL started from the compose file, with every test run against it and a ledger set up and audited in it |
 | Batch audit | 20,000 invoices under C1 on PostgreSQL: 2 min 58 s after bulk extraction (4 min 57 s before) |
 
 A concurrency defect found during testing (simultaneous web requests could
@@ -872,7 +979,7 @@ The paper draws its own figures in TikZ and pgfplots from the same numbers
 
 ## 13. How to reproduce every number
 
-From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 16 need no model.
+From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8, 12 to 17 and 19 need no model.
 
 | Step | Command | Writes |
 |---|---|---|
@@ -892,6 +999,9 @@ From `auditiq/`, after `pip install -e ".[dev]"`. Steps 1 to 8 and 12 to 16 need
 | 14 | `python -m evaluation.collect_results` (after the others) | `results/results.json` |
 | 15 | `python -m evaluation.huge --work <folder outside OneDrive>` (generation takes hours; about 330 MB) | `results/huge_seed_606/` |
 | 16 | `python -m evaluation.revisions` | `results/revisions.*` |
+| 17 | `python -m evaluation.stream_eval --backend sqlite --workers 1 2` and `--backend postgres --workers 1 2 4` (a Kafka broker, `scripts/kafka_local.py`; PostgreSQL for the second) | `results/stream/` |
+| 18 | `python -m evaluation.graph_eval --db <store> --out results/graph_retrieval.md` (the sample documents ingested; `policy embed` for the dense rankers) | `results/graph_retrieval.*` |
+| 19 | `python -m evaluation.routing --db <store> --name <name> [--run <run id>]` (reads a store; audits nothing) | `results/routing_<name>.*` |
 
 Model replies are cached (`.auditiq/`), so re-running step 10 or 11 on the same
 machine reuses them; on another machine the model must be configured

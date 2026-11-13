@@ -21,6 +21,12 @@ Policy documents and questions:
     python -m auditiq ask "Why is INV40042 high risk?"
     python -m auditiq ask-data "Which five vendors have the most escalated invoices?"
 
+Kafka ingestion (a broker at AUDITIQ_KAFKA_BOOTSTRAP; locally: python scripts/kafka_local.py start):
+    python -m auditiq stream topics                        create the four topics (invoice, email, vendor, compliance)
+    python -m auditiq stream publish --dataset data/bench_seed_202 --emails mail.mbox
+    python -m auditiq stream work --processes 4            one worker per topic, four on the invoices
+    python -m auditiq stream status                        messages, processed, lag and outcomes per topic
+
 Other:
     python -m auditiq serve                                REST API and web frontend on http://127.0.0.1:8000
     python -m auditiq status                               backend, ledger, row counts
@@ -36,13 +42,15 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import multiprocessing
 import sys
 from pathlib import Path
 
+import httpx
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from . import copilot, db, ledger_import, policy_extract, policy_ingest, policy_llm, service, simulation
+from . import copilot, db, ledger_import, policy_extract, policy_ingest, policy_llm, service, simulation, stream
 from .audit_pack import render_markdown
 from .config import configure_logging
 from .extraction import extract
@@ -78,14 +86,17 @@ def table(rows: list[dict], columns: list[str]) -> str:
 # ------------------------------------------------------------------- setup
 def cmd_setup(args: argparse.Namespace) -> int:
     conn = open_db(args)
-    ledger = ledger_import.read(Path(args.dataset), conn)
-    if not ledger.usable:
-        for problem in ledger.problems:
-            print(f"problem: {problem}", file=sys.stderr)
-        print("the ledger was not loaded", file=sys.stderr)
-        return 1
-    counts = ledger_import.load(conn, ledger)
-    print(f"ledger loaded from {args.dataset}: " + ", ".join(f"{n} {t}" for t, n in counts.items()))
+    if args.dataset:
+        ledger = ledger_import.read(Path(args.dataset), conn)
+        if not ledger.usable:
+            for problem in ledger.problems:
+                print(f"problem: {problem}", file=sys.stderr)
+            print("the ledger was not loaded", file=sys.stderr)
+            return 1
+        counts = ledger_import.load(conn, ledger)
+        print(f"ledger loaded from {args.dataset}: " + ", ".join(f"{n} {t}" for t, n in counts.items()))
+    else:
+        print("no ledger loaded: the records are to arrive through the Kafka topics (`stream work`)")
     for version in args.policies:
         db.store_policy(conn, load_policy(version), active=(version == args.policies[0]))
     print(f"policy versions stored: {', '.join(args.policies)} (active: {args.policies[0]})")
@@ -100,7 +111,11 @@ def cmd_setup(args: argparse.Namespace) -> int:
     if embedder is None:
         print("no embedding model configured (AUDITIQ_EMBED_MODEL): policy search is lexical only")
     else:
-        print(f"embedded {embed_chunks(conn, embedder)} chunks with {embedder.name}")
+        try:
+            print(f"embedded {embed_chunks(conn, embedder)} chunks with {embedder.name}")
+        except (httpx.HTTPError, RuntimeError, OSError) as error:     # the store is usable without the vectors
+            print(f"the embedding model {embedder.name} did not answer ({type(error).__name__}): policy search is "
+                  "lexical until `python -m auditiq policy embed` has run", file=sys.stderr)
     return 0
 
 
@@ -188,14 +203,34 @@ def cmd_policy(args: argparse.Namespace) -> int:
             print("Set AUDITIQ_EMBED_MODEL (and an endpoint) first; see .env.example.", file=sys.stderr)
             return 2
         print(f"embedded {embed_chunks(conn, embedder)} chunks with {embedder.name}")
+    elif args.action == "apply":
+        ids, unchanged = service.out_of_line(conn)
+        print(f"auditing {len(ids):,} invoice(s) with C1, each under the policy version in force on its date; "
+              f"{unchanged:,} keep their results")
+
+        def progress(done: int, total: int) -> None:
+            if done % 5000 == 0 or done == total:
+                print(f"  {done}/{total}", flush=True)
+
+        runs = service.audit_in_force(conn, PRESETS["C1"], None, ids, progress=progress,
+                                      note="policy applied from the command line: each invoice under the version in "
+                                           "force on its date")
+        print(json.dumps({**service.runs_summary(conn, runs), "unchanged": unchanged}, indent=1))
     elif args.action == "activate":
         db.set_active_policy(conn, args.arguments[0])
         print(f"active policy version: {args.arguments[0]}")
+        for period in db.timeline_summary(conn):
+            print(f"  v{period['version']} governs invoices dated {period['from'] or 'any day'}"
+                  + (f" until {period['until']}" if period["until"] else " onward")
+                  + f": {period['invoices']:,} invoice(s), {period['under_other_version']:,} last audited under "
+                  "another version")
     elif args.action == "search":
         index = PolicyIndex.from_db(conn, embedder=EndpointEmbedder.from_env())
-        mode = args.mode if args.mode != "auto" else index.default_mode()
-        print(f"ranking: {mode}\n")
-        for i, hit in enumerate(index.search(" ".join(args.arguments), k=args.k, mode=args.mode), start=1):
+        # With a chat model the question is restated in the documents' vocabulary first (the best measured setting).
+        client = make_client() if args.mode == "auto" and LLMSettings.configured() else None
+        mode = args.mode if args.mode != "auto" else index.default_mode(restated=client is not None)
+        print(f"ranking: {mode}" + (" after the model restated the question" if client else "") + "\n")
+        for i, hit in enumerate(index.search(" ".join(args.arguments), k=args.k, mode=mode, client=client), start=1):
             print(f"[{i}] {hit.source}\n    {hit.text}\n")
     return 0
 
@@ -248,7 +283,6 @@ def adopt_with_model(conn, path: Path, args: argparse.Namespace) -> int:
 def cmd_run(args: argparse.Namespace) -> int:
     conn = open_db(args)
     config = PRESETS[args.config]
-    policy = db.read_policy(conn, args.policy)
     ids = args.invoice or db.invoice_ids(conn, only_unaudited=args.unaudited, limit=args.limit)
     if not ids:
         print("no invoice to audit")
@@ -259,10 +293,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         if done % 1000 == 0 or done == total:
             print(f"  {done}/{total}", flush=True)
 
-    print(f"auditing {len(ids)} invoice(s) with {config.name} under policy v{policy.version}")
-    run_id = service.audit_invoices(conn, config, policy, client, ids, sample_rate=args.sample_rate,
-                                    workers=args.workers, note=args.note, progress=progress)
-    print(json.dumps(service.run_summary(conn, run_id), indent=1))
+    options = {"sample_rate": args.sample_rate, "workers": args.workers, "note": args.note, "progress": progress}
+    if args.policy:             # every invoice under the version named, whatever its date: an experiment, a what-if
+        policy = db.read_policy(conn, args.policy)
+        print(f"auditing {len(ids)} invoice(s) with {config.name} under policy v{policy.version}, whatever their dates")
+        print(json.dumps(service.run_summary(conn, service.audit_invoices(conn, config, policy, client, ids, **options)),
+                         indent=1))
+        return 0
+    print(f"auditing {len(ids)} invoice(s) with {config.name}, each under the policy version in force on its date")
+    print(json.dumps(service.runs_summary(conn, service.audit_in_force(conn, config, client, ids, **options)), indent=1))
     return 0
 
 
@@ -273,7 +312,8 @@ def cmd_audit(args: argparse.Namespace) -> int:
         txn = next((t for t in extract(Path(args.dataset)) if t["invoice"]["invoice_id"] == args.invoice), None)
     else:
         conn = open_db(args)
-        policy = db.read_policy(conn, args.policy)
+        version = args.policy or db.versions_in_force(conn, [args.invoice]).get(args.invoice)
+        policy = db.read_policy(conn, version)
         txn = db.extract_one(conn, args.invoice)
     if txn is None:
         print(f"{args.invoice} was not found", file=sys.stderr)
@@ -454,6 +494,70 @@ def cmd_graph(args: argparse.Namespace) -> int:
     return 0
 
 
+def _work(kind: str, target: str | None, config: str, batch: int, idle_exit: float | None) -> dict:
+    """One stream worker: what `stream work` runs, in a process of its own when there are several."""
+    configure_logging()
+    conn = db.connect(target)
+    try:
+        cfg = PRESETS[config]
+        client = make_client() if kind == "invoice" and cfg.agents != "none" else None
+        return stream.Worker(stream.StreamSettings.from_env(), conn, kind, config=cfg, client=client,
+                             batch=batch).run(idle_exit=idle_exit)
+    finally:
+        conn.close()
+
+
+def cmd_stream(args: argparse.Namespace) -> int:
+    settings = stream.StreamSettings.from_env()
+    if args.action == "topics":
+        for topic, count in stream.ensure_topics(settings, args.partitions).items():
+            print(f"{topic:32s} {count} partition(s)")
+    elif args.action == "publish":
+        if not (args.dataset or args.emails or args.policy):
+            print("nothing to publish: give --dataset, --emails or --policy", file=sys.stderr)
+            return 2
+        stream.ensure_topics(settings)
+        publisher = stream.Publisher(settings)
+        for path in args.policy or []:
+            stream.publish_policy(publisher, Path(path), activate=args.activate)
+        if args.dataset:
+            stream.publish_ledger(publisher, Path(args.dataset), limit=args.limit)
+        if args.emails:
+            stream.publish_mailbox(publisher, Path(args.emails))
+        sent = publisher.close()
+        print("published " + ", ".join(f"{n:,} to {settings.topic(kind)}" for kind, n in sent.items() if n))
+    elif args.action == "work":
+        stream.ensure_topics(settings)
+        kinds = list(stream.KINDS) if args.topic == "all" else [args.topic]
+        jobs = [kind for kind in kinds for _ in range(args.processes if kind == "invoice" else 1)]
+        if len(jobs) == 1:
+            print(json.dumps(_work(jobs[0], args.db, args.config, args.batch, args.idle_exit)))
+            return 0
+        # One process per worker: the workers share nothing but the database and the broker.
+        print(f"starting {len(jobs)} workers: " + ", ".join(f"{jobs.count(k)} on {settings.topic(k)}" for k in kinds))
+        processes = [multiprocessing.Process(target=_work, args=(kind, args.db, args.config, args.batch,
+                                                                 args.idle_exit), name=f"{kind}-worker-{i}")
+                     for i, kind in enumerate(jobs)]
+        for process in processes:
+            process.start()
+        try:
+            for process in processes:
+                process.join()
+        except KeyboardInterrupt:           # the workers got the interrupt too and stop after their batch
+            for process in processes:
+                process.join(timeout=60)
+        failed = [p.name for p in processes if p.exitcode]
+        if failed:
+            print(f"workers that failed: {', '.join(failed)}", file=sys.stderr)
+            return 1
+    else:
+        rows = stream.status(settings, open_db(args))
+        print(table([{**r, "outcomes": ", ".join(f"{k} {v:,}" for k, v in sorted(r["outcomes"].items())) or "-",
+                      **{k: f"{r[k]:,}" for k in ("messages", "processed", "lag")}} for r in rows],
+                    ["topic", "partitions", "messages", "processed", "lag", "outcomes"]))
+    return 0
+
+
 def cmd_check_llm(args: argparse.Namespace) -> int:
     client = make_client(use_cache=False)
     reply = client.complete([{"role": "user", "content": 'Reply with the JSON object {"ok": true} and nothing else.'}])
@@ -471,8 +575,9 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="command", required=True)
 
     setup = sub.add_parser("setup", help="load a dataset, the policy versions and the policy PDFs into the database")
-    setup.add_argument("--dataset", required=True, help="folder with the five record tables as CSV, a .zip "
-                                                     "archive of them, or an .xlsx workbook with one sheet each")
+    setup.add_argument("--dataset", help="folder with the five record tables as CSV, a .zip archive of them, or an "
+                                          ".xlsx workbook with one sheet each; leave it out when the ledger is to "
+                                          "arrive through Kafka")
     setup.add_argument("--policies", nargs="+", default=["2.5", "2.6"], help="versions to store; the first is active")
     setup.set_defaults(run=cmd_setup)
 
@@ -483,7 +588,7 @@ def main(argv: list[str] | None = None) -> int:
     led.set_defaults(run=cmd_ledger)
 
     pol = sub.add_parser("policy", help="policy documents: make-pdfs, ingest, adopt, simulate, embed, activate, search")
-    pol.add_argument("action", choices=["make-pdfs", "ingest", "adopt", "simulate", "embed", "activate", "search"])
+    pol.add_argument("action", choices=["make-pdfs", "ingest", "adopt", "simulate", "embed", "activate", "apply", "search"])
     pol.add_argument("arguments", nargs="*", help="files to ingest, the PDF to adopt or simulate, the version to activate, "
                                                   "or the search text")
     pol.add_argument("--activate", action="store_true", help="adopt: make the adopted version the active one")
@@ -505,7 +610,9 @@ def main(argv: list[str] | None = None) -> int:
 
     run = sub.add_parser("run", help="audit invoices from the database and store the results")
     run.add_argument("--config", choices=list(PRESETS), default="C1")
-    run.add_argument("--policy", default=None, help="policy version (default: the active one)")
+    run.add_argument("--policy", default=None,
+                     help="audit every invoice under this version, whatever its date (default: each invoice under "
+                          "the version in force on its date)")
     run.add_argument("--invoice", nargs="+", help="invoice ids (default: all)")
     run.add_argument("--unaudited", action="store_true", help="only invoices without a stored result")
     run.add_argument("--limit", type=int)
@@ -519,7 +626,7 @@ def main(argv: list[str] | None = None) -> int:
     audit.add_argument("--invoice", required=True)
     audit.add_argument("--dataset", help="read the records from this CSV folder, not from the database")
     audit.add_argument("--config", choices=list(PRESETS), default="C5")
-    audit.add_argument("--policy", default=None)
+    audit.add_argument("--policy", default=None, help="policy version (default: the one in force on the invoice's date)")
     audit.add_argument("--review", action="store_true", help="pause an escalated invoice for a decision")
     audit.add_argument("--sample-rate", type=float, default=1.0)
     audit.add_argument("--json", action="store_true", help="print the pack as JSON")
@@ -581,6 +688,25 @@ def main(argv: list[str] | None = None) -> int:
     graph.add_argument("--review", action="store_true")
     graph.set_defaults(run=cmd_graph)
 
+    st = sub.add_parser("stream", help="the Kafka ingestion layer: create the topics, publish documents, run the "
+                                       "workers, show the status")
+    st.add_argument("action", choices=["topics", "publish", "work", "status"])
+    st.add_argument("--partitions", type=int, help="topics: partitions per topic (default: AUDITIQ_KAFKA_PARTITIONS, 4)")
+    st.add_argument("--dataset", help="publish: a ledger folder; its vendor feed and its invoices are published")
+    st.add_argument("--limit", type=int, help="publish: only the first N invoices, in ledger order")
+    st.add_argument("--emails", help="publish: an mbox file of vendor e-mails")
+    st.add_argument("--policy", nargs="+", help="publish: policy documents (PDF) to compile into policy versions")
+    st.add_argument("--activate", action="store_true", help="publish --policy: make each adopted version the active one")
+    st.add_argument("--topic", choices=[*stream.KINDS, "all"], default="all", help="work: the topic to consume")
+    st.add_argument("--processes", type=int, default=1, help="work: number of invoice workers, one process each "
+                                                             "(at most the partitions of the invoice topic are busy)")
+    st.add_argument("--config", choices=list(PRESETS), default="C1", help="work: the configuration invoices are "
+                                                                          "audited with")
+    st.add_argument("--batch", type=int, default=500, help="work: messages read and stored per transaction")
+    st.add_argument("--idle-exit", type=float, default=None, help="work: stop after this many seconds without a "
+                                                                  "message (default: run until Ctrl+C)")
+    st.set_defaults(run=cmd_stream)
+
     check = sub.add_parser("check-llm", help="send one request to the configured model")
     check.set_defaults(run=cmd_check_llm)
 
@@ -588,7 +714,7 @@ def main(argv: list[str] | None = None) -> int:
     configure_logging()
     try:
         return args.run(args)
-    except (db.DatabaseUnavailable, LLMError) as error:
+    except (db.DatabaseUnavailable, LLMError, stream.StreamUnavailable) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
     finally:

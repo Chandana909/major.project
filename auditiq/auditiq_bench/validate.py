@@ -113,7 +113,13 @@ def validate(tables: dict[str, pd.DataFrame], policy: dict, expected_counts: dic
     for row in labels.itertuples():
         clauses = set(filter(None, row.clause_ids.split("|")))
         if row.label == "anomalous":
-            if row.class_id not in CLASSES or not clauses or not clauses <= set(CLASSES[row.class_id].clauses):
+            secondary = set(filter(None, getattr(row, "secondary_class_ids", "").split("|")))
+            allowed = set(CLASSES[row.class_id].clauses) if row.class_id in CLASSES else set()
+            for extra in secondary:
+                allowed |= set(CLASSES[extra].clauses) if CLASSES.get(extra) and CLASSES[extra].kind == "rule" else set()
+            if (row.class_id not in CLASSES or not clauses or not clauses <= allowed
+                    or any(CLASSES.get(x) is None or CLASSES[x].kind != "rule" for x in secondary)
+                    or not all(set(CLASSES[x].clauses) & clauses for x in secondary)):
                 problems.append(f"{row.Index}: class {row.class_id!r} with clauses {sorted(clauses)}")
         elif clauses or row.class_id:
             problems.append(f"{row.Index}: {row.label} invoice carries a class or clause")

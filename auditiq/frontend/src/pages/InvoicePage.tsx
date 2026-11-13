@@ -2,8 +2,8 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, waitForJob } from "../api/client";
 import type { ConfigName, InvoiceDetail, Job, PackFlag, RecordMap } from "../api/types";
-import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, RiskMeter, RouteBadge, SeverityBadge } from "../components/ui";
-import { cell, inr, ratio, stateLabel } from "../lib/format";
+import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, RouteBadge, ScoreComposition, SeverityBadge } from "../components/ui";
+import { cell, inr, ratio, SEVERITY_COLORS, SEVERITY_WEIGHTS, stateLabel } from "../lib/format";
 import { useApi } from "../lib/useApi";
 
 function Records({ title, record }: { title: string; record: RecordMap | null }) {
@@ -58,7 +58,7 @@ function FindingCard({ flag }: { flag: PackFlag }) {
       </header>
       <p>{flag.message}</p>
       <div className="finding-meta">
-        <span>Confidence {flag.confidence === null ? "n/a" : ratio(flag.confidence, 2)}</span>
+        <span>{flag.confidence === null ? "Confidence not measured: this configuration has no re-runs" : `Confidence ${ratio(flag.confidence, 2)}`}</span>
         {terms && (
           <span className="muted">
             grounding {terms.g ?? "–"} · clause validity {terms.p ?? "–"} · agreement {terms.a === null ? "–" : ratio(terms.a, 2)}
@@ -168,6 +168,7 @@ function InvoiceSearch() {
     <div className="page">
       <header className="page-head">
         <div>
+          <span className="eyebrow">Audit · Invoices</span>
           <h1>Invoices</h1>
           <p className="muted">Find an invoice by its id or its vendor, and open its audit pack.</p>
         </div>
@@ -270,6 +271,7 @@ function InvoiceView({ id }: { id: string }) {
           <p className="crumbs">
             <Link to="/invoice">Invoices</Link> / <span className="mono">{id}</span>
           </p>
+          <span className="eyebrow">Audit · Invoice</span>
           <h1>
             <span className="mono">{id}</span> <RouteBadge route={result?.route} />
           </h1>
@@ -300,14 +302,18 @@ function InvoiceView({ id }: { id: string }) {
             <>
               <Panel title="Audit result" subtitle={`${result.configuration}${result.model ? ` with ${result.model}` : ""} under policy v${result.policy_version} · run ${result.run_id} · ${result.created_at}`}>
                 <div className="scores">
-                  <div>
-                    <span className="muted">Count-based risk</span>
-                    <RiskMeter score={result.r0} />
-                  </div>
-                  <div>
-                    <span className="muted">Confidence-weighted risk</span>
-                    <RiskMeter score={result.rc} />
-                  </div>
+                  <ScoreComposition title="Count-based risk (R0)" flags={pack.flags} score={result.r0} />
+                  <ScoreComposition title="Confidence-weighted risk (Rc)" flags={pack.flags} score={result.rc} weighted />
+                </div>
+                <div className="legend">
+                  {(["critical", "high", "medium", "low"] as const).map((k) => (
+                    <span key={k}>
+                      <i style={{ background: SEVERITY_COLORS[k] }} /> {k} · {SEVERITY_WEIGHTS[k]}
+                    </span>
+                  ))}
+                  <span>
+                    <i className="lift-swatch" /> lift to a floor (high 50, critical 70)
+                  </span>
                 </div>
                 <p className="action">{pack.recommended_action}</p>
               </Panel>
@@ -391,9 +397,24 @@ function InvoiceView({ id }: { id: string }) {
               </ol>
             </Panel>
           )}
+          {d.emails && d.emails.length > 0 && (
+            <Panel title={`Vendor e-mails (${d.emails.length})`} subtitle="Correspondence that names this invoice, as it arrived through the e-mail topic.">
+              {d.emails.map((e) => (
+                <details key={e.message_id} className="hit">
+                  <summary>
+                    <strong>{e.subject}</strong>
+                    <div className="muted small">
+                      {e.sender} · {e.sent_at ?? "undated"}
+                    </div>
+                  </summary>
+                  <p className="small mail-body">{e.body}</p>
+                </details>
+              ))}
+            </Panel>
+          )}
           <Panel title="Benchmark answer key" subtitle="Synthetic ledgers only: what was injected into this invoice. The audit never reads it.">
             <label className="toggle">
-              <input type="checkbox" checked={withLabel} onChange={(e) => setWithLabel(e.target.checked)} /> Show
+              <input type="checkbox" checked={withLabel} onChange={(e) => setWithLabel(e.target.checked)} /> Show the answer key
             </label>
             {withLabel && d.benchmark_label && (
               <dl className="records">

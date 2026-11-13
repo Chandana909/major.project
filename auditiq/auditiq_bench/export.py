@@ -103,6 +103,7 @@ def to_tables(b: Builder) -> dict[str, pd.DataFrame]:
         t["invoice_id"] = f"INV{40001 + i}"
 
     inv_rows, label_rows, log_entries = [], [], []
+    compound = any(t["label"]["secondary"] for t in invoices)     # only a ledger with compound frauds has the column
     for t in invoices:
         inv, v = t["invoice"], t["vendor"]
         if t["po"] is not None:
@@ -155,6 +156,7 @@ def to_tables(b: Builder) -> dict[str, pd.DataFrame]:
                                    if lab["related_key"] is not None else ""),
             "hard_negative_type": lab["hard_negative_type"],
             "note": lab["note"],
+            **({"secondary_class_ids": "|".join(lab["secondary"])} if compound else {}),
         })
 
     po_rows = [{

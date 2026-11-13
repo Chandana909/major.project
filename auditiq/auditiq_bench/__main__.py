@@ -8,6 +8,8 @@
     pilot_seed_909               same composition; the only ledger prompts may be tuned on
     swap_seed_404                policy-swap ledger: 150 boundary invoices among 4,850 clean ones
     large_seed_505               a ledger at a realistic anomaly rate: 20,000 invoices, 1,000 vendors
+    collusion_seed_707, _808     benchmark ledgers with planted collusion rings (707 to develop on, 808 held out)
+    final_seed_2025              the ledger of the application: 25,000 invoices, compound frauds, six approver rings
 
 Output, per dataset, under data/<name>/:
     vendor_master.csv, purchase_orders.csv, goods_receipts.csv, invoices.csv,
@@ -44,7 +46,7 @@ TABLES = ["vendor_master", "purchase_orders", "goods_receipts", "invoices", "app
 @dataclass(frozen=True)
 class Profile:
     name: str
-    kind: str                      # benchmark, pilot, policy_swap, large
+    kind: str                      # benchmark, pilot, policy_swap, large, collusion
     seed: int
     n_invoices: int
     n_vendors: int
@@ -58,6 +60,16 @@ class Profile:
 BENCHMARK = ("A benchmark ledger of AuditIQ-Bench. It holds the 420 anomalous invoices (30 of each of the fourteen "
              "classes) and the 120 hard negatives of the evaluation protocol inside a ledger of 5,000 invoices from "
              "250 vendors. Results in the paper are reported on the three benchmark ledgers (seeds 101, 202, 303).")
+COLLUSION = ("A benchmark ledger with planted collusion. Besides the 420 anomalous invoices and the 120 hard negatives "
+             "of a benchmark ledger it holds two pairs of shell vendors (one legal entity registered twice) and two "
+             "rings of an approver and a few vendors whose invoices the approver passes above the limit of the role. "
+             "The members of each ring are in `manifest.json` (`rings`), never read by the pipeline.")
+FINAL = ("The ledger of the application and of the demonstrations: 25,000 invoices from 1,250 vendors over the "
+         "financial year 2025-26, the fourteen anomaly classes (141 invoices each) and five hard-negative types "
+         "(60 each) of the benchmark, about 40% of the eligible anomalous invoices carrying one to three further "
+         "violations (compound frauds, so that risk scores run from 0 to 100 and not between a few fixed values), "
+         "four pairs of shell vendors and six approver rings. `labels.csv` has a column `secondary_class_ids` for "
+         "the classes added to a compound fraud; `manifest.json` lists the rings.")
 PROFILES = [
     Profile("bench_seed_101", "benchmark", 101, 5000, 250, BENCHMARK),
     Profile("bench_seed_202", "benchmark", 202, 5000, 250, BENCHMARK),
@@ -75,6 +87,13 @@ PROFILES = [
             "invoices from 1,000 vendors (2.1% anomalous), with twice the hard negatives. It is the ledger the "
             "application is demonstrated on, and the one on which precision at a realistic rate is measured.",
             per_hard_negative=2 * PER_HARD_NEGATIVE_TYPE, eval_ordinary=480, approver_counts=(40, 25, 12, 2)),
+    Profile("collusion_seed_707", "collusion", 707, 5000, 250, COLLUSION +
+            " This is the development ledger: the ring detector is designed and the live demonstration runs on it."),
+    Profile("collusion_seed_808", "collusion", 808, 5000, 250, COLLUSION +
+            " This is the held-out ledger: the detection of the planted rings is reported on it, and nothing is "
+            "tuned on it."),
+    Profile("final_seed_2025", "final", 2025, 25000, 1250, FINAL,
+            per_class=141, per_hard_negative=60, eval_ordinary=800, approver_counts=(50, 30, 15, 3)),
 ]
 # Generated only when named (--only huge_seed_606): about 330 MB of CSV, too large for the repository. Its file
 # hashes are committed in results/huge_seed_606/manifest.json, so a regenerated copy can be checked.
@@ -151,15 +170,28 @@ def generate(profile: Profile, out_root: Path, policy_version: str = "2.5", alt_
                           n_blocked_vendors=n_blocked, approver_counts=profile.approver_counts)
         n_ordinary = (profile.n_invoices - profile.per_class * len(CLASSES)
                       - profile.per_hard_negative * len(HARD_NEGATIVE_TYPES))
-        builder.build_main(profile.per_class, profile.per_hard_negative, n_ordinary)
+        if profile.kind == "final":
+            builder.build_final(profile.per_class, profile.per_hard_negative, n_ordinary)
+        elif profile.kind == "collusion":
+            builder.build_collusion(profile.per_class, profile.per_hard_negative, n_ordinary)
+        else:
+            builder.build_main(profile.per_class, profile.per_hard_negative, n_ordinary)
         tables = to_tables(builder)
+        # The invoices of a planted ring are anomalous invoices of their class, beside the benchmark's own.
+        ring_labels = tables["labels"][tables["labels"]["group_id"].str.startswith("RING-")]
+        planted = ring_labels["class_id"].value_counts()
         expected = {
             "classes": list(CLASSES), "hard_negatives": list(HARD_NEGATIVE_TYPES),
-            "values": {"invoices": profile.n_invoices, "vendors": profile.n_vendors, "clean": n_ordinary,
-                       **{f"class:{c}": profile.per_class for c in CLASSES},
+            "values": {"invoices": profile.n_invoices, "vendors": profile.n_vendors,
+                       "clean": n_ordinary - len(ring_labels),
+                       **{f"class:{c}": profile.per_class + int(planted.get(c, 0)) for c in CLASSES},
                        **{f"hn:{h}": profile.per_hard_negative for h in HARD_NEGATIVE_TYPES}},
         }
         problems = validate(tables, policy, expected)
+        if builder.rings:
+            manifest["rings"] = [{**ring, "invoices": sorted(ring_labels.loc[ring_labels["group_id"] == ring["id"],
+                                                                             "invoice_id"])}
+                                 for ring in builder.rings]
 
     labels = tables["labels"]
     tables["eval_subset"] = evaluation_subset(labels, profile.eval_ordinary, builder.rng)

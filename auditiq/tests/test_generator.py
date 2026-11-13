@@ -176,7 +176,8 @@ def test_boundary_set_is_anomalous_under_v25_and_clean_under_v26():
 def test_every_shipped_dataset_is_a_full_size_ledger():
     from auditiq_bench.__main__ import PROFILES
     assert {p.name for p in PROFILES} == {"bench_seed_101", "bench_seed_202", "bench_seed_303", "pilot_seed_909",
-                                          "swap_seed_404", "large_seed_505"}
+                                          "swap_seed_404", "large_seed_505", "collusion_seed_707",
+                                          "collusion_seed_808", "final_seed_2025"}
     assert all(p.n_invoices >= 5000 for p in PROFILES)            # at least about 20,000 records in the ledger
     assert len({p.seed for p in PROFILES}) == len(PROFILES)
 
@@ -218,3 +219,30 @@ def test_each_dataset_folder_documents_itself(small_dataset, boundary_dataset):
     assert manifest["counts"]["invoices"] == 1200 and set(manifest["sha256"]) >= {"invoices.csv", "eval_subset.csv"}
     swap = (boundary_dataset / "README.md").read_text(encoding="utf-8")
     assert "clean under policy v2.6" in swap and "| R6 |" in swap and "| J1 |" not in swap
+
+
+# ---- the final ledger: compound frauds --------------------------------------
+
+@pytest.fixture(scope="module")
+def final_tables() -> dict[str, pd.DataFrame]:
+    b = Builder(31, policy("2.5"), START, END, n_vendors=120, n_blocked_vendors=4, approver_counts=(8, 5, 3, 1))
+    b.build_final(per_class=12, per_hard_negative=6, n_ordinary=900)
+    return to_tables(b)
+
+
+def test_compound_frauds_carry_every_violation_in_their_label(final_tables):
+    assert validate(final_tables, policy("2.5")) == []
+    labels = final_tables["labels"].fillna("")
+    compound = labels[labels["secondary_class_ids"] != ""]
+    assert len(compound) > 0 and set(labels.loc[labels["label"] != "anomalous", "secondary_class_ids"]) == {""}
+    clauses = compound["clause_ids"].str.split("|").map(len)
+    assert (clauses >= 2).all() and clauses.max() <= 4
+    for row in compound.itertuples():
+        for extra in row.secondary_class_ids.split("|"):
+            assert set(CLASSES[extra].clauses) & set(row.clause_ids.split("|"))      # the added class is a violation
+
+
+def test_a_compound_ledger_has_many_distinct_violation_sets(final_tables):
+    labels = final_tables["labels"].fillna("")
+    sets = labels.loc[labels["label"] == "anomalous", "clause_ids"].map(lambda s: tuple(sorted(s.split("|"))))
+    assert sets.nunique() >= 25          # a single-injection ledger has at most one set per clause (16)

@@ -27,6 +27,7 @@ dependencies = [
     "fastapi>=0.115",
     "pydantic>=2",
     "uvicorn>=0.34",
+    "confluent-kafka>=2.6",
     # Lower bounds that leave out releases with published vulnerabilities (pip-audit, 21 October 2026): the
     # upload parser and the server framework under FastAPI. Pillow cannot follow: Streamlit requires pillow<13,
     # and the fixes are in 13. AuditIQ decodes no uploaded image with it (PDFs are read by PyMuPDF; pandas opens

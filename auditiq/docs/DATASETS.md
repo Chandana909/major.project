@@ -2,7 +2,7 @@
 
 AuditIQ-Bench is the set of synthetic procurement ledgers this project is built and evaluated on. **This file is generated** from the manifests under `data/` by `python -m auditiq_bench.overview`; the prose is in `auditiq_bench/overview.py`.
 
-There are 6 datasets with 45,000 invoices and 187,413 ledger records in all. Each is a complete ledger: vendors, purchase orders, goods receipts, invoices and approval logs that refer to one another, plus the ground truth of every invoice.
+There are 8 datasets with 75,000 invoices and 311,935 ledger records in all. Each is a complete ledger: vendors, purchase orders, goods receipts, invoices and approval logs that refer to one another, plus the ground truth of every invoice.
 
 | Dataset | Seed | Vendors | Purchase orders | Goods receipts | Invoices | Approval entries | Ledger records | Anomalous | Hard negatives | Evaluation subset |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -12,6 +12,8 @@ There are 6 datasets with 45,000 invoices and 187,413 ledger records in all. Eac
 | [`pilot_seed_909`](../data/pilot_seed_909/README.md) | 909 | 250 | 4,920 | 4,910 | 5,000 | 5,675 | 20,755 | 420 (8.4%) | 120 | 1,200 |
 | [`swap_seed_404`](../data/swap_seed_404/README.md) | 404 | 250 | 5,000 | 5,000 | 5,000 | 5,654 | 20,904 | 150 (3.0%) | 0 | 300 |
 | [`large_seed_505`](../data/large_seed_505/README.md) | 505 | 1,000 | 19,920 | 19,910 | 20,000 | 22,665 | 83,495 | 420 (2.1%) | 240 | 1,200 |
+| [`collusion_seed_707`](../data/collusion_seed_707/README.md) | 707 | 250 | 4,920 | 4,910 | 5,000 | 5,701 | 20,781 | 471 (9.4%) | 120 | 1,251 |
+| [`final_seed_2025`](../data/final_seed_2025/README.md) | 2025 | 1,250 | 24,624 | 24,577 | 25,000 | 28,290 | 103,741 | 2,275 (9.1%) | 300 | 3,657 |
 
 | Dataset | What it is for |
 |---|---|
@@ -21,6 +23,8 @@ There are 6 datasets with 45,000 invoices and 187,413 ledger records in all. Eac
 | `pilot_seed_909` | Development. The only ledger on which prompts and settings may be tried. |
 | `swap_seed_404` | The policy-swap experiment: the same ledger audited under policy v2.5 and v2.6. |
 | `large_seed_505` | The ledger the application is demonstrated on, and precision at a realistic anomaly rate. |
+| `collusion_seed_707` | Vendor collusion rings: vendors and approvers linked by a shared PAN or GSTIN. 707 is the one to develop on; 808 is held out. |
+| `final_seed_2025` | The ledger of the application and of the demonstrations: 25,000 invoices with compound frauds, planted shell vendors and approver rings, at a fraud rate of about 9%. |
 
 ## Files of a dataset
 

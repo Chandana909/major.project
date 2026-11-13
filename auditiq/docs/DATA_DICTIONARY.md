@@ -179,7 +179,7 @@ One row per version of the policy.
 |---|---|---|---|
 | `version` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Version of the policy, for example `2.5`. |
 | `policy_name` | TEXT | TEXT | Title of the policy. |
-| `effective_date` | TEXT | DATE | First day the version is in force. |
+| `effective_date` | TEXT | DATE | First day the version is in force: the version judges the invoices dated from then until the next governing version takes effect (`db.policy_timeline`). |
 | `markdown_content` | TEXT NOT NULL | TEXT NOT NULL | The policy as text. This is what the agents read; it is rendered from the registry, so a threshold appears in the text exactly as the controls apply it. |
 | `registry` | TEXT NOT NULL | TEXT NOT NULL | The clause registry as JSON: every clause with its title, severity, kind and parameters. The only place where thresholds are stored. A version that a model helped to read from a document also records, under `adoption`, the model, the reviewer who confirmed the values, the time, and which values the reviewer supplied. |
 | `is_active` | INTEGER NOT NULL DEFAULT 0 | SMALLINT NOT NULL DEFAULT 0 | 1 for the version the audit applies, 0 for the others. Exactly one row has 1. |
@@ -412,7 +412,7 @@ Facts about the database itself.
 
 | Column | SQLite | PostgreSQL | Meaning |
 |---|---|---|---|
-| `key` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Name of the fact. `dataset` is the name of the loaded ledger; `schema` identifies the version of the schema the database has (on PostgreSQL also whether the copilot's read-only role has its grants), so that a connection to an up-to-date database changes nothing. |
+| `key` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | Name of the fact. `dataset` is the name of the loaded ledger; `labels_policy` is the policy version its benchmark labels were written for (from the dataset's manifest); `schema` identifies the version of the schema the database has (on PostgreSQL also whether the copilot's read-only role has its grants), so that a connection to an up-to-date database changes nothing. |
 | `value` | TEXT | TEXT | Its value. |
 
 ## Access
@@ -434,6 +434,83 @@ One row per user of the REST API.
 | `token_hash` | TEXT NOT NULL UNIQUE | TEXT NOT NULL UNIQUE | SHA-256 of the user's token. The token itself is shown once, when the user is created. |
 | `created_at` | TEXT | TIMESTAMP | When the user was created. |
 | `disabled` | INTEGER NOT NULL DEFAULT 0 | SMALLINT NOT NULL DEFAULT 0 | 1 if the user may no longer use the API. |
+
+## Ingestion
+
+What arrives through the Kafka topics (docs/STREAMING.md): the vendors' e-mails, and where each worker stands in its topic. The ledger tables above are written by the workers too, from the vendor and invoice topics.
+
+### `emails`
+
+One row per vendor e-mail received.
+
+- **Written by:** The Kafka topic `auditiq.email` (`stream work`), as MIME messages; synthetic ones come from `python -m auditiq_bench.correspondence`
+- **Used by:** The invoice page of the web application shows an invoice's e-mails.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `message_id` | TEXT PRIMARY KEY | TEXT PRIMARY KEY | The message's `Message-ID` header. |
+| `sender` | TEXT | TEXT | Address in the `From` header, in lower case. |
+| `sender_domain` | TEXT | TEXT | The part of `sender` after the `@`. |
+| `recipient` | TEXT | TEXT | Address in the `To` header. |
+| `subject` | TEXT | TEXT | The `Subject` header. |
+| `sent_at` | TEXT | TIMESTAMP | The `Date` header, as a timestamp. |
+| `body` | TEXT | TEXT | The plain-text body. |
+| `invoice_id` | TEXT | TEXT | The invoice the e-mail names (by its invoice number, in the subject first), or empty while that invoice has not arrived. |
+| `vendor_id` | TEXT | TEXT | The vendor of that invoice. |
+| `received_at` | TEXT | TIMESTAMP | When the e-mail was stored. |
+
+Also: `INDEX (invoice_id)`.
+
+### `email_mentions`
+
+One row per invoice-like number an e-mail contains.
+
+- **Written by:** Written with the e-mail
+- **Used by:** An e-mail can arrive before the invoice it names; when an invoice arrives, the e-mails that mention its number are linked to it.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `message_id` | TEXT NOT NULL | TEXT NOT NULL | The e-mail. |
+| `mention` | TEXT NOT NULL | TEXT NOT NULL | A token of letters and digits, as written, such as `INV-ROU-0146`. |
+
+Also: `PRIMARY KEY (message_id, mention)`; `INDEX (mention)`.
+
+### `stream_offsets`
+
+Where each consumer group stands in each partition of its topic.
+
+- **Written by:** The stream workers, in the same transaction as what the messages wrote
+- **Used by:** A worker resumes from here after a restart or a rebalance, so each message changes the database exactly once; a worker whose partition has moved past its batch rolls the batch back.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `consumer_group` | TEXT NOT NULL | TEXT NOT NULL | The group, such as `auditiq-invoice-workers`. |
+| `topic` | TEXT NOT NULL | TEXT NOT NULL | The topic, such as `auditiq.invoice`. |
+| `partition_no` | INTEGER NOT NULL | INTEGER NOT NULL | The partition. |
+| `next_offset` | BIGINT NOT NULL | BIGINT NOT NULL | Offset of the next message to process. |
+
+Also: `PRIMARY KEY (consumer_group, topic, partition_no)`.
+
+### `stream_log`
+
+One row per message processed from a topic.
+
+- **Written by:** The stream workers
+- **Used by:** `python -m auditiq stream status`, `GET /api/stream`, and the time from publication to result measured by `evaluation.stream_eval`.
+
+| Column | SQLite | PostgreSQL | Meaning |
+|---|---|---|---|
+| `topic` | TEXT NOT NULL | TEXT NOT NULL | The topic. |
+| `partition_no` | INTEGER NOT NULL | INTEGER NOT NULL | The partition. |
+| `kafka_offset` | BIGINT NOT NULL | BIGINT NOT NULL | The message's offset in the partition. |
+| `doc_key` | TEXT | TEXT | The message key: the vendor id for vendors and invoices, the Message-ID for e-mails, the file name for policy documents. |
+| `produced_ms` | BIGINT | BIGINT | When the message was published (Kafka's create time), in milliseconds since 1970. |
+| `processed_ms` | BIGINT | BIGINT | When it was processed, in milliseconds since 1970. |
+| `outcome` | TEXT NOT NULL | TEXT NOT NULL | `stored`, `audited`, `adopted`, `refused` (a policy document the controls cannot execute) or `error`. |
+| `detail` | TEXT | TEXT | What came of it: the route and number of findings, the invoice an e-mail was linked to, the policy version, or why it failed. |
+| `result_id` | BIGINT | BIGINT | For an audited invoice, its result. |
+
+Also: `PRIMARY KEY (topic, partition_no, kafka_offset)`.
 
 ## Views
 

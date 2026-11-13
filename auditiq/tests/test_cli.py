@@ -85,15 +85,30 @@ def test_a_ledger_is_exported_to_a_workbook_checked_and_imported(cli, small_data
 
 
 def test_the_policy_swap_from_the_command_line(cli, boundary_dataset):
-    """Activating version 2.6 changes what the same controls flag, with no other change."""
+    """Version 2.6 changes what the same controls flag, with no other change. Activated, it governs the invoices
+    from its effective date on, and these are all older: they stay under 2.5. `--policy 2.6` audits them as if 2.6
+    had always applied."""
     cli("setup", "--dataset", str(boundary_dataset))
     code, out = cli("run", "--config", "C1")
     assert '"invoices": 150' in out and '"flags": 150' in out and '"PENDING_REVIEW": 150' in out
     code, out = cli("policy", "activate", "2.6")
     assert code == 0 and "active policy version: 2.6" in out
+    assert "v2.5 governs invoices dated 2025-04-01 until 2026-04-01: 150 invoice(s), 0 last audited under" in out
     code, out = cli("run", "--config", "C1")
-    assert '"flags": 0' in out and '"AUTO_APPROVED": 150' in out
+    assert "each under the policy version in force on its date" in out and '"flags": 150' in out
+    code, out = cli("run", "--config", "C1", "--policy", "2.6")
+    assert "whatever their dates" in out and '"flags": 0' in out and '"AUTO_APPROVED": 150' in out
     assert "0 invoice(s) waiting for review" in cli("queue")[1]
+
+
+def test_policy_apply_brings_every_result_under_the_version_in_force(cli, boundary_dataset):
+    cli("setup", "--dataset", str(boundary_dataset))
+    cli("run", "--config", "C1", "--policy", "2.6")               # as if 2.6 had applied: not the version in force
+    code, out = cli("policy", "apply")
+    assert code == 0 and "auditing 150 invoice(s) with C1" in out and '"flags": 150' in out
+    cli("policy", "activate", "2.6")                              # takes effect after every invoice of this ledger
+    code, out = cli("policy", "apply")
+    assert code == 0 and "auditing 0 invoice(s)" in out and "150 keep their results" in out
 
 
 def test_every_connection_a_command_opens_is_closed_when_it_ends(cli, boundary_dataset, monkeypatch):

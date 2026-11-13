@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { api, waitForJob } from "../api/client";
-import type { Hit, Job, Preview, Proposal, Simulation } from "../api/types";
+import type { ApplySummary, Hit, Job, PolicyPeriod, Preview, Proposal, Simulation } from "../api/types";
 import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, SeverityBadge } from "../components/ui";
 import { count, inr } from "../lib/format";
 import { changeRows } from "../lib/policy";
@@ -106,14 +107,63 @@ function ProposalForm({ proposal, uploadId, onAdopted }: { proposal: Proposal; u
   );
 }
 
+/** Which version governs the invoices of which dates, and whether their results follow it. */
+function Timeline({ periods }: { periods: PolicyPeriod[] }) {
+  const total = periods.reduce((t, x) => t + x.invoices, 0);
+  return (
+    <div className="timeline" aria-label="Policy timeline">
+      <div className="timeline-bar" aria-hidden>
+        {periods.map((x, i) => (
+          <i key={x.version} className={`tl-${i % 4}`} style={{ flexGrow: Math.max(x.invoices, total ? total * 0.04 : 1) }}>
+            v{x.version}
+          </i>
+        ))}
+      </div>
+      <table className="table compact" aria-label="Which version governs which invoices">
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>Governs invoices dated</th>
+            <th className="num">Invoices</th>
+            <th>Their results</th>
+          </tr>
+        </thead>
+        <tbody>
+          {periods.map((x) => (
+            <tr key={x.version}>
+              <td className="mono strong">v{x.version}</td>
+              <td>{x.from ? `from ${x.from}` : "any date"}{x.until ? ` until ${x.until}` : " onward"}</td>
+              <td className="num">{count(x.invoices)}</td>
+              <td>
+                {x.under_other_version || x.unaudited ? (
+                  <Badge tone="warn">
+                    {[x.under_other_version ? `${count(x.under_other_version)} under another version` : "", x.unaudited ? `${count(x.unaudited)} not audited` : ""].filter(Boolean).join(", ")}
+                  </Badge>
+                ) : (
+                  <Badge tone="good">{x.invoices ? "audited under it" : "no invoice yet"}</Badge>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 /** The dry run of a policy document: what would change on the ledger if it were adopted. */
 function Impact({ impact }: { impact: Simulation }) {
   const changed = impact.findings_by_rule.filter((r) => r.before !== r.after);
   return (
     <div className="impact" aria-label="Simulated impact">
       <p>
-        Under version {impact.new_version ?? "–"} instead of {impact.active_version}, <strong>{count(impact.decisions_moved)}</strong> of{" "}
-        {count(impact.invoices)} decisions would change: {count(impact.newly_flagged)} invoices newly flagged, {count(impact.cleared)} cleared.
+        Adopted, version {impact.new_version ?? "–"} takes effect {impact.effective_date ? <>on <strong>{impact.effective_date}</strong></> : "with no stated date"} and
+        would govern <strong>{count(impact.governs_if_adopted)}</strong> of the ledger's {count(impact.invoices)} invoices; the others stay under the version in force on their date.
+      </p>
+      <p>
+        As if it had always applied, instead of {Object.keys(impact.baseline).map((v) => `v${v}`).join(" and ") || `v${impact.active_version}`},{" "}
+        <strong>{count(impact.decisions_moved)}</strong> of {count(impact.invoices)} decisions would change: {count(impact.newly_flagged)} invoices newly flagged,{" "}
+        {count(impact.cleared)} cleared.
         {impact.amount_newly_held > 0 && <> ₹{inr(impact.amount_newly_held)} would newly wait for review.</>} Nothing has been stored.
       </p>
       {Object.keys(impact.route_changes).length > 0 && (
@@ -296,7 +346,7 @@ function AdoptDocument({ hasModel, onChanged }: { hasModel: boolean; onChanged: 
 
 function PolicySearch() {
   const [q, setQ] = useState("");
-  const [hits, setHits] = useState<{ mode: string; hits: Hit[] } | null>(null);
+  const [hits, setHits] = useState<{ mode: string; restated: string | null; hits: Hit[] } | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const search = async (e: FormEvent) => {
     e.preventDefault();
@@ -309,7 +359,7 @@ function PolicySearch() {
     }
   };
   return (
-    <Panel title="Search the policy documents" subtitle={hits ? `Ranking: ${hits.mode}` : "By meaning when an embedding model is configured, by wording otherwise."}>
+    <Panel title="Search the policy documents" subtitle={hits ? `Ranking: ${hits.mode}${hits.restated ? ` · searched with the model's restatement: “${hits.restated}”` : ""}` : "With a model the question is restated in the policy's words first; by meaning with embeddings; by wording otherwise."}>
       <form className="search" onSubmit={search}>
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="bill raised on the weekend" aria-label="Question or keywords" />
         <button className="btn btn-primary" type="submit">
@@ -346,8 +396,9 @@ export function PolicyPage() {
   const apply = async () => {
     setError(null);
     try {
-      const summary = await waitForJob<{ invoices: number; flags: number; states: Record<string, number> }>(await api.applyPolicy(), setJob as (j: Job<{ invoices: number; flags: number; states: Record<string, number> }>) => void, 1000);
-      setNotice(`${count(summary.invoices)} invoices audited under the active version: ${count(summary.flags)} findings, ${count(summary.states.PENDING_REVIEW ?? 0)} waiting for review.`);
+      const summary = await waitForJob<ApplySummary>(await api.applyPolicy(), setJob as (j: Job<ApplySummary>) => void, 1000);
+      const runs = summary.runs.map((r) => `v${r.policy_version}: ${count(r.invoices)}`).join(", ");
+      setNotice(`${count(summary.invoices)} invoices audited, each under the version in force on its date${runs ? ` (${runs})` : ""}; ${count(summary.unchanged)} kept their results. ${count(summary.flags)} findings, ${count(summary.states.PENDING_REVIEW ?? 0)} waiting for review.`);
       policy.reload();
     } catch (err) {
       setError(err as Error);
@@ -359,7 +410,7 @@ export function PolicyPage() {
   const activate = async (version: string) => {
     try {
       await api.activate(version);
-      changed(`Version ${version} is now the policy the audit applies.`);
+      changed(`Version ${version} is now active: it governs the invoices dated from its effective date on.`);
     } catch (err) {
       setError(err as Error);
     }
@@ -369,6 +420,7 @@ export function PolicyPage() {
     <div className="page">
       <header className="page-head">
         <div>
+          <span className="eyebrow">Governance · Policy</span>
           <h1>Policy</h1>
           <p className="muted">The organisation's policy, as data: every threshold the controls apply comes from a policy document.</p>
         </div>
@@ -380,20 +432,31 @@ export function PolicyPage() {
       )}
       <ErrorBox error={policy.error ?? error} onRetry={policy.reload} />
       {!p && policy.loading && <Loading what="Reading the policy store" />}
-      {p && p.results_under_other_versions > 0 && (
+      {p && (p.under_other_version > 0 || p.unaudited > 0) && (
         <div className="banner">
           <span>
-            {count(p.results_under_other_versions)} invoices were last audited under another policy version than v{p.active}. Their results do not yet follow the active policy.
+            {p.under_other_version > 0 && <>{count(p.under_other_version)} invoices were last audited under a policy version that does not govern their date. </>}
+            {p.unaudited > 0 && <>{count(p.unaudited)} invoices have not been audited. </>}
+            Each invoice is judged by the version in force on its date.
           </span>
           <button className="btn btn-primary" onClick={apply} disabled={Boolean(job)}>
-            Audit the ledger under v{p.active}
+            Audit them under the version in force
           </button>
         </div>
       )}
       <JobProgress job={job} />
 
+      {p && p.timeline.length > 0 && (
+        <Panel
+          title="Which version governs which invoices"
+          subtitle="An invoice is judged by the policy in force on its date: adopting a stricter version does not turn invoices approved under the old rules into breaches. A version governs from its effective date until the next one takes effect."
+        >
+          <Timeline periods={p.timeline} />
+        </Panel>
+      )}
+
       {p && (
-        <Panel title="Versions" subtitle="The active version is the one the next audit applies.">
+        <Panel title="Versions" subtitle="The active version governs the invoices dated from its effective date on; each earlier version governs from its own date until the next. A stored version dated on or after the active one's that is not active governs nothing.">
           <table className="table">
             <thead>
               <tr>
@@ -427,6 +490,19 @@ export function PolicyPage() {
             </tbody>
           </table>
         </Panel>
+      )}
+
+      {p && p.active && (
+        <div className="banner subtle">
+          <span>
+            The rules of every version are also drawn as a <strong>knowledge graph</strong>, with what checks them and what each version changes, and every question can be traced
+            through retrieval step by step.
+          </span>
+          <span className="row">
+            <Link className="btn" to="/graph">Knowledge graph</Link>
+            <Link className="btn" to="/rag">RAG retrieval</Link>
+          </span>
+        </div>
       )}
 
       <AdoptDocument hasModel={Boolean(health.data?.model)} onChanged={changed} />

@@ -1,25 +1,5 @@
 // A small typed client for the AuditIQ REST API.
-import type {
-  ConfigName,
-  CopilotAnswer,
-  DataAnswer,
-  Health,
-  InvoiceDetail,
-  InvoiceRow,
-  Job,
-  LedgerLoad,
-  Me,
-  Overview,
-  Pipeline,
-  PolicyOverview,
-  Preview,
-  Proposal,
-  Simulation,
-  QueueItem,
-  Results,
-  VendorPoint,
-  Hit,
-} from "./types";
+import type { AiLayer, Analytics, ApplySummary, CaseAnswer, CaseGraphView, ConfigName, GraphAnswer, KnowledgeLayer, PeekMessage, RagTrace, StreamLogRow, StreamSources, SystemStatus, CopilotAnswer, DataAnswer, Health, Hit, InvoiceDetail, InvoiceRow, Job, LedgerLoad, Me, Overview, Pipeline, PolicyGraphData, PolicyOverview, Preview, Proposal, QueueItem, Results, Rings, Simulation, StreamStatus, VendorPoint } from "./types";
 
 const TOKEN_KEY = "auditiq.token";
 
@@ -97,8 +77,25 @@ export const api = {
   me: () => request<Me>("/api/me"),
   overview: () => request<Overview>("/api/overview"),
   riskMap: () => request<{ vendors: VendorPoint[] }>("/api/risk-map"),
+  analytics: () => request<Analytics>("/api/analytics"),
+  rings: (limit = 40) => request<Rings>(`/api/rings?limit=${limit}`),
   pipeline: () => request<Pipeline>("/api/pipeline"),
-  queue: (limit = 500) => request<{ total: number; items: QueueItem[] }>(`/api/queue?limit=${limit}`),
+  stream: () => request<StreamStatus>("/api/stream"),
+  system: () => request<SystemStatus>("/api/system"),
+  streamSources: () => request<StreamSources>("/api/stream/sources"),
+  streamPublish: (body: { source: "ledger" | "mailbox" | "policy"; name: string; limit?: number; activate?: boolean }) =>
+    request<Job<{ source: string; name: string; sent: Record<string, number> }>>("/api/stream/publish", json(body)),
+  streamWork: (body: { kinds?: string[]; idle_exit?: number }) =>
+    request<Job<{ counts: Record<string, Record<string, number>> }>>("/api/stream/work", json(body)),
+  streamLog: (limit = 60) => request<{ messages: StreamLogRow[] }>(`/api/stream/log?limit=${limit}`),
+  streamPeek: (kind: string, n = 8) => request<{ topic: string; messages: PeekMessage[] }>(`/api/stream/peek?kind=${kind}&n=${n}`),
+  ragTrace: (q: string, k = 5) => request<RagTrace>(`/api/rag/trace?q=${encodeURIComponent(q)}&k=${k}`),
+  knowledge: () => request<KnowledgeLayer>("/api/knowledge"),
+  ai: () => request<AiLayer>("/api/ai"),
+  queue: (limit = 500, level?: string) =>
+    request<{ total: number; items: QueueItem[]; rules: Record<string, string | null>; levels?: Partial<Record<string, { invoices: number; amount: number }>> }>(
+      `/api/queue?limit=${limit}${level ? `&level=${level}` : ""}`,
+    ),
   invoices: (q: string, limit = 50) =>
     request<{ items: InvoiceRow[] }>(`/api/invoices?q=${encodeURIComponent(q)}&limit=${limit}`),
   invoice: (id: string, withLabel = false) =>
@@ -120,6 +117,13 @@ export const api = {
     return request<Job<LedgerLoad>>("/api/ledger", { method: "POST", body: form });
   },
   policy: () => request<PolicyOverview>("/api/policy"),
+  policyGraph: (version?: string) =>
+    request<PolicyGraphData>(`/api/policy/graph${version ? `?version=${encodeURIComponent(version)}` : ""}`),
+  askGraph: (q: string, version?: string) =>
+    request<GraphAnswer>(`/api/policy/graph/ask?q=${encodeURIComponent(q)}${version ? `&version=${encodeURIComponent(version)}` : ""}`),
+  caseGraph: (focus?: string) =>
+    request<CaseGraphView>(`/api/case-graph${focus ? `?focus=${encodeURIComponent(focus)}` : ""}`),
+  askCaseGraph: (q: string) => request<CaseAnswer>(`/api/case-graph/ask?q=${encodeURIComponent(q)}`),
   activate: (version: string) => request<{ active: string }>("/api/policy/activate", json({ version })),
   preview: (file: File) => {
     const form = new FormData();
@@ -142,8 +146,9 @@ export const api = {
     version?: string | null;
     activate: boolean;
   }) => request<{ version: string; adopted: boolean }>("/api/policy/confirm", json(body)),
-  applyPolicy: () => request<Job<{ invoices: number; flags: number; states: Record<string, number> }>>("/api/policy/apply", { method: "POST" }),
-  search: (q: string, k = 4) => request<{ mode: string; hits: Hit[] }>(`/api/search?q=${encodeURIComponent(q)}&k=${k}`),
+  applyPolicy: () => request<Job<ApplySummary>>("/api/policy/apply", { method: "POST" }),
+  search: (q: string, k = 4) =>
+    request<{ mode: string; restated: string | null; hits: Hit[] }>(`/api/search?q=${encodeURIComponent(q)}&k=${k}`),
   ask: (question: string, invoiceId?: string) =>
     request<Job<CopilotAnswer>>("/api/copilot/ask", json({ question, invoice_id: invoiceId || null })),
   askData: (question: string) => request<Job<DataAnswer>>("/api/copilot/data", json({ question })),

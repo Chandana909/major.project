@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FOLDERS = ["auditiq", "auditiq_bench", "evaluation", "app", "scripts", "tests"]
 # The import name of each package whose distribution is named differently.
 DISTRIBUTION = {"dotenv": "python-dotenv", "faker": "faker", "pymupdf": "pymupdf", "fitz": "pymupdf",
-                "sklearn": "scikit-learn", "yaml": "pyyaml"}
+                "sklearn": "scikit-learn", "yaml": "pyyaml", "confluent_kafka": "confluent-kafka"}
 
 
 def declared() -> set[str]:
@@ -23,7 +23,8 @@ def declared() -> set[str]:
 
 
 def imported() -> dict[str, set[str]]:
-    local = {p.name for p in ROOT.iterdir() if p.is_dir()} | {p.stem for p in (ROOT / "tests").glob("*.py")}
+    local = ({p.name for p in ROOT.iterdir() if p.is_dir()} | {p.stem for p in (ROOT / "tests").glob("*.py")}
+             | {p.stem for p in (ROOT / "scripts").glob("*.py")})     # scripts/ imports its neighbours (kafka_local)
     found: dict[str, set[str]] = {}
     for folder in FOLDERS:
         for path in (ROOT / folder).rglob("*.py"):

@@ -47,6 +47,7 @@ flowchart LR
         CSV[Dataset CSV files]
         REG[Clause registry JSON]
         PDF[Policy PDFs]
+        KAF[[Kafka topics: invoice, vendor, email, compliance]]
     end
     subgraph store [Database: SQLite or PostgreSQL]
         LED[(Ledger)]
@@ -65,6 +66,10 @@ flowchart LR
     LLM[[Chat model, OpenAI-compatible]]
     EMB[[Embedding model]]
     CSV --> LED
+    KAF --> WRK[Stream workers]
+    WRK --> LED
+    WRK --> EXT
+    WRK --> POL
     REG --> POL
     PDF --> POL
     LED --> EXT
@@ -96,6 +101,8 @@ flowchart LR
 | Pipeline graph and configurations | `auditiq/graph.py` | |
 | Confidence, score, route | `auditiq/scoring.py` | re-runs only |
 | Batch audit, workflow status | `auditiq/service.py` | as configured |
+| Kafka ingestion: topics, publisher, stateless workers (docs/STREAMING.md) | `auditiq/stream.py` | as configured |
+| Vendor e-mails: parsing, linking to invoices | `auditiq/emails.py` | no |
 | Audit pack | `auditiq/audit_pack.py` | no |
 | The revision each control finding requires | `auditiq/corrections.py` | no |
 | A policy document simulated on the ledger before adoption | `auditiq/simulation.py` | no |
@@ -188,6 +195,17 @@ Confidence measures whether a finding is supported and stable. It does not
 measure whether it is correct: a model that makes the same mistake every time
 gets full agreement.
 
+### Which policy judges an invoice
+
+An invoice is judged by the policy in force on its date, not by whatever version is active when it is
+audited (`db.policy_timeline`, `service.audit_in_force`). The active version governs from its effective date;
+before that date each earlier version governs from its own; a stored version that is not active and takes
+effect on or after the active one's date (a draft, or a version replaced) governs nothing. Adopting a
+stricter policy therefore does not turn the invoices approved under the old rules into breaches. Applying a
+policy (`POST /api/policy/apply`, `policy apply`) audits again the invoices whose result is not under the
+version in force on their date. To audit every invoice under one version whatever its date, as an experiment
+or a what-if, name it: `run --policy 3.12`; the simulation (`policy simulate`) does the same in memory.
+
 ### Score and route
 
 Severity weights are critical 30, high 20, medium 10, low 5. A kept critical
@@ -202,6 +220,14 @@ least 50 and Rc is not; `approve` otherwise. Rc never exceeds R0, so
 confidence weighting never changes which invoices are approved; it only moves
 invoices from mandatory review to sampled review. A test checks this property
 on generated flags.
+
+The risk level is the band of Rc (70 critical, 50 high, 30 medium, below that
+low), and at least the level of the most severe finding held with confidence.
+The floors already lift a critical or high finding into its band; a medium
+finding has none, so alone it scores 10 and, without the second part, an
+invoice that breaks a medium rule would have the level of a clean one. The
+level changes neither the score nor the route: a medium or low finding alone
+is approved automatically and recorded on the invoice.
 
 The workflow status follows from the route: `approve` gives `AUTO_APPROVED`,
 `escalate` gives `PENDING_REVIEW`, and `sample` gives `PENDING_REVIEW` for the
@@ -282,6 +308,20 @@ Optionally the chat model first restates the question in the policy's terms.
 The default ranking was chosen on the development half of the paraphrased
 questions and is reported on the other half (`results/retrieval.md`).
 
+## Policy knowledge graph
+
+`auditiq/policy_graph.py` builds the policy as a graph from the clause registry,
+the ingested documents and the code that checks each rule: version, sections,
+rules, parameters, the roles of the approval limits, the control functions and
+agents, the pages, and what other versions change. Nothing in it comes from a
+model. For a question it recognises rule numbers, versions, amounts, roles,
+agents and topics, follows the edges and states facts with their passages: the
+role an amount needs, the structuring band, round amounts, what changed between
+versions, what checks a rule, sets of rules. Ask AI gives these facts to the
+model beside the retrieved passages. Evaluated against the passage rankers on
+32 questions (`evaluation/graph_eval.py`, RESULTS.md Section 8); details in
+docs/POLICY_GRAPH.md.
+
 ## Copilot
 
 Three kinds of question, each answered from retrieved material with citations:
@@ -301,6 +341,18 @@ Three kinds of question, each answered from retrieved material with citations:
    read-only connection, with a row limit and a time limit; on SQLite an
    authorizer refuses every other object, on PostgreSQL the query runs as the
    role `auditiq_reader`.
+
+## Kafka ingestion
+
+Besides a ledger loaded in one go, documents can arrive one by one through four
+Kafka topics: invoices (with their PO, goods receipt and approvals), the vendor
+feed, vendor e-mails and policy documents. A stateless worker per topic and
+consumer group stores what it reads; the invoice workers audit each invoice as
+it arrives, against the vendor's invoices that came before it, and audit a
+day's earlier invoices again when a later one completes a same-day split. Each
+message changes the database exactly once: the offsets are stored with what the
+messages wrote, in one transaction. Partitions are the scaling lever.
+docs/STREAMING.md has the design and the measurements.
 
 ## REST API and web application
 

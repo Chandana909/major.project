@@ -62,6 +62,7 @@ def _label(kind: str = "clean") -> dict:
         "related_key": None,        # key of the original invoice (R3, J1)
         "hard_negative_type": "",
         "note": "",
+        "secondary": [],            # classes added on top of class_id by a compound fraud (build_final)
     }
 
 
@@ -107,6 +108,8 @@ class Builder:
         w = np.array([v.weight for v in self.normal_vendors])
         self.normal_weights = w / w.sum()
         self.approvers = self._make_approvers()
+        self.rings: list[dict] = []                 # planted collusion (build_collusion); empty in other ledgers
+        self.ring_vendors: set[str] = set()
 
     # ------------------------------------------------------------------ utils
     def pick(self, seq):
@@ -758,6 +761,156 @@ class Builder:
             made += 1
         if made < total:
             raise RuntimeError(f"only {made} of {total} duplicates could be placed")
+
+    # ----------------------------------------------------------- collusion
+    def _ring_vendor(self) -> Vendor:
+        """A vendor that is not blocked and belongs to no planted ring yet."""
+        while True:
+            vendor = self.pick(self.normal_vendors)
+            if vendor.vendor_id not in self.ring_vendors:
+                self.ring_vendors.add(vendor.vendor_id)
+                return vendor
+
+    def share_identity(self, kind: str) -> dict:
+        """Planted shell vendors: a second vendor record of one legal entity. With ``kind`` "pan" the second
+        record has the entity's PAN and a registration of its own; with "gstin" it has the same registration.
+        Called before any invoice is built, since an invoice carries the registration of its vendor."""
+        assert not self.txns and kind in ("pan", "gstin")
+        first, second = self._ring_vendor(), self._ring_vendor()
+        if kind == "pan":
+            second.pan = first.pan
+            second.gstin = second.state_code + first.pan + second.gstin[12:]
+            if second.gstin == first.gstin:         # the same state and suffix: a second registration differs
+                second.gstin = second.gstin[:12] + ("2" if second.gstin[12] != "2" else "3") + second.gstin[13:]
+        else:
+            second.state_code, second.pan, second.gstin = first.state_code, first.pan, first.gstin
+        ring = {"id": self.next_group("RING"), "kind": "identity", "shares": "PAN" if kind == "pan" else "GSTIN",
+                "approver": None, "role": None, "vendors": [first.vendor_id, second.vendor_id]}
+        self.rings.append(ring)
+        return ring
+
+    def cross_registration(self, ring: dict, total: int) -> None:
+        """Invoices of the second shell vendor that carry the registration of the first (class R5, Rule 3.1.3)."""
+        first, second = (next(v for v in self.vendors if v.vendor_id == vendor_id) for vendor_id in ring["vendors"])
+        for _ in range(total):
+            txn = self.clean(vendor=second)
+            txn["invoice"]["gstin"] = first.gstin
+            self.mark(txn, "R5", ["3.1.3"], group_id=ring["id"],
+                      note=f"invoice GSTIN '{first.gstin}' of {first.vendor_id}; vendor master '{second.gstin}'")
+
+    def plant_approver_ring(self, role: str, n_vendors: int, flagged: int, ordinary: int) -> dict:
+        """A planted ring of one approver and a few vendors: of each vendor the approver approves ``flagged``
+        invoices above the limit of the role (class R7, Rule 5.1.1) and ``ordinary`` invoices within it."""
+        taken = {ring["approver"] for ring in self.rings}
+        approver = self.pick([name for name in self.approvers[role] if name not in taken])
+        limit = self.limits[role]
+        ring = {"id": self.next_group("RING"), "kind": "approver", "shares": None, "approver": approver, "role": role,
+                "vendors": []}
+        above, within = (1.05 * limit, min(2.5 * limit, MAX_AMOUNT)), (0.10 * limit, 0.75 * limit)
+        for _ in range(n_vendors):
+            vendor = self._ring_vendor()
+            ring["vendors"].append(vendor.vendor_id)
+            for target in [above] * flagged + [within] * ordinary:
+                txn = None
+                while txn is None:
+                    _, item, qty, price = self.draw_spec(vendor=vendor, target=target)
+                    txn = self.build(vendor, item, qty, price, role=role, approver=approver, allow_chain=False)
+                if target is above:
+                    self.mark(txn, "R7", ["5.1.1"], group_id=ring["id"],
+                              note=f"amount {txn['invoice']['amount']:,.2f} approved by {role} (limit {limit:,.0f}); "
+                                   f"planted ring of {approver}")
+        self.rings.append(ring)
+        return ring
+
+    def build_collusion(self, per_class: int = PER_CLASS, per_hard_negative: int = PER_HARD_NEGATIVE_TYPE,
+                        n_ordinary: int = N_ORDINARY) -> list[dict]:
+        """A benchmark ledger with planted collusion. Two pairs of shell vendors (one legal entity registered
+        twice: once sharing the PAN, with invoices of one under the registration of the other, once sharing the
+        whole GST registration), and two rings of an approver and vendors whose invoices the approver passes
+        above the limit of the role. The sizes vary with the seed. The rest is ``build_main``, with as many
+        ordinary invoices fewer as were planted, so the ledger keeps its size. Returns the rings."""
+        shells = self.share_identity("pan")
+        self.share_identity("gstin")
+        for role in self.roles[:2]:
+            self.plant_approver_ring(role, n_vendors=int(self.rng.integers(2, 5)), flagged=int(self.rng.integers(6, 9)),
+                                     ordinary=int(self.rng.integers(2, 5)))
+        self.cross_registration(shells, total=int(self.rng.integers(5, 9)))
+        self.build_main(per_class, per_hard_negative, n_ordinary - len(self.txns))
+        return self.rings
+
+    # ------------------------------------------------------------ compound
+    # An invoice that breaks one rule is the textbook case. A real fraud rarely stops at one: the approver passes
+    # an invoice above the role's limit, billed under another registration, for goods only partly received. The
+    # three rules below are added to an invoice that already carries one injection, and every added violation is
+    # in its label (`clause_ids`, and the class in `secondary_class_ids`), so that the validator checks it too.
+    COMPOUND_PRIMARIES = ("R1", "R2", "R4", "R5", "R7", "R8", "R9", "R10", "J3", "J4")
+
+    def compound_options(self, txn: dict) -> list[str]:
+        """Rule classes that can be added to an anomalous invoice without disturbing another label."""
+        lab, amount = txn["label"], txn["invoice"]["amount"]
+        if (lab["label"] != "anomalous" or lab["class_id"] not in self.COMPOUND_PRIMARIES or lab["group_id"]
+                or lab["related_key"] is not None or txn.get("is_base") or lab["secondary"]):
+            return []
+        options = []
+        if lab["class_id"] not in ("R4", "R5"):
+            options.append("R5")                    # another registration than the vendor master's
+        if (lab["class_id"] not in ("R2", "R8", "J4") and txn["grn"] is not None and txn["item"].goods
+                and txn["invoice"]["quantity"] >= 4):
+            options.append("R2")                    # fewer units received than billed
+        if lab["class_id"] != "R7" and amount <= max(self.limits.values()):
+            if self.roles.index(self.adequate_role(amount)) >= 1:
+                options.append("R7")                # approved by a role whose limit is below the amount
+        return options
+
+    def add_violation(self, txn: dict, class_id: str) -> None:
+        lab, invoice = txn["label"], txn["invoice"]
+        if class_id == "R5":
+            good = txn["vendor"].gstin
+            other = self.pick([s for s in cat.STATES if s != good[:2]]) + good[2:]
+            invoice["gstin"] = other
+            clause, note = "3.1.3", f"also billed under GSTIN '{other}' (vendor master '{good}')"
+        elif class_id == "R2":
+            qty = invoice["quantity"]
+            short = int(self.rng.integers(1, max(2, int(0.4 * qty) + 1)))
+            txn["grn"]["received_quantity"] = qty - short
+            txn["grn"]["notes"] = self.pick(cat.SHORT_RECEIPT_REMARKS)
+            clause, note = "2.1.2", f"also billed {qty}, received {qty - short}"
+        else:
+            role = self.roles[self.roles.index(self.adequate_role(invoice["amount"])) - 1]
+            txn["approvals"] = self.make_approvals(invoice["amount"], txn["date"], role=role, allow_chain=False)
+            clause, note = "5.1.1", f"also approved by {role} (limit {self.limits[role]:,.0f})"
+        lab["clauses"].append(clause)
+        lab["secondary"].append(class_id)
+        lab["note"] += f"; {note}"
+
+    def compound_frauds(self, share: float = 0.4, weights: tuple[float, ...] = (0.5, 0.3, 0.2)) -> int:
+        """Turn about ``share`` of the eligible anomalous invoices into compound frauds with one to three
+        violations added (by ``weights``). Returns the number of invoices changed."""
+        changed = 0
+        for txn in self.txns:
+            options = self.compound_options(txn)
+            if not options or not self.chance(share):
+                continue
+            k = min(len(options), 1 + int(self.rng.choice(len(weights), p=np.array(weights) / sum(weights))))
+            for class_id in self.rng.permutation(options)[:k]:
+                self.add_violation(txn, str(class_id))
+            changed += 1
+        return changed
+
+    def build_final(self, per_class: int, per_hard_negative: int, n_ordinary: int, share: float = 0.4) -> list[dict]:
+        """The ledger of the application: planted collusion at the scale of a company (four pairs of shell vendors;
+        two approver rings in each of the three lower roles), the fourteen classes and five hard-negative types of
+        the benchmark, and compound frauds on top. Ledger size and the sizes of the rings are fixed by the seed."""
+        shells = [self.share_identity(kind) for kind in ("pan", "gstin", "pan", "gstin")]
+        for role in self.roles[:3]:
+            for _ in range(2):
+                self.plant_approver_ring(role, n_vendors=int(self.rng.integers(3, 6)),
+                                         flagged=int(self.rng.integers(8, 15)), ordinary=int(self.rng.integers(3, 9)))
+        for ring in shells[::2]:                                    # the PAN pairs bill under each other's number
+            self.cross_registration(ring, total=int(self.rng.integers(6, 13)))
+        self.build_main(per_class, per_hard_negative, n_ordinary - len(self.txns))
+        self.compound_frauds(share)
+        return self.rings
 
     # -------------------------------------------------------------- recipe
     def build_main(self, per_class: int = PER_CLASS, per_hard_negative: int = PER_HARD_NEGATIVE_TYPE,

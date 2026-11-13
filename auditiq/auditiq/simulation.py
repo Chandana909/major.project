@@ -2,8 +2,10 @@
 
 The survey of LLM multi-agent systems in finance (Liu et al., 2026) names policy evaluation, simulating the
 effect of a policy before it applies, among the uses of such systems. For the rules the controls decide the
-simulation is exact: every invoice of the stored ledger is audited by the twelve controls under the active
-policy and under the new document, in memory, and the two are compared. Nothing is stored.
+simulation is exact: every invoice of the stored ledger is audited by the twelve controls under the version in
+force on its date and under the new document, in memory, and the two are compared. Nothing is stored. It is a
+what-if, "as if the document had always applied": adopted, a document governs only the invoices dated from its
+effective date on, and ``governs_if_adopted`` says how many of the ledger's that would be.
 
     simulate(conn, registry) -> {invoices, decisions_moved, newly_flagged, cleared, routes, route_changes,
                                  findings_by_rule, amount_newly_held, examples}
@@ -28,13 +30,17 @@ def _route(txn: dict, clauses: dict) -> tuple[set[str], str]:
 
 def simulate(conn: db.Database, registry: dict, examples: int = 20) -> dict:
     active = db.read_policy(conn)
-    before_clauses, after_clauses = active.registry["clauses"], registry["clauses"]
+    governing = db.versions_in_force(conn)
+    clauses_of = {version: db.read_policy(conn, version).registry["clauses"] for version in set(governing.values())}
+    after_clauses = registry["clauses"]
+    effective = db._day(registry.get("effective_date"))
+    dates = dict(conn.execute("SELECT invoice_id, CAST(date AS TEXT) FROM invoices").fetchall()) if effective else {}
     transactions = db.extract_many(conn, db.invoice_ids(conn))
     routes_before, routes_after, changes = Counter(), Counter(), Counter()
     rules_before, rules_after = Counter(), Counter()
     moved, newly, cleared, held, shown = 0, 0, 0, 0.0, []
     for txn in transactions:
-        b_rules, b_route = _route(txn, before_clauses)
+        b_rules, b_route = _route(txn, clauses_of[governing[txn["invoice"]["invoice_id"]]])
         a_rules, a_route = _route(txn, after_clauses)
         routes_before[b_route] += 1
         routes_after[a_route] += 1
@@ -54,6 +60,8 @@ def simulate(conn: db.Database, registry: dict, examples: int = 20) -> dict:
                               "route_after": a_route})
     rules = sorted(set(rules_before) | set(rules_after))
     return {"active_version": active.version, "new_version": registry.get("version"),
+            "baseline": dict(Counter(governing.values())), "effective_date": effective or None,
+            "governs_if_adopted": sum(1 for d in dates.values() if db._day(d) >= effective) if effective else len(transactions),
             "invoices": len(transactions), "decisions_moved": moved, "newly_flagged": newly, "cleared": cleared,
             "routes": {"before": dict(routes_before), "after": dict(routes_after)},
             "route_changes": dict(changes.most_common()),

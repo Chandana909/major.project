@@ -1,11 +1,17 @@
-# The whole application in containers: the API with the web frontend (the image of ../Dockerfile) and
-# PostgreSQL 17 with the copilot's read-only role (postgres/init.sql). From auditiq/:
+# The whole application in containers: the API with the web frontend (the image of ../Dockerfile),
+# PostgreSQL 17 with the copilot's read-only role (postgres/init.sql), a Kafka broker (one node, KRaft) and
+# the stream workers that consume its four topics (docs/STREAMING.md). From auditiq/:
 #
 #   set POSTGRES_PASSWORD (and, to require tokens, AUDITIQ_API_TOKEN) in the environment, then
 #   docker compose -f deploy/docker-compose.yml up -d --build --wait
 #   docker compose -f deploy/docker-compose.yml exec app python -m auditiq setup --dataset data/large_seed_505
 #   docker compose -f deploy/docker-compose.yml exec app python -m auditiq run --config C1
 #   docker compose -f deploy/docker-compose.yml exec app python -m auditiq user add "A. Auditor" --role reviewer
+#
+# Documents can also arrive through Kafka instead of `setup --dataset`; the workers write them to the store:
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq setup
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq stream publish --dataset data/bench_seed_202
+#   docker compose -f deploy/docker-compose.yml exec app python -m auditiq stream status
 #
 # The application is then at http://127.0.0.1:8000. A model is optional: set AUDITIQ_LLM_BASE_URL and
 # AUDITIQ_LLM_MODEL to an OpenAI-compatible endpoint the container can reach. Put a reverse proxy with HTTPS
@@ -38,10 +44,63 @@ services:
       AUDITIQ_LLM_BASE_URL: ${AUDITIQ_LLM_BASE_URL:-}
       AUDITIQ_LLM_MODEL: ${AUDITIQ_LLM_MODEL:-}
       AUDITIQ_LLM_API_KEY: ${AUDITIQ_LLM_API_KEY:-}
+      AUDITIQ_KAFKA_BOOTSTRAP: kafka:9092
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
+  kafka:
+    image: apache/kafka:4.3.2
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_NUM_PARTITIONS: 4
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_SHARE_COORDINATOR_STATE_TOPIC_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 15s
+      retries: 12
+      start_period: 20s
+  workers:
+    # The stateless consumers of the four topics; two processes on the invoice topic. Scale the invoice
+    # workers up to the topic's partitions (AUDITIQ_KAFKA_PARTITIONS, 4).
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: ["python", "-m", "auditiq", "stream", "work", "--processes", "2"]
+    environment:
+      AUDITIQ_DATABASE_URL: postgresql://auditiq:${POSTGRES_PASSWORD}@postgres:5432/auditiq
+      AUDITIQ_KAFKA_BOOTSTRAP: kafka:9092
+      AUDITIQ_LLM_BASE_URL: ${AUDITIQ_LLM_BASE_URL:-}
+      AUDITIQ_LLM_MODEL: ${AUDITIQ_LLM_MODEL:-}
+      AUDITIQ_LLM_API_KEY: ${AUDITIQ_LLM_API_KEY:-}
+    healthcheck:
+      disable: true           # the image's check asks the API, which this service does not run
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
 volumes:
   auditiq_data:
+  kafka_data:

@@ -1,0 +1,138 @@
+{
+  "dataset": "collusion_seed_707",
+  "kind": "collusion",
+  "seed": 707,
+  "generator_version": "1.0",
+  "policy_version": "2.5",
+  "period": [
+    "2025-04-01",
+    "2026-03-31"
+  ],
+  "rings": [
+    {
+      "id": "RING-01",
+      "kind": "identity",
+      "shares": "PAN",
+      "approver": null,
+      "role": null,
+      "vendors": [
+        "VEND1073",
+        "VEND1056"
+      ],
+      "invoices": [
+        "INV41125",
+        "INV42553",
+        "INV42833",
+        "INV44140",
+        "INV44519",
+        "INV44592",
+        "INV44960"
+      ]
+    },
+    {
+      "id": "RING-02",
+      "kind": "identity",
+      "shares": "GSTIN",
+      "approver": null,
+      "role": null,
+      "vendors": [
+        "VEND1076",
+        "VEND1044"
+      ],
+      "invoices": []
+    },
+    {
+      "id": "RING-03",
+      "kind": "approver",
+      "shares": null,
+      "approver": "Shivansh Malhotra",
+      "role": "Manager",
+      "vendors": [
+        "VEND1171",
+        "VEND1029",
+        "VEND1163",
+        "VEND1239"
+      ],
+      "invoices": [
+        "INV40007",
+        "INV40240",
+        "INV40298",
+        "INV40423",
+        "INV40623",
+        "INV40716",
+        "INV40842",
+        "INV40930",
+        "INV41041",
+        "INV41097",
+        "INV41215",
+        "INV41217",
+        "INV41242",
+        "INV41291",
+        "INV41394",
+        "INV41491",
+        "INV41594",
+        "INV41855",
+        "INV41892",
+        "INV42014",
+        "INV42167",
+        "INV42254",
+        "INV42268",
+        "INV42411",
+        "INV42562",
+        "INV42563",
+        "INV43192",
+        "INV43437",
+        "INV43663",
+        "INV43875",
+        "INV44183",
+        "INV44446"
+      ]
+    },
+    {
+      "id": "RING-04",
+      "kind": "approver",
+      "shares": null,
+      "approver": "Jason Borde",
+      "role": "Senior Manager",
+      "vendors": [
+        "VEND1087",
+        "VEND1216"
+      ],
+      "invoices": [
+        "INV40638",
+        "INV40769",
+        "INV40786",
+        "INV40820",
+        "INV40840",
+        "INV41293",
+        "INV41934",
+        "INV42548",
+        "INV44153",
+        "INV44191",
+        "INV44262",
+        "INV44409"
+      ]
+    }
+  ],
+  "counts": {
+    "invoices": 5000,
+    "anomalous": 471,
+    "hard_negative": 120,
+    "clean": 4409,
+    "purchase_orders": 4920,
+    "goods_receipts": 4910,
+    "approval_logs": 5701,
+    "vendors": 250,
+    "ledger_records": 20781,
+    "eval_subset": 1251
+  },
+  "sha256": {
+    "vendor_master.csv": "e634f199e59075a473e763723f23f8d3f25285160737922a861550c616919f5a",
+    "purchase_orders.csv": "782913559fa035d0cce3a4dd0f593fe4add01e04b4b9ba3864b7d3b3cd9c59a3",
+    "goods_receipts.csv": "fc718f531378574a714d1538142b0c5761bfbcf6ed55249e4363b90a176ac661",
+    "invoices.csv": "075a9485f5019215b047e53f6773ab6950b52cec7622366f4a94f6f34c9833a2",
+    "approval_logs.csv": "bff20d2fd413fb6d02ac26dc844b2e1c7cf047be247d5abec189dbd8517ed781",
+    "labels.csv": "3e1367328ee5e66067de4476a3c6c4e65af9b3e7e7cd1f1f3f5b59fefb1f102e",
+    "eval_subset.csv": "e08e95998b053f9f482c39b8a7406a13271a9dbb17648af957be9267ce3bd855"
+  }
+}

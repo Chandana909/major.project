@@ -235,6 +235,45 @@ class PolicyIndex:
         return hits
 
 
+def ranks(scores: np.ndarray) -> np.ndarray:
+    """1-based rank of each score, highest first; ties keep their order."""
+    rank = np.empty(len(scores), dtype=int)
+    rank[np.argsort(-scores, kind="stable")] = np.arange(1, len(scores) + 1)
+    return rank
+
+
+def trace(index: "PolicyIndex", query: str) -> dict:
+    """Every passage's lexical and (with embeddings) dense score and rank for a question, their reciprocal-rank
+    fusion, and the question's embedding: the steps ``PolicyIndex.search`` takes, laid open."""
+    lexical = index._lexical_scores(query)
+    out = {"lexical": lexical, "lexical_rank": ranks(lexical), "dense": None, "dense_rank": None,
+           "hybrid": None, "hybrid_rank": None, "query_vector": None}
+    if index._dense is not None:
+        vector = index.embedder.embed([query], kind="query")[0]
+        dense = index._dense @ vector
+        dense_rank = ranks(dense)
+        hybrid = 1 / (RRF_K + out["lexical_rank"]) + 1 / (RRF_K + dense_rank)
+        out.update(dense=dense, dense_rank=dense_rank, hybrid=hybrid, hybrid_rank=ranks(hybrid), query_vector=vector)
+    return out
+
+
+def projection(matrix: np.ndarray, extra: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray | None, list[float]]:
+    """Embeddings (one per row) in three dimensions: their first three principal components, scaled to [-1, 1],
+    ``extra`` vectors projected the same way, and the share of the variance each component keeps. With fewer
+    than three components (a store of one or two passages) the missing coordinates are 0."""
+    matrix = np.atleast_2d(np.asarray(matrix, dtype=np.float64))
+    mean = matrix.mean(axis=0)
+    _, singular, components = np.linalg.svd(matrix - mean, full_matrices=False)
+    axes = np.zeros((3, matrix.shape[1]))
+    axes[:min(3, len(components))] = components[:3]
+    coords = (matrix - mean) @ axes.T
+    scale = float(np.abs(coords).max()) or 1.0
+    projected = ((np.atleast_2d(extra) - mean) @ axes.T) / scale if extra is not None else None
+    total = float((singular ** 2).sum()) or 1.0
+    explained = (singular[:3] ** 2 / total).tolist()
+    return coords / scale, projected, explained
+
+
 def embed_chunks(conn: Database, embedder: Embedder, batch: int = 16) -> int:
     """Compute and store the embedding of every chunk that lacks one from this model."""
     rows = conn.execute("SELECT chunk_id, section, text FROM policy_chunks "

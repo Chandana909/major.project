@@ -16,12 +16,16 @@ It is a standalone Python project. The pipeline is a LangGraph state graph,
 the store is SQLite or PostgreSQL, and the model is any OpenAI-compatible
 endpoint, local or hosted. A REST API (FastAPI) and a web application (React,
 with 3D views in React Three Fiber) put the audit, the review queue, the policy
-and the measured results in the browser.
+and the measured results in the browser. Documents can be loaded as a ledger or
+arrive one by one through Apache Kafka: four partitioned topics (invoices, the
+vendor feed, vendor e-mails, policy documents) read by stateless workers that
+store and audit each message exactly once (docs/STREAMING.md).
 
 ```
 ledger (database) -> extraction -> controls -> three specialist agents -> challenger
                   -> confidence -> risk score and route -> review queue -> audit pack and audit trail
 policy PDFs       -> ingestion  -> clause store -> citations, policy search, copilot
+Kafka topics      -> stream workers (invoice, vendor, email, compliance) -> the same store and audit
 ```
 
 ## Documentation
@@ -29,15 +33,19 @@ policy PDFs       -> ingestion  -> clause store -> citations, policy search, cop
 | Document | Content |
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The design: principles, pipeline, agents, scoring, storage, retrieval, copilot, evaluation |
+| [docs/ANALYTICS.md](docs/ANALYTICS.md) | The forensic analytics, the coverage of the results against the answer key, and how collusion rings are tested |
+| [docs/POLICY_GRAPH.md](docs/POLICY_GRAPH.md) | The policy as a knowledge graph built by code, how Ask AI uses it, and its evaluation against passage retrieval |
+| [docs/CASE_GRAPH.md](docs/CASE_GRAPH.md) | The audit findings as a knowledge graph (vendors, invoices, rules, approvers, rings), how Ask AI uses it, and its evaluation on 78 questions with answers known from the ledger |
 | [docs/DEVELOPER.md](docs/DEVELOPER.md) | For changing the code: the map of every module, how an invoice, a policy and a request pass through it, the contracts between the parts, how to add a control, an endpoint, a page or a table, the conventions and the checks |
 | [docs/API.md](docs/API.md) | Every endpoint of the REST API: parameters, body, role, answers (generated from the code) |
 | [docs/BASE_PAPERS.md](docs/BASE_PAPERS.md) | Each element of the two base papers, where the code implements it and the measurement that shows it |
 | [docs/SECURITY.md](docs/SECURITY.md) | What is protected and how, the copilot's SQL guards, what is not protected, a checklist before a deployment |
-| [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) | The code review of 21 October 2026: how the code was examined, eleven findings and their fixes, what was found sound |
+| [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) | The code review of 21 October 2026 and the findings added since: how the code was examined, eighteen findings and their fixes, what was found sound |
 | [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | Every table and column, with types on both backends and who reads it (generated) |
 | [docs/DATASETS.md](docs/DATASETS.md) | The six datasets: sizes, how a ledger is built, how each anomaly is injected, limits (generated) |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Install, configure, run, reproduce the evaluation, troubleshoot |
 | [docs/WEB.md](docs/WEB.md) | The REST API and the web application: running, settings, security, every endpoint, the pages and 3D views, tests |
+| [docs/STREAMING.md](docs/STREAMING.md) | The Kafka ingestion layer: the four topics, the workers, exactly-once storage, what an invoice is audited against when it arrives alone, vendor e-mails, running it, measurements |
 | [docs/FEATURE_POLICY_AS_DATA.md](docs/FEATURE_POLICY_AS_DATA.md) | The measured feature, written up for the paper: thresholds read from the policy PDF, the policy-change experiment and its results |
 | `data/<name>/README.md` | The datasheet of each dataset (generated with the data) |
 | [PLAN.md](PLAN.md) | What is built, decisions taken while building, what is open |
@@ -220,8 +228,8 @@ Not measured:
 | `data/`, `results/` | Datasets; predictions, metrics and reports. |
 | `exports/` | A CSV snapshot of every table of the database (`python -m auditiq export`): the ledger, the policy store and the audit results of the 20,000-invoice ledger under C1. |
 | `docs/` | The documents listed above. |
-| `deploy/` | The Ollama Modelfile; a PostgreSQL compose file. |
-| `scripts/` | `pg_local.py`, a local PostgreSQL server without installation. |
+| `deploy/` | The Ollama Modelfile; a PostgreSQL compose file; the whole application in containers (API, PostgreSQL, Kafka, stream workers). |
+| `scripts/` | `pg_local.py`, a local PostgreSQL server without installation; `kafka_local.py`, a local Kafka broker without Docker. |
 | `tests/` | The Python test suite. No test calls a model. The frontend's tests sit next to its code (`frontend/src/**/*.test.ts(x)`). |
 | `.auditiq/` | Local state, not versioned: the SQLite database and the model-reply cache. |
 

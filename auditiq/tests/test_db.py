@@ -13,7 +13,7 @@ from test_pipeline import scripted
 from auditiq import db, service
 from auditiq.extraction import extract
 from auditiq.graph import PRESETS
-from auditiq.policy import load_policy
+from auditiq.policy import Policy, derive_policy, load_policy
 
 
 def test_loading_a_dataset_fills_the_ledger_and_keeps_the_labels_apart(conn):
@@ -98,6 +98,89 @@ def test_policy_store_round_trip_and_active_version(conn):
         db.set_active_policy(conn, "9.9")
     with pytest.raises(KeyError):
         db.read_policy(conn, "9.9")
+
+
+def test_each_invoice_is_governed_by_the_policy_in_force_on_its_date(conn):
+    # 2.5 (from 1 April 2025) is active; 2.6 (from 1 April 2026) is stored and governs nothing until it is active.
+    assert db.policy_timeline(conn) == [("2025-04-01", "2.5")]
+    later = [r[0] for r in conn.execute("SELECT invoice_id FROM invoices ORDER BY invoice_id LIMIT 7")]
+    conn.executemany("UPDATE invoices SET date = ? WHERE invoice_id = ?", [("2026-04-15", i) for i in later])
+    conn.commit()
+    assert set(db.versions_in_force(conn).values()) == {"2.5"}
+    db.set_active_policy(conn, "2.6")
+    timeline = db.policy_timeline(conn)
+    assert timeline == [("2025-04-01", "2.5"), ("2026-04-01", "2.6")]
+    assert [db.version_in_force(timeline, d) for d in ("2024-12-31", "2025-04-01", "2026-03-31", "2026-04-01", None)] \
+        == ["2.5", "2.5", "2.5", "2.6", "2.6"]          # older than every version: the first; no date: the active one
+    governing = db.versions_in_force(conn)
+    assert sorted(i for i, v in governing.items() if v == "2.6") == sorted(later)
+    expr, params = db.in_force_sql(timeline, "date")          # the same answer in SQL
+    assert dict(conn.execute(f"SELECT invoice_id, {expr} FROM invoices", params).fetchall()) == governing
+    # A version stored with the active one's date, but not active, governs nothing.
+    base = load_policy("2.5")
+    db.store_policy(conn, Policy(derive_policy(base.registry, "3.12", "2026-04-01", {}), base.text))
+    assert db.policy_timeline(conn) == timeline
+    db.set_active_policy(conn, "3.12")
+    assert db.policy_timeline(conn) == [("2025-04-01", "2.5"), ("2026-04-01", "3.12")]
+    summary = [(t["version"], t["from"], t["until"], t["invoices"], t["under_other_version"], t["unaudited"])
+               for t in db.timeline_summary(conn)]
+    assert summary == [("2.5", "2025-04-01", "2026-04-01", 1193, 0, 1193), ("3.12", "2026-04-01", None, 7, 0, 7)]
+    db.set_active_policy(conn, "2.5")                         # back to 2.5: the later versions govern nothing
+    assert db.policy_timeline(conn) == [("2025-04-01", "2.5")]
+
+
+def test_an_adopted_version_does_not_judge_the_invoices_before_its_date(conn):
+    """Adopting a stricter policy must not turn the invoices approved under the old one into breaches."""
+    ids = db.invoice_ids(conn)
+    first = service.audit_in_force(conn, PRESETS["C1"], None, ids)
+    db.set_active_policy(conn, "2.6")                         # takes effect on 1 April 2026, after every invoice
+    second = service.audit_in_force(conn, PRESETS["C1"], None, ids)
+    assert [conn.scalar("SELECT policy_version FROM audit_runs WHERE run_id = ?", (r,)) for r in first + second] \
+        == ["2.5", "2.5"]
+    summary = service.runs_summary(conn, first + second)
+    assert summary["invoices"] == 2 * len(ids) and [r["policy_version"] for r in summary["runs"]] == ["2.5", "2.5"]
+    later = ids[:5]
+    conn.executemany("UPDATE invoices SET date = ? WHERE invoice_id = ?", [("2026-05-04", i) for i in later])
+    conn.commit()
+    runs = service.audit_in_force(conn, PRESETS["C1"], None, ids)
+    assert [(r["policy_version"], r["invoices"]) for r in service.runs_summary(conn, runs)["runs"]] == \
+        [("2.5", len(ids) - 5), ("2.6", 5)]
+    with pytest.raises(KeyError, match="NOT-AN-INVOICE"):
+        service.audit_in_force(conn, PRESETS["C1"], None, ["NOT-AN-INVOICE"])
+
+
+def test_a_write_ahead_log_lets_a_reader_and_a_writer_work_together(tmp_path, monkeypatch):
+    """A live run reads the store from the web application while the stream workers write to it."""
+    monkeypatch.setattr(db, "LOCK_WAIT", 0.3)
+
+    def writer_commits_during_a_read(journal: str | None) -> bool:
+        if journal:
+            monkeypatch.setenv("AUDITIQ_SQLITE_JOURNAL", journal)
+        else:
+            monkeypatch.delenv("AUDITIQ_SQLITE_JOURNAL", raising=False)
+        target = str(tmp_path / f"{journal}.db")
+        writer, reader = db.connect(target), db.connect(target)
+        try:
+            writer.execute("INSERT INTO meta (key, value) VALUES ('a', '1')")
+            writer.commit()
+            cursor = reader.execute("SELECT key FROM meta")            # an open read: the reader holds its lock
+            cursor.fetchone()
+            writer.execute("INSERT INTO meta (key, value) VALUES ('b', '2')")
+            try:
+                writer.commit()
+            except Exception as error:      # noqa: BLE001 - sqlite3.OperationalError: database is locked
+                assert "locked" in str(error)
+                return False
+            return True
+        finally:
+            reader.close()
+            writer.close()
+
+    assert writer_commits_during_a_read("wal") is True
+    assert writer_commits_during_a_read(None) is False               # SQLite's rollback journal: they wait
+    monkeypatch.setenv("AUDITIQ_SQLITE_JOURNAL", "fast")
+    with pytest.raises(ValueError, match="AUDITIQ_SQLITE_JOURNAL"):
+        db.connect(str(tmp_path / "other.db"))
 
 
 def test_a_read_only_connection_cannot_write(ledger):

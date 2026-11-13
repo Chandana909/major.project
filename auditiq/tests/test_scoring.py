@@ -168,3 +168,24 @@ def test_a_transaction_with_control_flags_only_is_never_sampled():
         flags = [flag(rng.choice(s.SEVERITIES)) for _ in range(rng.randrange(5))]
         result = s.score(flags)
         assert result["rc"] == result["r0"] and result["route"] != "sample"
+
+
+def test_the_risk_level_is_at_least_that_of_the_most_severe_finding_held():
+    def control(severity):
+        return {"clause": "x", "severity": severity, "source": "D", "confidence": 1.0}
+
+    def agent(severity, c):
+        return {"clause": "x", "severity": severity, "source": "L", "confidence": c}
+
+    cases = [([], 0, "approve", "LOW"), ([control("low")], 5, "approve", "LOW"),
+             ([control("medium")], 10, "approve", "MEDIUM"),       # a medium rule broken: not the level of a clean invoice
+             ([control("medium")] * 3, 30, "approve", "MEDIUM"),
+             ([control("high")], 50, "escalate", "HIGH"), ([control("critical")], 70, "escalate", "CRITICAL"),
+             ([agent("medium", 1.0)], 10, "approve", "MEDIUM"),
+             ([agent("medium", 0.5)], 5, "approve", "LOW"),         # not held with confidence: no floor on the level
+             ([agent("high", 0.5)], 10, "sample", "LOW")]
+    for flags, rc, route, level in cases:
+        out = s.score(flags)
+        assert (out["rc"], out["route"], out["risk_level"]) == (rc, route, level), flags
+    assert s.risk_level(35) == "MEDIUM" and s.risk_level(10, [control("high")]) == "HIGH"
+    assert s.score([control("medium")], s.ScoringOptions(use_confidence=False))["risk_level"] == "MEDIUM"

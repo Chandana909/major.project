@@ -92,9 +92,10 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | GET | `/api/overview` | Counts by state, route and risk level; findings by rule; recent runs; vendors with most invoices waiting | 200 |
 | GET | `/api/risk-map` | Every vendor with category, invoices, amount, invoices waiting, highest risk, blacklisting | 200 |
 | GET | `/api/pipeline` | The stages and the stages of each configuration C1 to C5; open without a token | 200 |
+| GET | `/api/stream` | The Kafka ingestion layer: per topic, the messages in it, those processed, the lag and the outcomes; `configured: false` without a broker | 200 |
 | GET | `/api/queue?limit=` | Invoices waiting for review, highest weighted risk first | 200 |
 | GET | `/api/invoices?q=&limit=` | Invoices by id or vendor name, with their latest route and state | 200 |
-| GET | `/api/invoices/{id}?with_label=` | The records of an invoice, its vendor history, its latest result with audit pack and trail; the benchmark label on request | 200, 400, 404 |
+| GET | `/api/invoices/{id}?with_label=` | The records of an invoice, its vendor history, the vendor e-mails that name it, its latest result with audit pack and trail; the benchmark label on request | 200, 400, 404 |
 | POST | `/api/results/{id}/decision` | Record a reviewer's decision: `approve`, `reject` or `override` (an override needs a justification) | 200, 400, 404 |
 | POST | `/api/invoices/{id}/audit` | Audit one invoice again under a configuration; C2 to C5 need a model | 202 job, 400 |
 | GET | `/api/policy` | Stored versions and how each was adopted, the rules of the active version, ingested documents, results under another version | 200 |
@@ -106,7 +107,7 @@ result is in `result`) or `failed` (the reason is in `error`). `done` and
 | POST | `/api/policy/confirm` | Adopt a proposal after the reviewer's confirmation, corrections and passages | 200, 400, 404, 422 |
 | POST | `/api/policy/apply` | Audit the whole ledger again under the active version, with progress | 202 job |
 | POST | `/api/ledger` | Replace the ledger with an uploaded one (multipart: `file`, an .xlsx workbook with one sheet per table, or a .zip archive of the five CSV files; every column of the store must be present; and `replace=true`). The ledger is checked first; the job answers `loaded` and, if it was refused, the problems, with nothing replaced | 202 job, 400, 413, 415 |
-| GET | `/api/search?q=&k=` | Search the policy documents (hybrid when an embedding model is configured, lexical otherwise) | 200, 400, 409 |
+| GET | `/api/search?q=&k=` | Search the policy documents: with a chat model the question is first restated in the policy's vocabulary and ranked by the hybrid ranker (the best measured setting), and the answer says what was searched; by meaning with embeddings alone; by wording otherwise | 200, 400, 409, 502 |
 | POST | `/api/copilot/ask` | A question about the policy or an audited invoice, answered with citations | 202 job |
 | POST | `/api/copilot/data` | A question about the data, answered by one checked read-only query; needs a model | 202 job, 400 |
 | GET | `/api/jobs/{id}` | The state of a background job | 200, 404 |
@@ -139,12 +140,19 @@ Every dependency is pinned to an exact version in `package.json`, and
 
 | Route | Page | Shows |
 |---|---|---|
-| `/` | Overview | Counts of the audit; the **risk constellation**, a 3D view of every vendor (sector = spending category, height = highest risk, size = number of invoices, pulsing = invoices waiting, violet = blacklisted; click a vendor to see its invoices); findings by rule; vendors with most invoices waiting; recent runs; **loading a ledger** from a workbook or a zip archive, checked before it replaces the current one, and auditing it with the controls |
-| `/review` | Review queue | Invoices waiting for a reviewer, filtered by text and risk level |
-| `/invoice`, `/invoice/:id` | Invoices | Search; for one invoice: route, both risk scores, every finding with its evidence, confidence terms and citation, findings removed by the challenger, the records, the audit trail with tokens and time per model call, the decision form, a new audit under any configuration, and the benchmark label on request |
-| `/policy` | Policy | Versions and activation; upload of a policy PDF with the changes it makes, adoption, reading by the model with the reviewer's confirmation; re-auditing the ledger under the active version with progress; the rules; policy search |
-| `/copilot` | Copilot | Questions about the policy and invoices, with citations; questions about the data, with the query that answered them |
-| `/pipeline` | Pipeline | The stages of the audit as a **3D graph**; choosing a configuration lights the stages it runs |
+| `/` | Overview | Counts of the audit and the forensic signals (critical alerts, duplicates, three-way match, tax identity, splitting and timing, approval and vendor, vendors with findings, findings that did not hold payment); **audit coverage and quality**: the configurations behind the latest results, how many invoices the controls and the agents checked, and, on a benchmark ledger, the results against its answer key (docs/ANALYTICS.md); the composition of the audit (risk level, route, workflow); the **risk constellation**, a 3D view of every vendor (sector = spending category, height = highest risk, size = number of invoices, pulsing = invoices waiting, violet = blacklisted; click a vendor to see its invoices); the vendor risk matrix and the monthly trend; findings by rule; the escalation queue; vendors with most invoices waiting; the newest steps of the audit trail; high-risk vendors; recent runs; **loading a ledger** from a workbook or a zip archive, checked before it replaces the current one, and auditing it with the controls |
+| `/review` | Review queue | Invoices waiting for a reviewer and what share of the audited invoices they are (the others approved automatically, with how many carry a medium or low finding), by risk level with the money each level puts at stake (counted over the whole queue; a level chosen is read from the server, as the list holds at most the 2,000 riskiest), filtered by text and risk level, each with the rules it breaks; the **queue constellation**, a 3D view of the same invoices (sector = the most severe rule each breaks, height = weighted risk, size = amount, pulsing = risk 70 and above; click an invoice to open it) |
+| `/invoice`, `/invoice/:id` | Invoices | Search; for one invoice: route, both risk scores, every finding with its evidence, confidence terms and citation, findings removed by the challenger, the records, the audit trail with tokens and time per model call, the vendor e-mails that name the invoice, the decision form, a new audit under any configuration, and the benchmark label on request |
+| `/policy` | Policy | **Which version governs which invoices** (each invoice is judged by the version in force on its date: the periods, the invoices in each and whether their results follow it, with an action to audit those that do not); versions and activation; the dry run of a document (how many invoices it would govern if adopted, and what would change as if it had always applied); the **policy knowledge graph** in 3D (rules around their version, with their parameters, the roles of the limits, the control functions and agents that check them and the pages that state them), "Ask the graph" with the facts it derives and the passages they cite, the relations of a node, every relation as a table (docs/POLICY_GRAPH.md); upload of a policy PDF with the changes it makes, adoption, reading by the model with the reviewer's confirmation; auditing again the invoices not under the version in force on their date, with progress; the rules; policy search |
+| `/analytics` | Analytics | The forensic tests of the ledger: monthly volume, the **spend skyline** (3D, category by month), Benford's first-digit and first-two-digits tests, amounts against the approval limits and the invoices just under and just over each, weekdays, findings by category and rule, approvers, spend concentration (docs/ANALYTICS.md) |
+| `/rings` | Vendor collusion | Vendors and approvers linked by shared identities and by approvals that carry more serious findings than the approver's role makes likely, tested with a false-discovery-rate correction; the **collusion network** in 3D, the rings or, when none passes, the leads below significance; the watch list, the tests and the rate of each role (docs/ANALYTICS.md) |
+| `/kafka` | Kafka streams | Ingestion through Kafka from the browser: whether the broker answers, the **live topology** (sources, the producer, every topic and partition filled as the workers process it, the consumer groups and what they write; dots move while messages flow), publishing a ledger, a mailbox or a policy document, running the workers, the throughput, the outcomes per topic, the worker log, and the newest messages inside a topic (docs/STREAMING.md 6.1) |
+| `/ai` | Agents & pipeline | The audit graph with what each stage has cost (steps, tokens, latency), a step-by-step **replay** of an invoice's audit from its trail with the stage lighting up, auditing an invoice now under any configuration, the agents with their remits and the configurations |
+| `/knowledge` | Knowledge base | The knowledge pipeline (documents, passages, verification against the registry, embeddings), the **embedding map** of every passage in 3D (three principal components), the documents, the registry across versions with what each changes, and every passage with its page and whether it matches the registry |
+| `/graph` | Knowledge graph | Two tabs: the policy knowledge graph and "Ask the graph" (docs/POLICY_GRAPH.md), and the audit findings graph (vendors, invoices with findings, rules, approvers, rings) in 3D with questions, the neighbourhood of any node and every relation as a table (docs/CASE_GRAPH.md) |
+| `/rag` | RAG retrieval | A question traced through every step: what the graph recognises, the lexical, dense and fused rankings with their scores, the graph's facts, the context Ask AI would send with where each passage came from, the question in the embedding space, and the answer |
+| `/ask` | Ask AI | Questions about the policy and invoices, with citations and the facts of the policy graph; questions about the data, with the query that answered them (`/copilot` leads here) |
+| `/pipeline` | Pipeline | The **architecture diagram** of the whole platform: ten subsystems (sources, ingestion with the Kafka topics, the LangGraph audit engine and its agents, serving, policy as data, the store, the models, delivery), every component with its files and live figures, the data moving between them; choosing a configuration dims the stages it does not run; the configurations compared stage by stage; the stages as a **3D graph**; the **Kafka ingestion** panel: per topic, the messages processed, the lag and the outcomes (`GET /api/stream`) |
 | `/results` | Results | The measured results: detection on the benchmark ledgers with intervals, detection per anomaly class, the policy-change experiment with a **3D bar view** of the share of invoices a frozen system decides wrongly under each policy, scalability, policy reading, and the real-model runs on small samples, marked as pilots (development ledger) or as the benchmark sample (34 invoices of ledger 101) |
 
 ### Structure
@@ -165,14 +173,25 @@ Each 3D view sits in `SceneFrame`: a canvas with orbit controls (drag to turn,
 scroll to zoom), a fallback message when the browser has no WebGL, and an
 error boundary that shows the same message if the view fails. Every 3D view
 has a table or list on the same page with the same data, so nothing is shown
-only in 3D. The constellation draws all vendors as one instanced mesh, with one
-colour per instance, so the number of vendors does not change the number of
-draw calls.
+only in 3D. The pages are light; the 3D views keep a dark canvas of their own.
+The two constellations (vendors on the overview, invoices waiting on the review
+queue) share one layout (`layoutVendors`, `layoutQueue` in `three/layout.ts`)
+and one point field (`PointField`), which draws all points as one instanced
+mesh with one colour per instance, so the number of points does not change the
+number of draw calls. The spend skyline (`three/SpendSkyline.tsx`) raises one
+bar per category and month; the collusion network (`three/RingNetwork.tsx`)
+places each ring around its own centre on a golden-angle spiral and settles its
+members with a few hundred steps of springs and repulsion
+(`networkLayout` in `three/layout.ts`), drawing all links as one line segment
+geometry. The architecture diagram of the Pipeline page is SVG drawn from a
+description of the platform (`lib/architecture.ts`); a test checks that every
+connection is drawn as horizontal and vertical runs and that no two components
+overlap.
 
 ### Size
 
 The production build splits the code so that three.js loads only with a page
-that draws a 3D view (overview, pipeline, results):
+that draws a 3D view (overview, review queue, pipeline, results):
 
 | Chunk | Size | gzip | Loaded |
 |---|---|---|---|
@@ -202,14 +221,17 @@ cd frontend && npm run build && npm run e2e
   copilot without a model; the results; a ledger uploaded, refused with its
   problems or loaded; the token; 503 for an unreachable
   database; the built frontend with client-side routes.
-- **Frontend** (28 tests): the API client (token, error messages, uploads, job
+- **Frontend** (36 tests): the API client (token, error messages, uploads, job
   polling); formatting and the policy and results helpers; the geometry of the
-  3D views; the three 3D scenes rendered with React Three Fiber's test renderer
-  (instances per vendor, stages per configuration, bars per policy); and the
-  pages against a mocked API (overview with the WebGL fallback and retry after
-  an error, queue filters, invoice findings and records, decision validation
-  and recording, policy preview and adoption, a document the patterns cannot
-  read, the results, the token prompt, an unknown route).
+  3D views (vendors and the invoices waiting placed in sectors, stages, bars);
+  the 3D scenes rendered with React Three Fiber's test renderer (instances per
+  vendor, stems only where asked, a clicked point handed to the page, stages per
+  configuration, bars per policy); and the pages against a mocked API (overview
+  with the WebGL fallback and retry after an error, queue filters, invoice
+  findings, records and vendor e-mails, decision validation and recording,
+  policy preview and adoption, a document the patterns cannot read, the
+  results, the Kafka topics with and without a broker, the token prompt, an
+  unknown route).
 - **End to end** (`e2e/app.spec.ts`, 10 tests in Chromium, about two minutes):
   the real server on a new SQLite store, the built application, no mock. The
   overview of the ledger set up from the command line; a workbook loaded

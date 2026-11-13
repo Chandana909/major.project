@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Job } from "../api/types";
-import { riskColor } from "../lib/format";
+import { explainScore, riskColor, scoreBreakdown, SEVERITY_COLORS, SEVERITY_FLOORS } from "../lib/format";
 
 export function Panel({ title, subtitle, actions, children, className = "" }: {
   title?: ReactNode;
@@ -25,17 +25,114 @@ export function Panel({ title, subtitle, actions, children, className = "" }: {
   );
 }
 
-export function Kpi({ label, value, hint, tone = "default" }: {
+export function Kpi({ label, value, hint, tone = "default", share, shareLabel }: {
   label: string;
   value: ReactNode;
   hint?: ReactNode;
   tone?: "default" | "good" | "warn" | "bad" | "accent";
+  /** A part of a whole, from 0 to 1, drawn as a thin bar under the value. */
+  share?: number;
+  shareLabel?: string;
 }) {
   return (
     <div className={`kpi kpi-${tone}`}>
       <span className="kpi-label">{label}</span>
       <span className="kpi-value">{value}</span>
       {hint && <span className="kpi-hint">{hint}</span>}
+      {share !== undefined && (
+        <span className="kpi-share" title={shareLabel} aria-hidden>
+          <i style={{ width: `${Math.min(100, Math.max(0, share * 100))}%` }} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** How a whole divides into parts: one bar with a segment per part, and a legend with counts and shares. */
+export function StackedBar({ label, parts }: { label: string; parts: { key: string; label: string; value: number; color: string }[] }) {
+  const total = parts.reduce((t, p) => t + p.value, 0);
+  const shown = parts.filter((p) => p.value > 0);
+  return (
+    <div className="stacked">
+      <div className="stacked-head">
+        <span className="stacked-label">{label}</span>
+        <span className="muted small">{total.toLocaleString("en-IN")}</span>
+      </div>
+      <div className="stacked-track" role="img" aria-label={`${label}: ${shown.map((p) => `${p.label} ${p.value}`).join(", ")}`}>
+        {shown.map((p) => (
+          <span key={p.key} style={{ flexGrow: p.value, background: p.color }} title={`${p.label}: ${p.value.toLocaleString("en-IN")}`} />
+        ))}
+      </div>
+      <ul className="stacked-legend">
+        {parts.map((p) => (
+          <li key={p.key}>
+            <i style={{ background: p.color }} />
+            <span>{p.label}</span>
+            <strong>{p.value.toLocaleString("en-IN")}</strong>
+            <span className="muted">{total ? `${((p.value / total) * 100).toFixed(1)}%` : "–"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The rules an invoice breaks, as compact chips; the title of each rule on hover. */
+export function RuleChips({ rules, titles }: { rules: string[]; titles?: Record<string, string | null> }) {
+  if (!rules.length) return null;
+  return (
+    <span className="rule-chips">
+      {rules.map((r) => (
+        <span key={r} className="rule-chip" title={titles?.[r] ?? undefined}>
+          {r}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** A score taken apart: what each severity adds, the lift to a floor, the threshold of 50 and the result. */
+export function ScoreComposition({ title, flags, score, weighted = false }: {
+  title: string;
+  flags: { severity: string; confidence: number | null }[];
+  score: number;
+  weighted?: boolean;
+}) {
+  const b = scoreBreakdown(flags, weighted);
+  const order = ["critical", "high", "medium", "low"] as const;
+  let left = 0;
+  const segments = order
+    .filter((k) => b.parts[k] > 0)
+    .map((k) => {
+      const width = Math.max(0, Math.min(b.parts[k], 100 - left));
+      const seg = { key: k, left, width, color: SEVERITY_COLORS[k] };
+      left += width;
+      return seg;
+    });
+  const lift = b.floor > b.sum ? { left: b.sum, width: b.floor - b.sum } : null;
+  return (
+    <div className="composition">
+      <div className="composition-head">
+        <span className="muted">{title}</span>
+        <strong style={{ color: riskColor(score) }}>{score.toFixed(1)}</strong>
+      </div>
+      <div className="composition-track" role="img" aria-label={`${title} ${score.toFixed(1)}: ${explainScore(b)}`}>
+        {segments.map((s) => (
+          <span key={s.key} className="composition-seg" style={{ left: `${s.left}%`, width: `${s.width}%`, background: s.color }} />
+        ))}
+        {lift && <span className="composition-lift" style={{ left: `${lift.left}%`, width: `${lift.width}%` }} title={`lifted to the ${b.floorFrom} floor`} />}
+        <span className="composition-mark" style={{ left: "50%" }} title="threshold 50" />
+        {[SEVERITY_FLOORS.high, SEVERITY_FLOORS.critical].map((f) => (
+          <span key={f} className="composition-tick" style={{ left: `${f}%` }} />
+        ))}
+      </div>
+      <div className="composition-scale" aria-hidden>
+        <span>0</span>
+        <span style={{ left: "50%" }}>τ 50</span>
+        <span style={{ left: "70%" }}>70</span>
+        <span style={{ right: 0 }}>100</span>
+      </div>
+      <p className="score-why">{explainScore(b)}</p>
     </div>
   );
 }

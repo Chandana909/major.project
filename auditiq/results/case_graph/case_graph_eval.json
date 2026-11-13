@@ -1,0 +1,1435 @@
+{
+ "ledger": "final_seed_2025",
+ "seed": 2026,
+ "summary": {
+  "invoice": {
+   "questions": 20,
+   "audit_graph_right": 20,
+   "policy_only_right": 0,
+   "audit_graph_complete": 20
+  },
+  "vendor": {
+   "questions": 14,
+   "audit_graph_right": 14,
+   "policy_only_right": 0
+  },
+  "approver": {
+   "questions": 14,
+   "audit_graph_right": 14,
+   "policy_only_right": 0
+  },
+  "rule": {
+   "questions": 18,
+   "audit_graph_right": 18,
+   "policy_only_right": 0
+  },
+  "rings": {
+   "questions": 2,
+   "audit_graph_right": 2,
+   "policy_only_right": 0,
+   "audit_graph_mean_recall": 1.0,
+   "audit_graph_mean_precision": 1.0,
+   "audit_graph_mean_named": 6.0,
+   "expected_size": 6.0,
+   "policy_only_mean_recall": 0.0
+  },
+  "members": {
+   "questions": 6,
+   "audit_graph_right": 6,
+   "policy_only_right": 0,
+   "audit_graph_mean_recall": 1.0,
+   "audit_graph_mean_precision": 1.0,
+   "audit_graph_mean_named": 4.166666666666667,
+   "expected_size": 4.166666666666667,
+   "policy_only_mean_recall": 0.0
+  },
+  "identity": {
+   "questions": 2,
+   "audit_graph_right": 2,
+   "policy_only_right": 0,
+   "audit_graph_mean_recall": 1.0,
+   "audit_graph_mean_precision": 1.0,
+   "audit_graph_mean_named": 8.0,
+   "expected_size": 8.0,
+   "policy_only_mean_recall": 0.0
+  },
+  "blocked": {
+   "questions": 2,
+   "audit_graph_right": 2,
+   "policy_only_right": 0,
+   "audit_graph_mean_recall": 1.0,
+   "audit_graph_mean_precision": 0.5555555555555556,
+   "audit_graph_mean_named": 9.0,
+   "expected_size": 5.0,
+   "policy_only_mean_recall": 0.0
+  }
+ },
+ "total": {
+  "questions": 78,
+  "audit_graph_right": 78,
+  "policy_only_right": 0
+ },
+ "rows": [
+  {
+   "type": "invoice",
+   "q": "Why was INV43815 flagged?",
+   "invoice": "INV43815",
+   "expected": [
+    "3.1.3",
+    "4.3.1",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.3",
+     "4.3.1",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "What is wrong with invoice INV48451?",
+   "invoice": "INV48451",
+   "expected": [
+    "3.1.3",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.3",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Explain the findings on INV53077.",
+   "invoice": "INV53077",
+   "expected": [
+    "3.1.2",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.2",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Which rules does INV53376 break and why?",
+   "invoice": "INV53376",
+   "expected": [
+    "2.1.2",
+    "3.1.3"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.2",
+     "3.1.3"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Why was INV57209 flagged?",
+   "invoice": "INV57209",
+   "expected": [
+    "3.1.3",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.3",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "What is wrong with invoice INV62959?",
+   "invoice": "INV62959",
+   "expected": [
+    "2.1.3",
+    "3.1.3",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.3",
+     "3.1.3",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Explain the findings on INV43317.",
+   "invoice": "INV43317",
+   "expected": [
+    "2.1.1",
+    "2.1.2",
+    "3.1.3"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.1",
+     "2.1.2",
+     "3.1.3"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Which rules does INV63773 break and why?",
+   "invoice": "INV63773",
+   "expected": [
+    "2.1.2",
+    "3.1.3"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.2",
+     "3.1.3"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Why was INV46251 flagged?",
+   "invoice": "INV46251",
+   "expected": [
+    "2.1.2",
+    "3.1.3",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.2",
+     "3.1.3",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "What is wrong with invoice INV64059?",
+   "invoice": "INV64059",
+   "expected": [
+    "2.1.2",
+    "3.1.3"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.2",
+     "3.1.3"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Explain the findings on INV55723.",
+   "invoice": "INV55723",
+   "expected": [
+    "3.1.3",
+    "4.2.1",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.3",
+     "4.2.1",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Which rules does INV56343 break and why?",
+   "invoice": "INV56343",
+   "expected": [
+    "3.1.2",
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.2",
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Why was INV60895 flagged?",
+   "invoice": "INV60895",
+   "expected": [
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "What is wrong with invoice INV55605?",
+   "invoice": "INV55605",
+   "expected": [
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Explain the findings on INV61434.",
+   "invoice": "INV61434",
+   "expected": [
+    "4.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "4.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Which rules does INV60479 break and why?",
+   "invoice": "INV60479",
+   "expected": [
+    "3.1.2"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.2"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Why was INV58332 flagged?",
+   "invoice": "INV58332",
+   "expected": [
+    "2.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "What is wrong with invoice INV62120?",
+   "invoice": "INV62120",
+   "expected": [
+    "5.1.1"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "5.1.1"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Explain the findings on INV56400.",
+   "invoice": "INV56400",
+   "expected": [
+    "3.1.2"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "3.1.2"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "invoice",
+   "q": "Which rules does INV49149 break and why?",
+   "invoice": "INV49149",
+   "expected": [
+    "2.1.2"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "complete": true,
+    "got": [
+     "2.1.2"
+    ]
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Sabharwal Inc carry findings?",
+   "vendor": "VEND1006",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Anne and Sons were flagged?",
+   "vendor": "VEND2032",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Dayal, Muni and Dhar carry findings?",
+   "vendor": "VEND1130",
+   "expected": 4,
+   "audit_graph": {
+    "ok": true,
+    "got": 4
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from D\u2019Alia Inc were flagged?",
+   "vendor": "VEND1178",
+   "expected": 7,
+   "audit_graph": {
+    "ok": true,
+    "got": 7
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Bail-Sahota carry findings?",
+   "vendor": "VEND1471",
+   "expected": 2,
+   "audit_graph": {
+    "ok": true,
+    "got": 2
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Wason LLC were flagged?",
+   "vendor": "VEND1162",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Mitra Group carry findings?",
+   "vendor": "VEND1742",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Sankar, Balakrishnan and Narula were flagged?",
+   "vendor": "VEND1018",
+   "expected": 4,
+   "audit_graph": {
+    "ok": true,
+    "got": 4
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Manda, Lata and Halder carry findings?",
+   "vendor": "VEND2145",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Singhal-Setty were flagged?",
+   "vendor": "VEND1813",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Oza LLC carry findings?",
+   "vendor": "VEND2133",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Issac-Thaker were flagged?",
+   "vendor": "VEND1518",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many invoices of Raj-Sarraf carry findings?",
+   "vendor": "VEND1340",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "vendor",
+   "q": "How many of the invoices from Subramanian, Gala and Johal were flagged?",
+   "vendor": "VEND1650",
+   "expected": 1,
+   "audit_graph": {
+    "ok": true,
+    "got": 1
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Ijaya Bhatia make?",
+   "approver": "Ijaya Bhatia",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Liam Ganguly approved invoices over their limit, and how many?",
+   "approver": "Liam Ganguly",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Max Parmar make?",
+   "approver": "Max Parmar",
+   "expected": 2,
+   "audit_graph": {
+    "ok": true,
+    "got": 2
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Mugdha Palla approved invoices over their limit, and how many?",
+   "approver": "Mugdha Palla",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Ria Parmer make?",
+   "approver": "Ria Parmer",
+   "expected": 4,
+   "audit_graph": {
+    "ok": true,
+    "got": 4
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Vasana Gokhale approved invoices over their limit, and how many?",
+   "approver": "Vasana Gokhale",
+   "expected": 2,
+   "audit_graph": {
+    "ok": true,
+    "got": 2
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Ansh Kale make?",
+   "approver": "Ansh Kale",
+   "expected": 5,
+   "audit_graph": {
+    "ok": true,
+    "got": 5
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Lakshit Pau approved invoices over their limit, and how many?",
+   "approver": "Lakshit Pau",
+   "expected": 37,
+   "audit_graph": {
+    "ok": true,
+    "got": 37
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Avni Chacko make?",
+   "approver": "Avni Chacko",
+   "expected": 2,
+   "audit_graph": {
+    "ok": true,
+    "got": 2
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Sudiksha Oza approved invoices over their limit, and how many?",
+   "approver": "Sudiksha Oza",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Sarthak Baral make?",
+   "approver": "Sarthak Baral",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Ishita Rout approved invoices over their limit, and how many?",
+   "approver": "Ishita Rout",
+   "expected": 4,
+   "audit_graph": {
+    "ok": true,
+    "got": 4
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "approver",
+   "q": "How many approvals above their own limit did Ishanvi Vala make?",
+   "approver": "Ishanvi Vala",
+   "expected": 2,
+   "audit_graph": {
+    "ok": true,
+    "got": 2
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "approver",
+   "q": "Has Patrick Sachdeva approved invoices over their limit, and how many?",
+   "approver": "Patrick Sachdeva",
+   "expected": 3,
+   "audit_graph": {
+    "ok": true,
+    "got": 3
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 2.1.1?",
+   "clause": "2.1.1",
+   "wording": "rule number",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 2.1.2?",
+   "clause": "2.1.2",
+   "wording": "rule number",
+   "expected": 291,
+   "audit_graph": {
+    "ok": true,
+    "got": 291
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 2.1.3?",
+   "clause": "2.1.3",
+   "wording": "rule number",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many exact duplicate invoices are there?",
+   "clause": "2.2.1",
+   "wording": "everyday",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 2.2.1?",
+   "clause": "2.2.1",
+   "wording": "rule number",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 3.1.1?",
+   "clause": "3.1.1",
+   "wording": "rule number",
+   "expected": 71,
+   "audit_graph": {
+    "ok": true,
+    "got": 71
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 3.1.2?",
+   "clause": "3.1.2",
+   "wording": "rule number",
+   "expected": 70,
+   "audit_graph": {
+    "ok": true,
+    "got": 70
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 3.1.3?",
+   "clause": "3.1.3",
+   "wording": "rule number",
+   "expected": 563,
+   "audit_graph": {
+    "ok": true,
+    "got": 563
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices were split on the same day?",
+   "clause": "4.1.1",
+   "wording": "everyday",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 4.1.1?",
+   "clause": "4.1.1",
+   "wording": "rule number",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices are dated on a weekend?",
+   "clause": "4.2.1",
+   "wording": "everyday",
+   "expected": 70,
+   "audit_graph": {
+    "ok": true,
+    "got": 70
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 4.2.1?",
+   "clause": "4.2.1",
+   "wording": "rule number",
+   "expected": 70,
+   "audit_graph": {
+    "ok": true,
+    "got": 70
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices have a round amount?",
+   "clause": "4.3.1",
+   "wording": "everyday",
+   "expected": 71,
+   "audit_graph": {
+    "ok": true,
+    "got": 71
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 4.3.1?",
+   "clause": "4.3.1",
+   "wording": "rule number",
+   "expected": 71,
+   "audit_graph": {
+    "ok": true,
+    "got": 71
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices came from blacklisted vendors?",
+   "clause": "4.4.1",
+   "wording": "everyday",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 4.4.1?",
+   "clause": "4.4.1",
+   "wording": "rule number",
+   "expected": 141,
+   "audit_graph": {
+    "ok": true,
+    "got": 141
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices were approved above the approver's limit?",
+   "clause": "5.1.1",
+   "wording": "everyday",
+   "expected": 601,
+   "audit_graph": {
+    "ok": true,
+    "got": 601
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 2
+  },
+  {
+   "type": "rule",
+   "q": "How many invoices break rule 5.1.1?",
+   "clause": "5.1.1",
+   "wording": "rule number",
+   "expected": 601,
+   "audit_graph": {
+    "ok": true,
+    "got": 601
+   },
+   "policy_only": {
+    "ok": false
+   },
+   "facts": 1
+  },
+  {
+   "type": "rings",
+   "q": "Which approvers are involved in collusion rings?",
+   "expected": [
+    "Frado Deep",
+    "Lakshit Pau",
+    "Meera Kapoor",
+    "Orinder Merchant",
+    "Qasim Pandey",
+    "Ubika Gour"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 6,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "rings",
+   "q": "Which approvers belong to rings with vendors?",
+   "expected": [
+    "Frado Deep",
+    "Lakshit Pau",
+    "Meera Kapoor",
+    "Orinder Merchant",
+    "Qasim Pandey",
+    "Ubika Gour"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 6,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Qasim Pandey?",
+   "approver": "Qasim Pandey",
+   "expected": [
+    "VEND1021",
+    "VEND1530",
+    "VEND1849",
+    "VEND2139"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 4,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Frado Deep?",
+   "approver": "Frado Deep",
+   "expected": [
+    "VEND1506",
+    "VEND1725",
+    "VEND1940",
+    "VEND2038",
+    "VEND2222"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 5,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Ubika Gour?",
+   "approver": "Ubika Gour",
+   "expected": [
+    "VEND1469",
+    "VEND1539",
+    "VEND1850",
+    "VEND2109",
+    "VEND2110"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 5,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Orinder Merchant?",
+   "approver": "Orinder Merchant",
+   "expected": [
+    "VEND1029",
+    "VEND1147",
+    "VEND1727",
+    "VEND2234"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 4,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Lakshit Pau?",
+   "approver": "Lakshit Pau",
+   "expected": [
+    "VEND1163",
+    "VEND1194",
+    "VEND1573",
+    "VEND2128"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 4,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "members",
+   "q": "Which vendors are in the ring around Meera Kapoor?",
+   "approver": "Meera Kapoor",
+   "expected": [
+    "VEND1223",
+    "VEND1527",
+    "VEND2244"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 3,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 8
+  },
+  {
+   "type": "identity",
+   "q": "Which vendors share the same PAN?",
+   "expected": [
+    "VEND1309",
+    "VEND1319",
+    "VEND1376",
+    "VEND1549",
+    "VEND1798",
+    "VEND1809",
+    "VEND2055",
+    "VEND2104"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 8,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 1
+  },
+  {
+   "type": "identity",
+   "q": "Which vendor records are registered twice?",
+   "expected": [
+    "VEND1309",
+    "VEND1319",
+    "VEND1376",
+    "VEND1549",
+    "VEND1798",
+    "VEND1809",
+    "VEND2055",
+    "VEND2104"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 1.0,
+    "named": 8,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 1
+  },
+  {
+   "type": "blocked",
+   "q": "Which blacklisted vendors billed the most?",
+   "expected": [
+    "VEND1080",
+    "VEND1189",
+    "VEND1206",
+    "VEND1266",
+    "VEND2190"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 0.5555555555555556,
+    "named": 9,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 2
+  },
+  {
+   "type": "blocked",
+   "q": "Which fraudulent vendors, blocked or blacklisted, have the largest invoices?",
+   "expected": [
+    "VEND1080",
+    "VEND1189",
+    "VEND1206",
+    "VEND1266",
+    "VEND2190"
+   ],
+   "audit_graph": {
+    "ok": true,
+    "recall": 1.0,
+    "precision": 0.5555555555555556,
+    "named": 9,
+    "missed": []
+   },
+   "policy_only": {
+    "ok": false,
+    "recall": 0.0
+   },
+   "facts": 2
+  }
+ ]
+}

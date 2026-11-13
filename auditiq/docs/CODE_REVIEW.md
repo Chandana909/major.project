@@ -6,7 +6,7 @@ generator, the evaluation, the dashboard, the scripts and the tests) and 4,000
 of TypeScript (the web application and its tests). Each finding below says
 what was wrong, what it could cause, what was changed and which test now
 checks it. Findings 12 to 14 were added on 25 October, when the application
-was served from the 500,000-invoice ledger, and 15 to 17 later the same day. Section 3 lists what was examined
+was served from the 500,000-invoice ledger, 15 to 17 later the same day, and 18 on 27 October, with the Kafka layer. Section 3 lists what was examined
 and found sound, and Section 4 what is left.
 
 ## 1. How the code was examined
@@ -174,6 +174,111 @@ API, run as an unprivileged user, with a health check) and
 `deploy/docker-compose.yml` (the application with PostgreSQL). CI builds the
 image, starts both, sets up and audits a ledger inside it and reads the result
 through the API with a token (the `container` job).
+
+**18. Storing the active version again left no version active** (correctness;
+found 27 October, while building the compliance topic). `db.store_policy`
+replaced a version with `is_active = 0`, so adopting the active version's own
+document again without "activate" (on the policy page, with `policy adopt`, or
+from the Kafka compliance topic) left the store with no active policy, and the
+next audit failed. *Changed:* a version that was active stays active when it is
+stored again; which version is active changes only when asked. *Test:*
+`tests/test_stream.py` (the compliance topic).
+
+**19. The overview read an unchecked invoice as an approved one** (honesty of
+the results; found 1 November, checking the scores on the overview against the
+answer key). The overview counted every approval together, but most latest
+results came from the controls-only configuration, which never evaluates the
+four judgement rules: anomalies of those rules were approved without any check,
+invoices whose one finding was medium or low were approved with it, and the
+model's findings on the sampled invoices (which can be false) were mixed with
+the controls'. *Changed:* the overview reports the coverage of the latest
+results: the configurations behind them, how many invoices the controls and the
+agents checked, the findings that did not hold payment, and, on a benchmark
+ledger, the results against the answer key per configuration
+(`analytics.coverage`, docs/ANALYTICS.md). *Tests:* `tests/test_analytics.py`.
+
+**20. The answer key would have scored results under another policy**
+(correctness; found 1 November, on the 500,000-invoice ledger). The labels of
+a benchmark ledger hold for the policy they were generated for (v2.5); results
+audited under another version (v3.12 there) differ from them because the
+thresholds changed, not because the audit erred, and would have shown as false
+alarms. *Changed:* loading a dataset records the labels' policy version from
+its manifest (`meta.labels_policy`); only results under that version are
+scored, and the others are counted apart. *Test:*
+`test_the_answer_key_scores_only_results_under_its_own_policy`.
+
+**21. A first rule for collusion rings joined a whole ledger into one ring**
+(correctness; found 1 November, while building the rings). Linking an approver
+to every vendor of one approval above their own limit made one ring of almost
+every vendor and approver of the 500,000-invoice ledger, whose policy v3.12
+makes such approvals common; comparing approvers with the whole ledger instead
+of their own role made hundreds of them look unusual, because a role with a
+lower limit breaks the rules more often. *Changed:* an approval link needs a
+one-sided binomial test against the rate of the approver's role to pass the
+Benjamini-Hochberg procedure at a false discovery rate of 1 %; identity links
+need no test; a watch list ranks the strongest leads when nothing passes
+(`auditiq/rings.py`, docs/ANALYTICS.md). *Tests:* `tests/test_analytics.py`.
+
+**22. A new policy version judged invoices dated before it took effect**
+(correctness; found 4 November, from a question about why the 500,000-invoice
+ledger sent a third of its invoices to review). Applying a policy, the CLI's
+`run`, the audit of one invoice, the stream worker and the dashboard all
+audited every invoice under the version active at the time of the audit. Version
+3.12 (effective 1 April 2026) had been applied to a ledger dated 1 April 2025 to
+31 March 2026: 149,514 invoices approved within the limits of their day became
+critical breaches of the halved approval limits, 160,068 invoices (32.0 %) went
+to a person and 4.7 % of them were anomalous in the answer key (RESULTS.md
+3.9). The Policy page's notice, "results do not yet follow the active policy",
+invited exactly that re-audit. *Changed:* `db.policy_timeline` and
+`service.audit_in_force`: every invoice under the version in force on its date,
+in the API, the CLI, the worker and the dashboard; the analytics measure amounts
+against the limits in force; the Policy page shows which version governs which
+dates. `--policy` still audits every invoice under one version, for experiments.
+*Tests:* `test_each_invoice_is_governed_by_the_policy_in_force_on_its_date`,
+`test_an_adopted_version_does_not_judge_the_invoices_before_its_date`, and the
+policy tests of the API, the CLI, the dashboard and the stream.
+
+**23. The risk level MEDIUM could not occur** (design; found 4 November). A
+medium finding scores 10, in the lowest band, so an invoice breaking a medium
+rule had the level of a clean invoice, and MEDIUM needed three medium findings.
+*Changed:* the level is at least that of the most severe finding held with
+confidence; scores and routes are unchanged. *Test:*
+`test_the_risk_level_is_at_least_that_of_the_most_severe_finding_held`.
+
+**24. The Kafka page could overwrite the store's invoices with another
+ledger's** (data integrity; found 4 November). Every generated ledger numbers
+its invoices from INV40001, and the page offered the first ledger in the
+folder. *Changed:* publishing a ledger that would replace invoices of the store
+with different ones is refused with 409 (`stream.ledger_clash`); the page
+offers the store's own ledger first. *Tests:*
+`test_another_ledger_with_the_same_invoice_numbers_would_replace_the_stores`
+and the console test of `tests/test_stream.py`.
+
+**25. A publish job reported its sent counts as failures** (correctness; found
+4 November). `Publisher.close()` returns the messages sent per topic and raises
+when one is not delivered; the endpoint stored its return value as the number
+failed. *Changed:* the job reports the topics that received messages; a
+delivery failure fails the job with its reason.
+
+**26. The local Kafka broker stopped on Windows and would not start again**
+(operations; found 4 November). Kafka marks a finished metadata snapshot
+read-only and then cannot delete it on Windows; its log cleaner renames open
+segment files, which Windows refuses, and the broker took its only log
+directory offline. *Changed:* `scripts/kafka_local.py start` clears the
+read-only flag on the broker's files and writes `log.cleaner.enable=false`. A
+long read of a SQLite store could also make a batch audit fail ("database is
+locked") after the default 5 s wait; connections now wait up to 60 s
+(`db.LOCK_WAIT`).
+
+**27. The review queue counted its levels from a cut list** (correctness of a
+display; found 4 November). The page loads at most 2,000 invoices, riskiest
+first, and counted the cards from them: on the 500,000-invoice ledger it showed
+2,000 waiting, all critical, while 5,712 were waiting, 3,570 of them high.
+*Changed:* `GET /api/queue` returns the count and amount of the whole queue per
+level (`levels`) and takes a `level`, so a level chosen on the page is read from
+the server; the page says when the list holds only the riskiest. *Tests:*
+`test_the_queue_counts_every_level_and_lists_one_level` and the review-queue
+tests of `pages.test.tsx`.
 
 ## 3. Examined and found sound
 

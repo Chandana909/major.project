@@ -1,0 +1,102 @@
+{
+ "dataset": "bench_seed_202",
+ "invoices": 5000,
+ "emails": 2105,
+ "backend": "sqlite",
+ "partitions": 4,
+ "repeats": 3,
+ "machine": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel, 12 logical CPUs, Windows 10",
+ "kafka": "127.0.0.1:9092",
+ "batch": {
+  "seconds": 6.76,
+  "detection": {
+   "tp": 300,
+   "fp": 0,
+   "fn": 120,
+   "precision": 1.0,
+   "recall": 0.7142857142857143,
+   "f1": 0.8333333333333334
+  }
+ },
+ "runs": [
+  {
+   "workers": 1,
+   "partitions": 4,
+   "published_seconds": 1.19,
+   "seconds": 21.92,
+   "invoices_per_second": 228.1,
+   "latency_ms": {
+    "median": 12770.0,
+    "p95": 21178,
+    "max": 21196
+   },
+   "invoices_per_partition": [
+    1435,
+    1307,
+    1107,
+    1151
+   ],
+   "errors": 0,
+   "worker_exit_code": 0,
+   "worker_output_tail": "",
+   "detection": {
+    "tp": 300,
+    "fp": 0,
+    "fn": 120,
+    "precision": 1.0,
+    "recall": 0.7142857142857143,
+    "f1": 0.8333333333333334
+   },
+   "same_findings_as_batch": 5000,
+   "differing_invoices": 0,
+   "differing_clauses": {},
+   "differing_examples": [],
+   "emails_linked_right": 2100,
+   "seconds_of_each_run": [
+    19.35,
+    24.75,
+    21.92
+   ]
+  },
+  {
+   "workers": 2,
+   "partitions": 4,
+   "published_seconds": 0.67,
+   "seconds": 17.56,
+   "invoices_per_second": 284.8,
+   "latency_ms": {
+    "median": 11043.5,
+    "p95": 16185,
+    "max": 17273
+   },
+   "invoices_per_partition": [
+    1435,
+    1307,
+    1107,
+    1151
+   ],
+   "errors": 0,
+   "worker_exit_code": 0,
+   "worker_output_tail": "",
+   "detection": {
+    "tp": 300,
+    "fp": 0,
+    "fn": 120,
+    "precision": 1.0,
+    "recall": 0.7142857142857143,
+    "f1": 0.8333333333333334
+   },
+   "same_findings_as_batch": 5000,
+   "differing_invoices": 0,
+   "differing_clauses": {},
+   "differing_examples": [],
+   "emails_linked_right": 2102,
+   "seconds_of_each_run": [
+    19.97,
+    17.56,
+    16.95
+   ]
+  }
+ ],
+ "measured_at": "2026-10-27 23:58"
+}
