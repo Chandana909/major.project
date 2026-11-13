@@ -76,7 +76,7 @@ Classes R1 to R10 can be decided by comparing fields, and the pipeline decides t
 | J3 | Invoice description inconsistent with the PO description | 2.1.5 | The invoice describes goods or services of a different kind from what the PO ordered. Amounts and quantities agree, so no field comparison shows it. |
 | J4 | GRN remark contradicts the billed quantity | 2.1.4 | The receiver's remark says that some units were rejected or returned, while the `received_quantity` field and the invoice still show the full quantity. Only the free-text remark contradicts the bill. |
 
-Each anomalous invoice carries exactly one injected anomaly. Classes have equal counts by design, so that every class can be measured; this is not the mix a real ledger would have.
+Each anomalous invoice of a benchmark ledger carries exactly one injected anomaly; in `final_seed_2025` about 40% of the eligible ones carry one to three more (compound frauds, written in `secondary_class_ids`). Classes have equal counts by design, so that every class can be measured; this is not the mix a real ledger would have.
 
 ## Hard negatives
 
@@ -113,7 +113,7 @@ A dataset is a function of its seed, the generator version and the policy regist
 ## What the data cannot show
 
 - **It is synthetic.** Vendors, people, GSTINs and invoices are generated. Amount distributions, vendor concentration and approval routing are plausible by design, not fitted to a real ledger, so results on this data are results about the system under controlled conditions, not estimates of its accuracy on a company's books.
-- **Injected anomalies are clean cases.** Each anomalous invoice has one anomaly, built to match the definition of its class. Real exceptions are messier and overlap.
+- **Injected anomalies are clean cases.** Each anomalous invoice has one anomaly (in the final ledger, one to four, from three fixed add-ons), built to match the definition of its class. Real exceptions are messier, overlap, and concentrate in few vendors and periods; here they are spread evenly.
 - **Several columns are constant** (currency, payment terms, payment status, quality check and others, as the data dictionary states). They are there so that the schema is complete; nothing can be learned from them.
 - **Free text is templated.** Descriptions and receipt remarks are drawn from a fixed vocabulary with variations, which is easier to read than what people type.
 - **J1 can be found without judgement, as generated.** In these ledgers an invoice that is not the first on its purchase order is always a duplicate (R3 or J1), so a rule on the PO reference finds every J1 without reading the invoice number, and both classical detectors do (`results/summary.md`). J1 therefore does not test judgement here. Whether to make it a rule-defined class or to let clean invoices share a purchase order is an open decision (`PLAN.md`, section 6).

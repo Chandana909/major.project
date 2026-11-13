@@ -67,7 +67,7 @@ COLLUSION = ("A benchmark ledger with planted collusion. Besides the 420 anomalo
 FINAL = ("The ledger of the application and of the demonstrations: 25,000 invoices from 1,250 vendors over the "
          "financial year 2025-26, the fourteen anomaly classes (141 invoices each) and five hard-negative types "
          "(60 each) of the benchmark, about 40% of the eligible anomalous invoices carrying one to three further "
-         "violations (compound frauds, so that risk scores run from 0 to 100 and not between a few fixed values), "
+         "violations (compound frauds, so that flagged invoices score on more than the 70 or 50 of a single finding), "
          "four pairs of shell vendors and six approver rings. `labels.csv` has a column `secondary_class_ids` for "
          "the classes added to a compound fraud; `manifest.json` lists the rings.")
 PROFILES = [

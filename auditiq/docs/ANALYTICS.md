@@ -126,9 +126,13 @@ a few index lookups. Each server process has its own cache.
 
 ## 5. Limits
 
-- The generated benchmark ledgers assign approvers at random and model no
-  collusion, so on them no ring is expected to pass the tests; the watch list
-  shows the strongest leads instead.
+- The five plain benchmark ledgers (101, 202, 303, 909, 404) and the 20,000 and
+  500,000-invoice ledgers assign approvers at random and model no collusion, so
+  on them no ring is expected to pass the tests; the watch list shows the
+  strongest leads instead. The collusion ledgers (`collusion_seed_707`,
+  `final_seed_2025`) plant shell vendors and approver rings; on the final
+  ledger the detector recovers all 10 planted rings, and its tested approver-vendor
+  links match the six planted approver rings exactly (`results/final_seed_2025/verification.md`).
 - Approvers are taken from `invoices.approved_by` and their roles from
   `approval_logs`; an approver without a role is compared with the others
   without one.

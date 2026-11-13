@@ -1,5 +1,9 @@
 # AuditIQ: the complete architecture
 
+> **Superseded on 14 November 2026 by [`ARCHITECTURE.md`](ARCHITECTURE.md)**, which contains this reference as its Part VII
+> (sections R1 to R33, checked against the code and updated) together with the context, the decisions, the data, the analytics
+> and the results added since. This file (and `ARCH.pdf`, rendered from it) stays as the snapshot of 4 November.
+
 This document describes AuditIQ from the ground up: what it does, every part it is made of, the exact logic of each
 part, the data it stores, the technologies it uses, and how the parts talk to each other. It is written for two
 readers:

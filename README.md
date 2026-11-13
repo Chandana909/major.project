@@ -4,6 +4,13 @@ A controls-first, multi-agent audit of procure-to-pay transactions, with a REST
 API and a web application whose views of vendor risk, the audit pipeline and
 policy changes are drawn in 3D with React Three Fiber.
 
+**Want the whole project in one file? Read [`ARCHITECTURE.md`](ARCHITECTURE.md)** (updated 14 November 2026): what
+AuditIQ is, what changed between versions, why each design choice was made over its alternatives, how to run it
+(`auditiq\start.bat` runs everything through Kafka), the datasets and how each kind of error is designed, the
+analytics, the two knowledge graphs, the demonstration policies, what was measured, the limits, and the full
+technical reference. It is written so that another person or language model can answer questions about the
+project from that file alone (https://github.com/Chandana909/major.project/blob/main/ARCHITECTURE.md).
+
 **Writing the paper? Start with [`RESULTS.md`](RESULTS.md):** every measured
 result, with its table, figure, source file and the command that produced it.
 

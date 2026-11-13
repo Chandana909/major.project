@@ -32,7 +32,9 @@ Kafka topics      -> stream workers (invoice, vendor, email, compliance) -> the 
 
 | Document | Content |
 |---|---|
+| [../ARCHITECTURE.md](../ARCHITECTURE.md) | **The whole project in one file** (14 November 2026): what it is, what changed between versions, every design decision with its alternatives, how to run it, the datasets and how each error is designed, the analytics, both knowledge graphs, the demonstration policies, what was measured, the limits, and the full technical reference. Written so that a reader with no other access can answer questions about the project |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The design: principles, pipeline, agents, scoring, storage, retrieval, copilot, evaluation |
+| [docs/POLICY_DEMO.md](docs/POLICY_DEMO.md) | The five demonstration policies (and an incomplete draft that is refused): the steps and the measured effect on the final ledger (generated) |
 | [docs/ANALYTICS.md](docs/ANALYTICS.md) | The forensic analytics, the coverage of the results against the answer key, and how collusion rings are tested |
 | [docs/POLICY_GRAPH.md](docs/POLICY_GRAPH.md) | The policy as a knowledge graph built by code, how Ask AI uses it, and its evaluation against passage retrieval |
 | [docs/CASE_GRAPH.md](docs/CASE_GRAPH.md) | The audit findings as a knowledge graph (vendors, invoices, rules, approvers, rings), how Ask AI uses it, and its evaluation on 78 questions with answers known from the ledger |
@@ -40,9 +42,9 @@ Kafka topics      -> stream workers (invoice, vendor, email, compliance) -> the 
 | [docs/API.md](docs/API.md) | Every endpoint of the REST API: parameters, body, role, answers (generated from the code) |
 | [docs/BASE_PAPERS.md](docs/BASE_PAPERS.md) | Each element of the two base papers, where the code implements it and the measurement that shows it |
 | [docs/SECURITY.md](docs/SECURITY.md) | What is protected and how, the copilot's SQL guards, what is not protected, a checklist before a deployment |
-| [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) | The code review of 21 October 2026 and the findings added since: how the code was examined, eighteen findings and their fixes, what was found sound |
+| [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md) | The code review of 21 October 2026 and the findings added since: how the code was examined, twenty-seven findings and their fixes, what was found sound |
 | [docs/DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md) | Every table and column, with types on both backends and who reads it (generated) |
-| [docs/DATASETS.md](docs/DATASETS.md) | The six datasets: sizes, how a ledger is built, how each anomaly is injected, limits (generated) |
+| [docs/DATASETS.md](docs/DATASETS.md) | The eight datasets: sizes, how a ledger is built, how each anomaly is injected, limits (generated) |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Install, configure, run, reproduce the evaluation, troubleshoot |
 | [docs/WEB.md](docs/WEB.md) | The REST API and the web application: running, settings, security, every endpoint, the pages and 3D views, tests |
 | [docs/STREAMING.md](docs/STREAMING.md) | The Kafka ingestion layer: the four topics, the workers, exactly-once storage, what an invoice is audited against when it arrives alone, vendor e-mails, running it, measurements |
@@ -94,6 +96,13 @@ without it the API runs alone. The Streamlit dashboard
 (`python -m streamlit run app/dashboard.py`) offers the same work in a simpler
 form.
 
+**The whole thing in one file (Windows).** With Java 17 or later and a local Kafka broker installed once
+(`python scripts\kafka_local.py init kafka_2.13-4.3.2.tgz`), `start.bat` starts the broker, creates an empty
+store, starts the stream workers and the web application, publishes the 25,000-invoice final ledger (vendors,
+invoices with their orders, receipts and approvals, and vendor e-mails) through Kafka, audits what arrives and
+opens the browser; `start.bat stop` and `start.bat reset` end it. The sections "How to run it" of
+[`../ARCHITECTURE.md`](../ARCHITECTURE.md) give every option.
+
 End to end, two more checks need no model either. The first runs the whole
 application in a browser (Playwright, after `npx playwright install chromium`
 once); the second reproduces every result that needs no model in a temporary
@@ -143,9 +152,9 @@ python -m auditiq ask "Why is INV40042 high risk?"
 
 ## Data
 
-Six generated ledgers, 45,000 invoices and 187,413 ledger records in all, each
-with vendors, purchase orders, goods receipts, invoices, approval logs and the
-ground truth of every invoice.
+Eight generated ledgers committed, 75,000 invoices and 311,935 ledger records in all (a ninth, of 500,000
+invoices, is generated on request), each with vendors, purchase orders, goods receipts, invoices, approval logs
+and the ground truth of every invoice.
 
 | Dataset | Invoices | Ledger records | For |
 |---|---|---|---|
@@ -153,6 +162,8 @@ ground truth of every invoice.
 | `pilot_seed_909` | 5,000 | 20,755 | development; the only ledger prompts may be tried on |
 | `swap_seed_404` | 5,000 | 20,904 | the policy-swap experiment |
 | `large_seed_505` | 20,000 | 83,495 | the application; a realistic anomaly rate (2.1%) |
+| `collusion_seed_707` | 5,000 | 20,781 | planted collusion rings; the ring detector was designed on it |
+| `final_seed_2025` | 25,000 | 103,741 | **the final ledger**: compound frauds, four shell-vendor pairs, six approver rings; the default of `start.bat` |
 | `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale, and the web application on half a million invoices; generated only on request (`python -m evaluation.huge`), not committed |
 
 `python -m auditiq_bench` regenerates them byte-identically;
