@@ -323,10 +323,14 @@ describe("the architecture diagram", () => {
     expect(within(about).getByText("auditiq/controls.py")).toBeInTheDocument();
     expect(within(about).getByText(/Clause registry/)).toBeInTheDocument();               // one of its connections
     const agent = screen.getByRole("button", { name: /^Math & Approvals:/ });
-    expect(agent).toHaveClass("dim");                                                       // not connected to the selection
+    expect(agent).toHaveClass("trace-out");                                                 // the controls feed the agent
+    expect(screen.getByRole("button", { name: /^Clause registry:/ })).toHaveClass("trace-in"); // and the registry feeds the controls
+    const unrelated = screen.getByRole("button", { name: /^Human review:/ });
+    expect(unrelated).toHaveClass("dim");                                                   // not connected to the selection
     await userEvent.click(controls);                                                        // deselect
     expect(screen.queryByRole("region", { name: "About Deterministic controls" })).not.toBeInTheDocument();
     await userEvent.unhover(controls);
+    expect(unrelated).not.toHaveClass("dim");
     expect(agent).not.toHaveClass("dim");
     await userEvent.click(within(screen.getByRole("tablist", { name: "Highlight a configuration" })).getByRole("tab", { name: "C1" }));
     expect(agent).toHaveClass("dim");

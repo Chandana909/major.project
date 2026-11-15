@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { api } from "../api/client";
 import type { ConfigName, StreamStatus } from "../api/types";
 import { ArchitectureDiagram } from "../components/ArchitectureDiagram";
-import { EDGES, KIND_STYLE, NODES } from "../lib/architecture";
+import { EDGE_STYLE, EDGES, GROUPS, KIND_STYLE, neighbours, NODES } from "../lib/architecture";
 import { short } from "../lib/chart";
 import { Badge, ErrorBox, Kpi, Loading, Panel } from "../components/ui";
 import { count } from "../lib/format";
@@ -23,13 +23,6 @@ const TOPIC_ABOUT: Record<string, string> = {
   email: "vendor e-mails (MIME)",
   compliance: "policy documents (PDF)",
 };
-
-const EDGE_KINDS: [string, string, string][] = [
-  ["data", "#64748b", "data written or read"],
-  ["control", "#0f766e", "control flow of one audit"],
-  ["model", "#a21caf", "calls to a model"],
-  ["dashed", "#94a3b8", "only in one configuration"],
-];
 
 /** The four topics documents arrive through, and how far the workers have got in each. */
 function Ingestion({ status }: { status: Loaded<StreamStatus> }) {
@@ -148,7 +141,7 @@ export function PipelinePage() {
       </header>
 
       <div className="kpis eight">
-        <Kpi label="Components" value={count(NODES.length)} hint={`${count(EDGES.length)} connections · 10 subsystems`} />
+        <Kpi label="Components" value={count(NODES.length)} hint={`${count(EDGES.length)} connections · ${GROUPS.length} subsystems`} />
         <Kpi label="Graph stages" value={count(stages.length)} hint={`${count(stages.filter((x) => x.kind === "llm").length)} call a model`} tone="accent" />
         <Kpi label="Rules in the policy" value={count(policy.data?.rules.length ?? 0)} hint={`${count(policy.data?.rules.filter((r) => r.kind === "judgement").length ?? 0)} need judgement`} />
         <Kpi label="Invoices in the store" value={o ? short(o.invoices) : "–"} hint={h ? `${h.backend} · ledger ${h.ledger ?? "none"}` : undefined} />
@@ -162,7 +155,7 @@ export function PipelinePage() {
 
       <Panel
         title="System architecture"
-        subtitle="Clusters are subsystems; arrows follow the data. Choose a configuration to dim the stages it does not run."
+        subtitle="Every component of the platform, grouped by subsystem; arrows follow the code. Hover a component to trace what feeds it and what it feeds; choose a configuration to dim the stages it does not run."
         actions={
           <div className="segmented" role="tablist" aria-label="Highlight a configuration">
             {(["all", ...(p ? (Object.keys(p.configurations) as ConfigName[]) : [])] as (ConfigName | "all")[]).map((c) => (
@@ -173,18 +166,16 @@ export function PipelinePage() {
           </div>
         }
       >
-        <div className="arch-wrap">
-          <ArchitectureDiagram live={live} active={active} rules={policy.data?.rules ?? []} selected={selected} onSelect={setSelected} />
-        </div>
+        <ArchitectureDiagram live={live} active={active} selected={selected} onSelect={setSelected} />
         <div className="arch-legend">
           {Object.entries(KIND_STYLE).map(([k, v]) => (
             <span key={k}>
               <i style={{ background: v.color }} /> {v.label}
             </span>
           ))}
-          {EDGE_KINDS.map(([k, c, label]) => (
+          {Object.entries(EDGE_STYLE).map(([k, v]) => (
             <span key={k}>
-              <b className={`edge-swatch ${k}`} style={{ borderColor: c }} /> {label}
+              <b className={`edge-swatch ${k}`} style={{ borderColor: v.color }} /> {v.label}
             </span>
           ))}
         </div>
@@ -213,11 +204,11 @@ export function PipelinePage() {
               )}
               <span className="kpi-label">Connections</span>
               <ul className="files">
-                {EDGES.filter((e) => e.from === node.id || e.to === node.id).map((e, i) => (
+                {[...neighbours(node.id).inputs.map((e) => ["← ", e.from, e.label]), ...neighbours(node.id).outputs.map((e) => ["→ ", e.to, e.label])].map(([arrow, id, label], i) => (
                   <li key={i}>
-                    {e.from === node.id ? "→ " : "← "}
-                    {NODES.find((n) => n.id === (e.from === node.id ? e.to : e.from))?.title ?? (e.from === node.id ? e.to : e.from)}
-                    {e.label && <span className="muted"> · {e.label}</span>}
+                    {arrow}
+                    {NODES.find((n) => n.id === id)?.title ?? id}
+                    <span className="muted"> · {label}</span>
                   </li>
                 ))}
               </ul>

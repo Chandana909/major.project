@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cell, explainScore, inr, percent, ratio, RISK_COLORS, riskColor, routeLabel, rupeesCompact, scoreBreakdown, stateLabel } from "./format";
-import { CLUSTERS, EDGES, edgePoints, NODES, smoothPath } from "./architecture";
+import { EDGES, edgeSides, GROUPS, groupSize, neighbours, NODES } from "./architecture";
 import { monthLabel, niceMax, short } from "./chart";
 import { changeRows } from "./policy";
 import { meanOver } from "./results";
@@ -80,30 +80,33 @@ describe("chart scales", () => {
 });
 
 describe("the architecture diagram", () => {
-  const boxes = [...NODES, ...CLUSTERS];
-  const inside = (a: { x: number; y: number; w: number; h: number }, b: { x: number; y: number; w: number; h: number }) =>
-    a.x >= b.x && a.y >= b.y && a.x + a.w <= b.x + b.w && a.y + a.h <= b.y + b.h;
+  const ids = new Set(NODES.map((n) => n.id));
 
-  it("connects only components that exist", () => {
-    const ids = new Set(boxes.map((b) => b.id));
+  it("connects only components that exist, once each", () => {
     expect(EDGES.filter((e) => !ids.has(e.from) || !ids.has(e.to))).toEqual([]);
-    expect(new Set(NODES.map((n) => n.id)).size).toBe(NODES.length);
+    expect(ids.size).toBe(NODES.length);
+    const pairs = EDGES.map((e) => `${e.from}->${e.to}`);
+    expect(pairs.filter((p, i) => pairs.indexOf(p) !== i)).toEqual([]);
+    expect(NODES.filter((n) => neighbours(n.id).inputs.length + neighbours(n.id).outputs.length === 0).map((n) => n.id)).toEqual([]);
   });
 
-  it("places every component inside a subsystem and no two on top of each other", () => {
-    expect(NODES.filter((n) => !CLUSTERS.some((c) => inside(n, c))).map((n) => n.id)).toEqual([]);
-    const overlaps = NODES.flatMap((a, i) =>
-      NODES.slice(i + 1).filter((b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h).map((b) => `${a.id}/${b.id}`),
-    );
+  it("places every component in a cell of its subsystem, one per cell, and no two subsystems overlap", () => {
+    expect(NODES.filter((n) => {
+      const g = GROUPS.find((x) => x.id === n.group);
+      return !g || n.col >= g.cols || n.row >= g.rows;
+    }).map((n) => n.id)).toEqual([]);
+    const cells = NODES.map((n) => `${n.group}:${n.col}:${n.row}`);
+    expect(cells.filter((c, i) => cells.indexOf(c) !== i)).toEqual([]);
+    const boxes = GROUPS.map((g) => ({ id: g.id, x: g.x, y: g.y, ...groupSize(g) }));
+    const overlaps = boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h).map((b) => `${a.id}/${b.id}`));
     expect(overlaps).toEqual([]);
   });
 
-  it("draws every connection as horizontal and vertical runs", () => {
-    const slanted = EDGES.filter((e) => {
-      const pts = edgePoints(e);
-      return pts.slice(1).some(([x, y], i) => Math.abs(x - pts[i][0]) > 2 && Math.abs(y - pts[i][1]) > 2);
-    }).map((e) => `${e.from}->${e.to}`);
-    expect(slanted).toEqual([]);
-    expect(smoothPath([[0, 0], [10, 0], [10, 10]])).toBe("M0,0 L5,0 Q10,0 10,5 L10,10");
+  it("leaves a component sideways unless the two are stacked, and traces inputs and outputs", () => {
+    expect(edgeSides({ from: "erp", to: "importer", label: "" })).toEqual({ source: "r", target: "l" });
+    expect(edgeSides({ from: "bench", to: "erp", label: "" })).toEqual({ source: "t", target: "b" });
+    const { inputs, outputs } = neighbours("controls");
+    expect(inputs.map((e) => e.from)).toEqual(expect.arrayContaining(["registry", "extract", "history"]));
+    expect(outputs.map((e) => e.to)).toEqual(expect.arrayContaining(["math", "score", "corrections"]));
   });
 });

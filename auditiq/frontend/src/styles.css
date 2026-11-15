@@ -562,45 +562,101 @@ h3.sub { margin: 14px 0 8px; font-size: 0.8rem; font-weight: 700; text-transform
 .scene-label.approver { color: #f8fafc; }
 .scene-label.side-label { text-align: right; transform: translateX(-50%); }
 
-/* --- architecture diagram ------------------------------------------------------------------------------ */
-.arch-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; background: #f8fafc; }
-.arch { display: block; width: 100%; min-width: 1100px; height: auto; font-family: inherit; }
-.arch-cluster rect { stroke-width: 1.4; stroke-dasharray: 6 5; }
-.arch-cluster.inner rect { stroke-dasharray: 3 4; }
-.arch-cluster.dim { opacity: 0.35; }
-.arch-cluster-title { font-size: 12.5px; font-weight: 750; letter-spacing: 0.02em; }
-.arch-cluster-note { font-size: 10px; fill: #64748b; }
-.arch-card { fill: #fff; stroke: #cbd5e1; stroke-width: 1; filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.06)); transition: stroke 0.15s; }
-.arch-node { cursor: pointer; transition: opacity 0.2s; }
-.arch-node:hover .arch-card, .arch-node:focus .arch-card { stroke: #0f172a; stroke-width: 1.4; }
-.arch-node.selected .arch-card { stroke: var(--brand); stroke-width: 2.2; }
-.arch-node.dim { opacity: 0.32; }
-.arch-node:focus { outline: none; }
-.arch-title { font-size: 12.5px; font-weight: 700; fill: #0f172a; }
-.arch-title.mono { font-family: var(--mono); font-size: 11.5px; }
-.arch-line { font-size: 10.2px; fill: #475569; }
-.arch-node.queue .arch-line { fill: #9a3412; font-size: 9.5px; }
-.arch-badge-text { font-size: 9.4px; font-weight: 700; }
-.arch-chip { fill: #f1f5f9; stroke: #cbd5e1; stroke-width: 0.8; }
-.arch-chip-text { font-size: 9.6px; fill: #334155; font-family: var(--mono); }
-.arch-edge path { fill: none; stroke-width: 1.5; stroke-dasharray: 6 5; animation: arch-flow 1.6s linear infinite; }
-.arch-edge.dashed path { stroke-dasharray: 3 4; animation-duration: 2.4s; }
-.arch-edge.hot path { stroke-width: 2.6; }
-.arch-edge.dim { opacity: 0.18; }
-.arch-edge-label rect { fill: #fff; stroke: #e2e8f0; }
-.arch-edge-label text { font-size: 9.6px; fill: #334155; font-weight: 600; }
-@keyframes arch-flow { to { stroke-dashoffset: -22; } }
+/* --- architecture diagram (React Flow) ---------------------------------------------------------------- */
+.arch-canvas { position: relative; height: 760px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  background: radial-gradient(1200px 500px at 10% -10%, #eef6ff 0%, transparent 60%), radial-gradient(900px 500px at 110% 110%, #f3efff 0%, transparent 55%), #f8fafc; }
+.arch-canvas.full { position: fixed; inset: 0; z-index: 1000; height: auto; border-radius: 0; border: none; }
+.arch-canvas .react-flow { --xy-edge-label-background-color: #fff; font-family: inherit; }
+.arch-canvas .react-flow__pane { cursor: grab; }
+.arch-canvas .react-flow__pane.dragging { cursor: grabbing; }
+
+/* subsystems */
+.arch-lane { width: 100%; height: 100%; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--tone) 24%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 9%, #fff) 0, color-mix(in srgb, var(--tone) 3%, #fff) 54px, color-mix(in srgb, var(--tone) 2.5%, transparent) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 10px 30px -22px color-mix(in srgb, var(--tone) 60%, transparent); transition: opacity 0.25s; }
+.arch-lane.faded { opacity: 0.45; }
+.arch-lane-head { display: flex; flex-direction: column; gap: 1px; padding: 12px 16px 0; }
+.arch-lane-title { font-size: 13px; font-weight: 750; letter-spacing: 0.01em; color: color-mix(in srgb, var(--tone) 82%, #0f172a); display: flex; align-items: center; gap: 8px; }
+.arch-lane-title::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--tone); box-shadow: 0 0 0 3px color-mix(in srgb, var(--tone) 18%, transparent); }
+.arch-lane-note { font-size: 11px; color: #64748b; padding-left: 16px; }
+
+/* components */
+.arch-handle { opacity: 0; width: 6px !important; height: 6px !important; min-width: 0 !important; min-height: 0 !important; border: none !important; pointer-events: none; }
+.arch-card { --kind: #0d9488; position: relative; display: flex; align-items: center; gap: 11px; width: 100%; height: 100%; padding: 10px 12px; border-radius: 12px; cursor: pointer;
+  background: #fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 6px 16px -12px rgba(15, 23, 42, 0.25);
+  transition: opacity 0.22s, filter 0.22s, transform 0.18s, box-shadow 0.18s, border-color 0.18s; outline: none; }
+.arch-card::before { content: ""; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 0 3px 3px 0; background: var(--kind); }
+.arch-card:hover, .arch-card:focus-visible, .arch-card.trace-focus { border-color: color-mix(in srgb, var(--kind) 55%, #fff); transform: translateY(-1px);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--kind) 14%, transparent), 0 14px 28px -16px color-mix(in srgb, var(--kind) 55%, rgba(15, 23, 42, 0.4)); }
+.arch-card.selected { border-color: var(--kind); box-shadow: 0 0 0 2px var(--kind), 0 14px 28px -16px color-mix(in srgb, var(--kind) 55%, rgba(15, 23, 42, 0.4)); }
+.arch-card.trace-in { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16), 0 8px 18px -12px rgba(37, 99, 235, 0.5); }
+.arch-card.trace-out { border-color: #fcd34d; box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16), 0 8px 18px -12px rgba(217, 119, 6, 0.5); }
+.arch-card.trace-both { border-color: #a5b4fc; box-shadow: -3px 0 0 0 rgba(37, 99, 235, 0.35), 3px 0 0 0 rgba(217, 119, 6, 0.35), 0 8px 18px -12px rgba(79, 70, 229, 0.5); }
+.arch-card.dim { opacity: 0.16; filter: grayscale(0.85); }
+.arch-card.off { border-style: dashed; }
+.arch-card.off:not(.trace-faded) { opacity: 0.38; }
+.arch-icon { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; color: var(--kind);
+  background: color-mix(in srgb, var(--kind) 11%, #fff); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kind) 20%, transparent); }
+.arch-text { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.arch-title { font-size: 13px; font-weight: 650; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arch-title.mono { font-family: var(--mono); font-size: 12.5px; }
+.arch-sub { font-size: 11px; color: #64748b; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arch-badge { position: absolute; top: -9px; right: 10px; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 16px; white-space: nowrap;
+  color: var(--kind); background: color-mix(in srgb, var(--kind) 10%, #fff); border: 1px solid color-mix(in srgb, var(--kind) 30%, transparent); }
+.arch-flag { position: absolute; bottom: -9px; right: 10px; padding: 0 7px; border-radius: 999px; font-size: 9.5px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; line-height: 16px; color: #fff; }
+.arch-flag.in { background: #2563eb; }
+.arch-flag.out { background: #d97706; }
+.arch-flag.both { background: linear-gradient(90deg, #2563eb, #d97706); }
+
+/* connections */
+.arch-edge path.react-flow__edge-path { transition: opacity 0.22s, stroke 0.22s; }
+.arch-edge.faded { opacity: 0.05; }
+.arch-edge:not(.hot):not(.faded) path.react-flow__edge-path { opacity: 0.4; }.arch-edge.hot path.react-flow__edge-path { filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.9)); }
+.arch-edge.hot.animated path.react-flow__edge-path { stroke-dasharray: 7 5; animation-duration: 0.9s; }
+
+/* tooltip */
+.arch-tip { width: 344px; padding: 14px 15px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.97); border: 1px solid #e2e8f0; color: #334155; font-size: 12px; line-height: 1.5;
+  box-shadow: 0 24px 48px -20px rgba(15, 23, 42, 0.35), 0 2px 6px rgba(15, 23, 42, 0.06); backdrop-filter: blur(6px); pointer-events: none; animation: arch-tip-in 0.16s ease-out; }
+@keyframes arch-tip-in { from { opacity: 0; transform: translateY(-4px); } }
+.arch-tip p { margin: 4px 0 8px; }
+.arch-tip-kind { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 750; letter-spacing: 0.05em; text-transform: uppercase; }
+.arch-tip-stage { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 0; text-transform: none; color: #64748b; font-weight: 500; }
+.arch-tip-title { display: block; margin-top: 4px; font-size: 15px; color: #0f172a; }
+.arch-tip-live { color: #047857; font-weight: 650; }
+.arch-tip-files { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.arch-tip-files code { padding: 1px 6px; border-radius: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 10.5px; color: #334155; }
+.arch-tip-flows { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 10px; border-top: 1px solid #eef2f7; }
+.arch-tip-head { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 750; color: #0f172a; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.arch-tip-head i { width: 8px; height: 8px; border-radius: 50%; }
+.arch-tip-flow ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.arch-tip-flow li { display: flex; flex-direction: column; line-height: 1.25; }
+.arch-tip-flow li b { font-size: 11.5px; font-weight: 650; color: #1e293b; }
+.arch-tip-flow li span { font-size: 10.5px; color: #64748b; }
+.arch-tip-more, .arch-tip-none { font-size: 10.5px; color: #94a3b8; }
+
+/* chrome */
+.arch-hint { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 7px 8px 7px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.88);
+  border: 1px solid #e2e8f0; box-shadow: 0 6px 18px -12px rgba(15, 23, 42, 0.3); font-size: 12px; color: #334155; backdrop-filter: blur(6px); }
+.arch-hint span { display: inline-flex; align-items: center; gap: 6px; }
+.arch-hint i { width: 9px; height: 9px; border-radius: 50%; }
+.arch-expand { border: 1px solid #e2e8f0; background: #fff; border-radius: 8px; padding: 3px 10px; font: inherit; font-size: 12px; font-weight: 600; color: #0f172a; cursor: pointer; }
+.arch-expand:hover { border-color: #94a3b8; }
+.arch-canvas .react-flow__controls { border-radius: 10px; overflow: hidden; box-shadow: 0 6px 18px -10px rgba(15, 23, 42, 0.35); border: 1px solid #e2e8f0; }
+.arch-canvas .react-flow__controls-button { border-bottom-color: #eef2f7; width: 28px; height: 28px; }
+.arch-minimap { border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 6px 18px -12px rgba(15, 23, 42, 0.3); }
+
 .arch-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; font-size: 0.8rem; color: var(--ink-2); }
 .arch-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
-.edge-swatch { display: inline-block; width: 22px; height: 0; border-top: 2px dashed; margin-right: 6px; vertical-align: 3px; }
-.edge-swatch.dashed { border-top-style: dotted; }
+.edge-swatch { display: inline-block; width: 22px; height: 0; border-top: 2px solid; margin-right: 6px; vertical-align: 3px; }
+.edge-swatch.model { border-top-style: dotted; }
+.edge-swatch.config, .edge-swatch.variant { border-top-style: dashed; }
 .arch-detail { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; margin-top: 14px; padding: 16px 18px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2); }
 .arch-detail h3 { margin: 6px 0 4px; }
 .arch-kind { display: inline-block; padding: 1px 8px; border-radius: 999px; color: #fff; font-size: 0.72rem; font-weight: 700; }
 .files { margin: 4px 0 12px; padding-left: 18px; color: var(--ink-2); font-size: 0.85rem; display: grid; gap: 3px; }
 .matrix .tick { color: var(--brand); font-size: 0.9rem; }
-@media (max-width: 900px) { .arch-detail { grid-template-columns: 1fr; } .method li { grid-template-columns: 1fr; } .checks { grid-template-columns: 1fr; } }
-@media (prefers-reduced-motion: reduce) { .arch-edge path { animation: none; } }
+@media (max-width: 900px) { .arch-detail { grid-template-columns: 1fr; } .method li { grid-template-columns: 1fr; } .checks { grid-template-columns: 1fr; } .arch-canvas { height: 560px; } .arch-hint .muted { display: none; } }
+@media (prefers-reduced-motion: reduce) { .arch-edge.hot.animated path.react-flow__edge-path { animation: none; } .arch-card, .arch-tip { transition: none; animation: none; } }
 
 /* --- policy knowledge graph ----------------------------------------------------------------------------- */
 .graph-ask { margin-top: 14px; }
