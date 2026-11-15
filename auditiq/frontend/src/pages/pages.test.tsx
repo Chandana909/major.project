@@ -13,6 +13,7 @@ import {
 import { error, mockApi } from "../test/mockApi";
 import { InvoicePage } from "./InvoicePage";
 import { AiLayerPage } from "./AiLayerPage";
+import { ArchitecturePage } from "./ArchitecturePage";
 import { AnalyticsPage } from "./AnalyticsPage";
 import { GraphPage } from "./GraphPage";
 import { KafkaPage } from "./KafkaPage";
@@ -294,48 +295,60 @@ describe("the pipeline page", () => {
   });
 });
 
-describe("the architecture diagram", () => {
-  const pipeline = {
-    stages: [
-      { id: "extraction", label: "Evidence extraction", kind: "code" },
-      { id: "controls", label: "Deterministic controls", kind: "code", feature: true },
-      { id: "math_approvals", label: "Math & Approvals agent", kind: "llm" },
-      { id: "risk_score", label: "Risk score & route", kind: "code" },
-    ],
-    configurations: { C1: ["extraction", "controls", "risk_score"], C2: ["extraction", "risk_score"], C3: ["extraction", "controls", "math_approvals", "risk_score"], C4: [], C5: [] },
-  };
-
-  it("explains a component, shows live figures and dims what a configuration does not run", async () => {
+describe("the architecture tab", () => {
+  const mockAll = () =>
     mockApi([
-      ["/api/pipeline", () => pipeline],
       ["/api/stream", () => ({ configured: false, topics: [] })],
       ["/api/overview", () => overview],
       ["/api/health", () => health],
-      ["/api/policy/graph/ask", () => graphAnswer],
-      ["/api/policy/graph", () => policyGraph],
       ["/api/policy", () => policy],
     ]);
-    renderAt("/pipeline", "/pipeline", <PipelinePage />);
+  const renderTab = () =>
+    render(
+      <MemoryRouter initialEntries={["/architecture"]}>
+        <Routes>
+          <Route path="/architecture" element={<ArchitecturePage />} />
+          <Route path="/ai" element={<p>the agents page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+  it("traces what feeds a component and what it feeds, and falls back to the map without WebGL", async () => {
+    mockAll();
+    renderTab();
+    expect(screen.getByRole("tab", { name: "3D city" })).toBeDisabled();                   // jsdom has no WebGL
     const controls = await screen.findByRole("button", { name: /^Deterministic controls:/ });
-    expect(await within(controls).findByText("40 findings")).toBeInTheDocument();           // live: both rules of the overview are controls
-    await userEvent.click(controls);
-    const about = screen.getByRole("region", { name: "About Deterministic controls" });
-    expect(within(about).getByText("auditiq/controls.py")).toBeInTheDocument();
-    expect(within(about).getByText(/Clause registry/)).toBeInTheDocument();               // one of its connections
-    const agent = screen.getByRole("button", { name: /^Math & Approvals:/ });
-    expect(agent).toHaveClass("trace-out");                                                 // the controls feed the agent
-    expect(screen.getByRole("button", { name: /^Clause registry:/ })).toHaveClass("trace-in"); // and the registry feeds the controls
+    expect(await within(controls).findByText("40 findings")).toBeInTheDocument();          // live: both rules of the overview are controls
+    await userEvent.hover(controls);
+    expect(screen.getByRole("button", { name: /^Math & Approvals:/ })).toHaveClass("trace-out");   // the controls feed the agent
+    expect(screen.getByRole("button", { name: /^Clause registry:/ })).toHaveClass("trace-in");     // the registry feeds the controls
     const unrelated = screen.getByRole("button", { name: /^Human review:/ });
-    expect(unrelated).toHaveClass("dim");                                                   // not connected to the selection
-    await userEvent.click(controls);                                                        // deselect
-    expect(screen.queryByRole("region", { name: "About Deterministic controls" })).not.toBeInTheDocument();
+    expect(unrelated).toHaveClass("dim");
+    expect(screen.getByText("Click to open Agents & pipeline →")).toBeInTheDocument();
     await userEvent.unhover(controls);
     expect(unrelated).not.toHaveClass("dim");
-    expect(agent).not.toHaveClass("dim");
-    await userEvent.click(within(screen.getByRole("tablist", { name: "Highlight a configuration" })).getByRole("tab", { name: "C1" }));
-    expect(agent).toHaveClass("dim");
-    expect(screen.getByRole("button", { name: /^Deterministic controls:/ })).not.toHaveClass("dim");
-    expect(within(kpi("Rules in the policy")).getByText(String(policy.rules.length))).toBeInTheDocument();
+  });
+
+  it("walks the pitch tour step by step and leaves it with Escape", async () => {
+    mockAll();
+    renderTab();
+    await userEvent.click(screen.getByRole("button", { name: "Start the pitch tour" }));
+    const tour = screen.getByRole("complementary", { name: "Pitch tour" });
+    expect(within(tour).getByText(/A real procure-to-pay ledger comes in/)).toBeInTheDocument();
+    expect(await within(tour).findByText(`${overview.invoices.toLocaleString("en-IN")} invoices`)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^ERP ledger:/ })).not.toHaveClass("dim");    // in the step
+    expect(screen.getByRole("button", { name: /^Human review:/ })).toHaveClass("dim");      // not in it
+    await userEvent.click(within(tour).getByRole("button", { name: "Next →" }));
+    expect(within(tour).getByText(/Streamed through Kafka, exactly once/)).toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("complementary", { name: "Pitch tour" })).not.toBeInTheDocument();
+  });
+
+  it("opens the page that shows a component at work when it is clicked", async () => {
+    mockAll();
+    renderTab();
+    await userEvent.click(await screen.findByRole("button", { name: /^Deterministic controls:/ }));
+    expect(await screen.findByText("the agents page")).toBeInTheDocument();
   });
 });
 

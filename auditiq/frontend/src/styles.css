@@ -617,7 +617,7 @@ h3.sub { margin: 14px 0 8px; font-size: 0.8rem; font-weight: 700; text-transform
 /* tooltip */
 .arch-tip { width: 344px; padding: 14px 15px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.97); border: 1px solid #e2e8f0; color: #334155; font-size: 12px; line-height: 1.5;
   box-shadow: 0 24px 48px -20px rgba(15, 23, 42, 0.35), 0 2px 6px rgba(15, 23, 42, 0.06); backdrop-filter: blur(6px); pointer-events: none; animation: arch-tip-in 0.16s ease-out; }
-@keyframes arch-tip-in { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes arch-tip-in { from { transform: translateY(-4px); } }
 .arch-tip p { margin: 4px 0 8px; }
 .arch-tip-kind { display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 750; letter-spacing: 0.05em; text-transform: uppercase; }
 .arch-tip-stage { margin-left: auto; font-family: var(--mono); font-size: 10px; letter-spacing: 0; text-transform: none; color: #64748b; font-weight: 500; }
@@ -766,3 +766,113 @@ h3.sub { margin: 14px 0 8px; font-size: 0.8rem; font-weight: 700; text-transform
 .timeline-bar .tl-1 { background: #2563eb; }
 .timeline-bar .tl-2 { background: #7c3aed; }
 .timeline-bar .tl-3 { background: #c2410c; }
+
+/* --- architecture tab: 3D city, map, pitch tour ----------------------------------------------------- */
+.arch-canvas.embedded { height: 100%; border: none; border-radius: 0; }
+.arch-card.trace-tour { border-color: #5eead4; box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18), 0 10px 22px -14px rgba(13, 148, 136, 0.6); }
+.arch-tip-open { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eef2f7; font-size: 11.5px; font-weight: 700; color: #047857; }
+
+.a3-stage { position: relative; display: flex; flex-direction: column; height: 760px; margin: 18px 0; border-radius: 20px; overflow: hidden; isolation: isolate;
+  background: #050914; border: 1px solid #1e293b; box-shadow: 0 30px 60px -36px rgba(2, 6, 23, 0.8), 0 0 0 1px rgba(148, 163, 184, 0.06) inset; }
+.a3-stage.map { background: #f8fafc; border-color: var(--border); }
+.a3-stage.full { position: fixed; inset: 0; z-index: 1000; height: auto; margin: 0; border-radius: 0; }
+.a3-bar { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 300; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; pointer-events: none; }
+.a3-bar > * { pointer-events: auto; }
+.a3-stage .segmented { background: rgba(15, 23, 42, 0.72); border-color: rgba(148, 163, 184, 0.25); backdrop-filter: blur(8px); }
+.a3-stage .segmented button { color: #cbd5e1; }
+.a3-stage .segmented button.active { background: #f8fafc; color: #0f172a; }
+.a3-stage .segmented button:disabled { opacity: 0.45; cursor: not-allowed; }
+.a3-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 7px 12px; border-radius: 12px; background: rgba(15, 23, 42, 0.62); border: 1px solid rgba(148, 163, 184, 0.18);
+  font-size: 11px; color: #cbd5e1; backdrop-filter: blur(8px); max-width: 760px; }
+.a3-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.a3-legend i { width: 8px; height: 8px; border-radius: 3px; }
+.a3-stage.map .a3-legend { display: none; }
+.a3-actions { margin-left: auto; display: flex; gap: 8px; }
+.a3-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 10px; border: 1px solid rgba(148, 163, 184, 0.3); background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0; font: inherit; font-size: 12.5px; font-weight: 650; cursor: pointer; text-decoration: none; backdrop-filter: blur(8px); transition: background 0.15s, border-color 0.15s, transform 0.15s; }
+.a3-btn:hover { border-color: rgba(226, 232, 240, 0.6); background: rgba(30, 41, 59, 0.9); }
+.a3-btn:disabled { opacity: 0.4; cursor: default; }
+.a3-btn.primary { background: linear-gradient(135deg, #14b8a6, #0ea5e9); border-color: transparent; color: #04111d; }
+.a3-btn.primary:hover { transform: translateY(-1px); background: linear-gradient(135deg, #2dd4bf, #38bdf8); }
+.a3-view { position: relative; flex: 1; min-height: 0; }
+.a3-stage.map .a3-view { padding-top: 58px; }
+.a3-scene { width: 100%; }
+.a3-hint { position: absolute; z-index: 300; left: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 7px 12px; border-radius: 10px; font-size: 11.5px; color: #94a3b8;
+  background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(148, 163, 184, 0.16); backdrop-filter: blur(8px); pointer-events: none; }
+.a3-hint span { display: inline-flex; align-items: center; gap: 6px; }
+.a3-hint i { width: 8px; height: 8px; border-radius: 50%; }
+
+/* labels lying on the 3D tiles and plates (1 px = 0.01 world units) */
+.a3-label { width: 128px; display: flex; flex-direction: column; gap: 2px; transition: opacity 0.25s; user-select: none; }
+.a3-label b { font-size: 15px; font-weight: 700; color: #f1f5f9; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.01em; }
+.a3-label b.mono { font-family: var(--mono); font-size: 14px; color: #fed7aa; }
+.a3-label span { font-size: 9.5px; color: #8b9bb4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a3-label.lit b { color: #fff; text-shadow: 0 0 10px color-mix(in srgb, var(--kind) 70%, transparent); }
+.a3-label.faded { opacity: 0.18; }
+.a3-badge { padding: 1px 6px; border-radius: 999px; font-size: 8.5px; font-weight: 750; white-space: nowrap; color: var(--kind);
+  background: color-mix(in srgb, var(--kind) 16%, #0b1220); border: 1px solid color-mix(in srgb, var(--kind) 45%, transparent); }
+.a3-plate { width: 420px; display: flex; align-items: baseline; gap: 10px; user-select: none; transition: opacity 0.25s; }
+.a3-plate b { font-size: 24px; font-weight: 800; letter-spacing: 0.01em; color: color-mix(in srgb, var(--tone) 55%, #fff); text-shadow: 0 0 18px color-mix(in srgb, var(--tone) 60%, transparent); white-space: nowrap; }
+.a3-plate span { font-size: 11px; color: #7c8aa5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.a3-plate.faded { opacity: 0.3; }
+
+/* the 3D tooltip */
+.a3-tip { width: 330px; transform: translate(var(--shift, 0px), -58%); padding: 14px 15px 12px; border-radius: 14px; color: #cbd5e1; font-size: 12px; line-height: 1.5;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(8, 13, 26, 0.96)); border: 1px solid color-mix(in srgb, var(--kind) 40%, rgba(148, 163, 184, 0.25));
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8), 0 0 40px -12px color-mix(in srgb, var(--kind) 50%, transparent); backdrop-filter: blur(10px); animation: arch-tip-in 0.16s ease-out; }
+.a3-tip.below { transform: translate(var(--shift, 0px), 58%); }
+.a3-tip-kind { font-size: 10.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kind); }
+.a3-tip strong { display: block; margin: 3px 0 2px; font-size: 16px; color: #f8fafc; }
+.a3-tip p { margin: 4px 0 8px; }
+.a3-tip-live { color: #5eead4; font-weight: 650; }
+.a3-tip-flows { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding-top: 9px; border-top: 1px solid rgba(148, 163, 184, 0.16); }
+.a3-tip-flows div { display: flex; flex-direction: column; gap: 2px; }
+.a3-tip-flows em { font-style: normal; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.a3-tip-flows span { font-size: 11.5px; color: #e2e8f0; }
+.a3-tip-flows .more { color: #64748b; }
+.a3-tip-open { margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(148, 163, 184, 0.16); font-weight: 750; color: #5eead4; font-size: 12px; }
+
+/* the pitch tour */
+.a3-tour { position: absolute; z-index: 300; left: 16px; bottom: 16px; width: min(460px, calc(100% - 32px)); padding: 16px 18px 12px; border-radius: 18px; color: #cbd5e1;
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.94), rgba(6, 11, 24, 0.94)); border: 1px solid rgba(94, 234, 212, 0.28);
+  box-shadow: 0 30px 60px -24px rgba(0, 0, 0, 0.85), 0 0 60px -24px rgba(45, 212, 191, 0.5); backdrop-filter: blur(12px); animation: a3-rise 0.3s ease-out; }
+@keyframes a3-rise { from { transform: translateY(10px); } }
+.a3-tour h2 { margin: 10px 0 6px; font-size: 18px; color: #f8fafc; letter-spacing: -0.01em; }
+.a3-tour p { margin: 0 0 10px; font-size: 13px; line-height: 1.55; }
+.a3-tour-progress { display: flex; gap: 5px; }
+.a3-tour-progress button { flex: 1; height: 4px; border: none; border-radius: 4px; background: rgba(148, 163, 184, 0.22); cursor: pointer; padding: 0; }
+.a3-tour-progress button.done { background: rgba(94, 234, 212, 0.5); }
+.a3-tour-progress button.on { background: linear-gradient(90deg, #2dd4bf, #38bdf8); }
+.a3-tour-hard { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; padding: 9px 11px; border-radius: 12px; background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.25); }
+.a3-tour-hard b { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: #fbbf24; }
+.a3-tour-hard span { font-size: 12.5px; color: #fde68a; line-height: 1.5; }
+.a3-tour-figures { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.a3-tour-figures span { padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; color: #5eead4; background: rgba(45, 212, 191, 0.1); border: 1px solid rgba(45, 212, 191, 0.3); }
+.a3-tour-nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.a3-tour-nav .a3-btn.primary { margin-left: auto; }
+.a3-tour-keys { display: block; margin-top: 8px; font-size: 10.5px; color: #64748b; }
+
+/* why it is not simple */
+.a3-hard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.a3-hard { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 16px 16px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface);
+  color: inherit; text-decoration: none; overflow: hidden; transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s; }
+.a3-hard::after { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: linear-gradient(90deg, #14b8a6, #6366f1, #f59e0b); opacity: 0.85; }
+.a3-hard:hover { transform: translateY(-2px); border-color: var(--border-strong); box-shadow: var(--shadow); }
+.a3-hard-n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.a3-hard strong { font-size: 15px; color: var(--ink); }
+.a3-hard p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.5; flex: 1; }
+.a3-hard-link { margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--brand); }
+
+/* subsystems */
+.a3-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.a3-group { padding: 14px 14px 12px; border-radius: 14px; border: 1px solid color-mix(in srgb, var(--tone) 28%, var(--border)); background: linear-gradient(180deg, color-mix(in srgb, var(--tone) 6%, #fff), #fff 60%); }
+.a3-group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.a3-group-head strong { color: color-mix(in srgb, var(--tone) 80%, #0f172a); }
+.a3-group-head span { font-size: 11.5px; color: var(--muted); }
+.a3-group p { margin: 2px 0 10px; }
+.a3-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.a3-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 8px; border: 1px solid var(--border); background: #fff; font: inherit; font-size: 12px; color: var(--ink); cursor: pointer; }
+.a3-chip::before { content: ""; width: 7px; height: 7px; border-radius: 2px; background: var(--kind); }
+.a3-chip:hover { border-color: var(--kind); background: color-mix(in srgb, var(--kind) 7%, #fff); }
+@media (max-width: 900px) { .a3-stage { height: 620px; } .a3-legend { display: none; } .a3-tour { left: 8px; right: 8px; width: auto; bottom: 8px; } }
+@media (prefers-reduced-motion: reduce) { .a3-tour, .a3-tip { animation: none; } }

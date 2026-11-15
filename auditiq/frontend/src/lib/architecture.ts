@@ -65,7 +65,7 @@ export const EDGE_STYLE: Record<EdgeKind, { color: string; label: string; dash?:
 };
 
 /** Direction colours of a traced component: what flows in, what flows out. */
-export const TRACE = { in: "#2563eb", out: "#d97706" };
+export const TRACE = { in: "#2563eb", out: "#d97706", tour: "#0d9488" };
 
 // Geometry of the grid: every component has the same footprint, so the diagram reads as a calm grid.
 export const NODE_W = 212;
@@ -402,6 +402,55 @@ export const EDGES: ArchEdge[] = [
   { from: "reproduce", to: "bench", label: "regenerates ledgers", kind: "control" },
   { from: "reproduce", to: "service", label: "re-audits", kind: "control" },
 ];
+
+/** The pages of the application, by route. */
+export const PAGES: Record<string, string> = {
+  "/": "Overview",
+  "/review": "Review queue",
+  "/invoice": "Invoices",
+  "/kafka": "Kafka streams",
+  "/ai": "Agents & pipeline",
+  "/ask": "Ask AI",
+  "/knowledge": "Knowledge base",
+  "/graph": "Knowledge graph",
+  "/rag": "RAG retrieval",
+  "/policy": "Policy",
+  "/analytics": "Audit analytics",
+  "/rings": "Vendor collusion",
+  "/pipeline": "Pipeline & configurations",
+  "/results": "Results",
+};
+
+/** The page of the application that shows each component at work: clicking a component opens it. */
+export const DEMO: Record<string, string> = {
+  erp: "/", mailbox: "/kafka", sop: "/policy", bench: "/results", demo: "/policy",
+  importer: "/", launcher: "/kafka", producer: "/kafka", workers: "/kafka", emails: "/kafka",
+  broker: "/kafka", "t-vendor": "/kafka", "t-invoice": "/kafka", "t-email": "/kafka", "t-compliance": "/kafka",
+  extract: "/invoice", history: "/invoice", controls: "/ai", math: "/ai", tax: "/ai", vendorint: "/ai",
+  single: "/ai", challenger: "/ai", confidence: "/ai", score: "/invoice", route: "/review", review: "/review",
+  service: "/ai", corrections: "/invoice", pack: "/invoice",
+  ledger: "/", mail: "/invoice", policyT: "/knowledge", streamT: "/kafka", access: "/pipeline",
+  audit: "/", views: "/review", labels: "/results", engines: "/pipeline",
+  pdfIngest: "/policy", compiler: "/policy", reader: "/policy", confirm: "/policy", registry: "/policy", simulation: "/policy",
+  chat: "/ai", embed: "/rag", cache: "/ai",
+  container: "/pipeline", compose: "/pipeline", ci: "/results", kafkaLocal: "/kafka", pgLocal: "/pipeline", reproduce: "/results",
+  analytics: "/analytics", rings: "/rings", caseGraph: "/graph", copilot: "/ask", retrieval: "/rag", policyGraph: "/graph",
+  guard: "/ask", datadict: "/knowledge",
+  users: "/", web: "/", api: "/pipeline", cli: "/pipeline", dash: "/pipeline",
+};
+
+/** The route of the page that demonstrates a component, and that page's name. */
+export function demoOf(id: string): { to: string; page: string } {
+  const to = DEMO[id] ?? "/pipeline";
+  return { to, page: PAGES[to] ?? to };
+}
+
+/** The canvas the whole diagram spans: the union of the subsystems. */
+export function bounds(): { x: number; y: number; w: number; h: number } {
+  const boxes = GROUPS.map((g) => ({ ...groupSize(g), x: g.x, y: g.y }));
+  const x = Math.min(...boxes.map((b) => b.x)), y = Math.min(...boxes.map((b) => b.y));
+  return { x, y, w: Math.max(...boxes.map((b) => b.x + b.w)) - x, h: Math.max(...boxes.map((b) => b.y + b.h)) - y };
+}
 
 export function groupSize(g: ArchGroup): { w: number; h: number } {
   return { w: PAD_X * 2 + g.cols * NODE_W + (g.cols - 1) * GAP_X, h: PAD_TOP + PAD_BOTTOM + g.rows * NODE_H + (g.rows - 1) * GAP_Y };

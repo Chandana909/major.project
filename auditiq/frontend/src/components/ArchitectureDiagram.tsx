@@ -9,7 +9,7 @@ import "@xyflow/react/dist/style.css";
 import { Background, BackgroundVariant, Controls, Handle, MarkerType, MiniMap, NodeToolbar, Panel, Position, ReactFlow, ReactFlowProvider, useReactFlow, useStore, type Edge, type Node, type NodeProps } from "@xyflow/react";
 import { createContext, memo, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
-  absoluteBox, EDGE_STYLE, EDGES, edgeSides, GROUPS, groupSize, KIND_STYLE, localPosition, neighbours, NODE_H, NODE_W, NODES, TRACE,
+  absoluteBox, demoOf, EDGE_STYLE, EDGES, edgeSides, GROUPS, groupSize, KIND_STYLE, localPosition, neighbours, NODE_H, NODE_W, NODES, TRACE,
   type ArchGroup, type ArchNode, type NodeKind, type Side,
 } from "../lib/architecture";
 
@@ -20,9 +20,15 @@ export interface DiagramProps {
   active?: Set<string> | null;
   selected?: string | null;
   onSelect?: (id: string | null) => void;
+  /** When given, a click opens the component's page instead of pinning it. */
+  onOpen?: (id: string) => void;
+  /** Components of the current tour step: highlighted and framed while nothing is hovered. */
+  tour?: string[] | null;
+  /** Inside a page's own frame: fills it, and leaves full screen to the frame. */
+  embedded?: boolean;
 }
 
-type Trace = "rest" | "focus" | "in" | "out" | "both" | "faded";
+type Trace = "rest" | "focus" | "in" | "out" | "both" | "tour" | "faded";
 
 interface CardData extends Record<string, unknown> {
   node: ArchNode;
@@ -33,6 +39,8 @@ interface CardData extends Record<string, unknown> {
   /** Where the tooltip opens: the side with the fewest traced components, so it hides as little of the trace as it can. */
   tipSide: Position;
   badge?: string;
+  /** The page a click opens, when clicks open pages. */
+  opens?: string;
 }
 
 interface LaneData extends Record<string, unknown> {
@@ -92,7 +100,7 @@ function Flow({ title, edges, side }: { title: string; edges: { id: string; labe
 }
 
 const Card = memo(function Card({ data }: NodeProps<Node<CardData>>) {
-  const { node, trace, off, selected, tip, tipSide, badge } = data;
+  const { node, trace, off, selected, tip, tipSide, badge, opens } = data;
   const hover = useContext(Hover);
   const style = KIND_STYLE[node.kind];
   const { inputs, outputs } = neighbours(node.id);
@@ -118,6 +126,7 @@ const Card = memo(function Card({ data }: NodeProps<Node<CardData>>) {
           <Flow title="Receives from" side="in" edges={inputs.map((e) => ({ id: e.from, label: e.label }))} />
           <Flow title="Sends to" side="out" edges={outputs.map((e) => ({ id: e.to, label: e.label }))} />
         </div>
+        {opens && <div className="arch-tip-open">Click to open {opens} →</div>}
       </NodeToolbar>
       {(["l", "r", "t", "b"] as Side[]).map((s) => (
         <Handle key={`t-${s}`} id={`t-${s}`} type="target" position={SIDE[s]} isConnectable={false} className="arch-handle" />
@@ -203,7 +212,7 @@ function quietSide(id: string, view: { x: number; y: number; zoom: number; width
   return SIDE[best];
 }
 
-function Canvas({ live = {}, active = null, selected = null, onSelect, full, setFull }: DiagramProps & { full: boolean; setFull: (f: boolean) => void }) {
+function Canvas({ live = {}, active = null, selected = null, onSelect, onOpen, tour = null, embedded = false, full, setFull }: DiagramProps & { full: boolean; setFull: (f: boolean) => void }) {
   const [hover, setHover] = useState<string | null>(null);
   const focus = hover ?? selected;
   const flow = useReactFlow();
@@ -216,6 +225,11 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
 
   const trace = useMemo(() => {
     const t = new Map<string, Trace>();
+    if (!focus && tour?.length) {
+      const on = new Set(tour);
+      for (const n of NODES) t.set(n.id, on.has(n.id) ? "tour" : "faded");
+      return t;
+    }
     if (!focus) return t;
     for (const n of NODES) t.set(n.id, "faded");
     t.set(focus, "focus");
@@ -224,12 +238,12 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
       if (e.from === focus && e.to !== focus) t.set(e.to, t.get(e.to) === "in" ? "both" : "out");
     }
     return t;
-  }, [focus]);
+  }, [focus, tour]);
 
   const nodes = useMemo<Node[]>(() => {
     const lanes: Node<LaneData>[] = GROUPS.map((g) => {
       const { w, h } = groupSize(g);
-      const faded = !!focus && !NODES.some((n) => n.group === g.id && trace.get(n.id) !== "faded");
+      const faded = trace.size > 0 && !NODES.some((n) => n.group === g.id && trace.get(n.id) !== "faded");
       return { id: `g-${g.id}`, type: "lane", position: { x: g.x, y: g.y }, data: { group: g, faded }, style: { width: w, height: h }, width: w, height: h,
         draggable: false, selectable: false, focusable: false, zIndex: 0 };
     });
@@ -247,18 +261,20 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
       focusable: false,
       zIndex: n.id === hover ? Z_CARD + 1 : Z_CARD,
       data: { node: n, trace: trace.get(n.id) ?? "rest", off: off.has(n.id), selected: selected === n.id, tip: hover === n.id,
-        tipSide: hover === n.id ? quietSide(n.id, { x: tx, y: ty, zoom, width, height }) : Position.Bottom, badge: live[n.id] },
+        tipSide: hover === n.id ? quietSide(n.id, { x: tx, y: ty, zoom, width, height }) : Position.Bottom, badge: live[n.id],
+        opens: onOpen ? demoOf(n.id).page : undefined },
     }));
     return [...lanes, ...cards];
     // The viewport is read when the hover changes; panning with a tooltip open keeps its side.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focus, hover, selected, trace, off, live]);
+  }, [focus, hover, selected, trace, off, live, onOpen]);
 
   const edges = useMemo<Edge[]>(() => EDGES.map((e, i) => {
     const kind = e.kind ?? "data";
     const base = EDGE_STYLE[kind];
-    const dir = !focus ? null : e.to === focus ? "in" : e.from === focus ? "out" : null;
-    const faded = (focus && !dir) || off.has(e.from) || off.has(e.to);
+    const inTour = !focus && !!tour?.length && tour.includes(e.from) && tour.includes(e.to);
+    const dir = !focus ? (inTour ? "tour" : null) : e.to === focus ? "in" : e.from === focus ? "out" : null;
+    const faded = ((focus || tour?.length) && !dir) || off.has(e.from) || off.has(e.to);
     const color = dir ? TRACE[dir] : base.color;
     const { source, target } = edgeSides(e);
     return {
@@ -284,20 +300,21 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
       labelBgPadding: [6, 3] as [number, number],
       labelBgBorderRadius: 6,
     };
-  }), [focus, off]);
+  }), [focus, off, tour]);
 
   const hoverApi = useMemo(() => ({
     enter: (id: string) => setHover(id),
     leave: () => setHover(null),
-    toggle: (id: string) => onSelect?.(selected === id ? null : id),
-  }), [onSelect, selected]);
+    toggle: (id: string) => (onOpen ? onOpen(id) : onSelect?.(selected === id ? null : id)),
+  }), [onSelect, onOpen, selected]);
 
   // Fit the whole platform whenever the canvas changes size (entering or leaving full screen, a resized window).
   useEffect(() => {
     if (!width || !height) return;
-    const t = window.setTimeout(() => flow.fitView({ padding: 0.04, duration: 250 }), 40);
+    const framed = tour?.length ? { nodes: tour.map((id) => ({ id })), padding: 0.3, duration: 600 } : { padding: 0.04, duration: 250 };
+    const t = window.setTimeout(() => flow.fitView(framed), 40);
     return () => window.clearTimeout(t);
-  }, [width, height, flow]);
+  }, [width, height, flow, tour]);
 
   useEffect(() => {
     const key = (ev: KeyboardEvent) => {
@@ -339,10 +356,12 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
         <Panel position="top-left" className="arch-hint">
           <span><i style={{ background: TRACE.in }} /> feeds in</span>
           <span><i style={{ background: TRACE.out }} /> feeds out</span>
-          <span className="muted">Hover to trace · click to pin · Ctrl + scroll to zoom</span>
-          <button type="button" className="arch-expand" onClick={() => setFull(!full)} aria-pressed={full}>
-            {full ? "Exit full screen" : "Full screen"}
-          </button>
+          <span className="muted">Hover to trace · {onOpen ? "click to open its page" : "click to pin"} · Ctrl + scroll to zoom</span>
+          {!embedded && (
+            <button type="button" className="arch-expand" onClick={() => setFull(!full)} aria-pressed={full}>
+              {full ? "Exit full screen" : "Full screen"}
+            </button>
+          )}
         </Panel>
       </ReactFlow>
     </Hover.Provider>
@@ -352,7 +371,7 @@ function Canvas({ live = {}, active = null, selected = null, onSelect, full, set
 export function ArchitectureDiagram(props: DiagramProps) {
   const [full, setFull] = useState(false);
   return (
-    <div className={`arch-canvas ${full ? "full" : ""}`}>
+    <div className={`arch-canvas ${full ? "full" : ""} ${props.embedded ? "embedded" : ""}`}>
       <ReactFlowProvider>
         <Canvas {...props} full={full} setFull={setFull} />
       </ReactFlowProvider>

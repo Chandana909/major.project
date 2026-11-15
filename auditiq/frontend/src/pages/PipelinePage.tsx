@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import type { ConfigName, StreamStatus } from "../api/types";
-import { ArchitectureDiagram } from "../components/ArchitectureDiagram";
-import { EDGE_STYLE, EDGES, GROUPS, KIND_STYLE, neighbours, NODES } from "../lib/architecture";
+import { EDGES, GROUPS, NODES } from "../lib/architecture";
 import { short } from "../lib/chart";
 import { Badge, ErrorBox, Kpi, Loading, Panel } from "../components/ui";
 import { count } from "../lib/format";
@@ -82,49 +82,11 @@ export function PipelinePage() {
   const stream = useApi(() => api.stream());
   const policy = useApi(() => api.policy());
   const [config, setConfig] = useState<ConfigName>("C5");
-  const [highlight, setHighlight] = useState<ConfigName | "all">("all");
-  const [selected, setSelected] = useState<string | null>(null);
   const p = pipeline.data;
   const o = overview.data;
   const h = health.data;
   const s = stream.data;
 
-  const live = useMemo(() => {
-    const out: Record<string, string> = {};
-    if (h) {
-      out.api = `v${h.version} · ${h.backend}`;
-      out.chat = h.model ? "configured" : "not configured";
-      if (h.ledger) out.erp = h.ledger;
-      if (h.policy_version) out.registry = `v${h.policy_version} active`;
-    }
-    if (o) {
-      out.ledger = `${short(o.invoices)} invoices`;
-      out.audit = `${short(o.audited)} results`;
-      out.views = `${count(o.states.PENDING_REVIEW ?? 0)} waiting`;
-      out.review = `${count(o.states.PENDING_REVIEW ?? 0)} waiting · ${count(o.reviewed)} done`;
-      out.route = `${count(o.routes.escalate ?? 0)} escalated`;
-      out.score = `${short(o.audited)} scored`;
-      const controls = o.findings_by_rule.filter((f) => f.source === "control").reduce((t, f) => t + f.findings, 0);
-      out.controls = `${count(controls)} findings`;
-      out.pack = `${count(o.runs.length)} runs`;
-      if (o.coverage) {
-        out.single = `${count(o.coverage.configurations.C2 ?? 0)} invoices`;
-        out.labels = o.coverage.answer_key ? "present" : "none";
-        if (o.coverage.judgement_run) out.confidence = `${count(o.coverage.configurations.C5 ?? 0)} invoices`;
-      }
-    }
-    if (s) {
-      const down = !s.configured ? "no broker" : s.error ? "broker down" : null;
-      for (const t of s.topics) out[`t-${t.kind}`] = `${short(t.messages)} msgs · lag ${short(t.lag)}`;
-      if (down) for (const k of ["vendor", "invoice", "email", "compliance"]) out[`t-${k}`] = down;
-      out.workers = down ?? `${short(s.topics.reduce((t, x) => t + x.processed, 0))} processed`;
-    }
-    if (policy.data) out.policyT = `${policy.data.versions.length} versions`;
-    return out;
-  }, [h, o, s, policy.data]);
-
-  const active = highlight === "all" || !p ? null : new Set(p.configurations[highlight]);
-  const node = NODES.find((n) => n.id === selected);
   const stages = p?.stages ?? [];
 
   return (
@@ -134,8 +96,7 @@ export function PipelinePage() {
           <span className="eyebrow">Engineering · Pipeline</span>
           <h1>The pipeline</h1>
           <p className="muted">
-            The whole platform in one diagram: where ledgers, e-mails and policies come in, the audit graph each invoice runs through, what is stored where, which parts call a
-            model and how people reach it. Hover a component to trace its connections; click it for what it does and where it lives in the code.
+            The audit graph each invoice runs through, the stages each configuration (C1 to C5) runs, and the Kafka topics documents arrive through.
           </p>
         </div>
       </header>
@@ -153,70 +114,11 @@ export function PipelinePage() {
         <Kpi label="API" value={h ? `v${h.version}` : "–"} hint="27 endpoints · roles · jobs" />
       </div>
 
-      <Panel
-        title="System architecture"
-        subtitle="Every component of the platform, grouped by subsystem; arrows follow the code. Hover a component to trace what feeds it and what it feeds; choose a configuration to dim the stages it does not run."
-        actions={
-          <div className="segmented" role="tablist" aria-label="Highlight a configuration">
-            {(["all", ...(p ? (Object.keys(p.configurations) as ConfigName[]) : [])] as (ConfigName | "all")[]).map((c) => (
-              <button key={c} role="tab" aria-selected={highlight === c} className={highlight === c ? "active" : ""} onClick={() => setHighlight(c)}>
-                {c === "all" ? "All" : c}
-              </button>
-            ))}
-          </div>
-        }
-      >
-        <ArchitectureDiagram live={live} active={active} selected={selected} onSelect={setSelected} />
-        <div className="arch-legend">
-          {Object.entries(KIND_STYLE).map(([k, v]) => (
-            <span key={k}>
-              <i style={{ background: v.color }} /> {v.label}
-            </span>
-          ))}
-          {Object.entries(EDGE_STYLE).map(([k, v]) => (
-            <span key={k}>
-              <b className={`edge-swatch ${k}`} style={{ borderColor: v.color }} /> {v.label}
-            </span>
-          ))}
-        </div>
-        {node ? (
-          <div className="arch-detail" role="region" aria-label={`About ${node.title}`}>
-            <div>
-              <span className="arch-kind" style={{ background: KIND_STYLE[node.kind].color }}>
-                {KIND_STYLE[node.kind].label}
-              </span>
-              <h3>{node.title}</h3>
-              <p>{node.detail}</p>
-              {live[node.id] && <p className="muted small">Now: {live[node.id]}</p>}
-            </div>
-            <div>
-              {node.files && (
-                <>
-                  <span className="kpi-label">In the code</span>
-                  <ul className="files">
-                    {node.files.map((f) => (
-                      <li key={f}>
-                        <code>{f}</code>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              <span className="kpi-label">Connections</span>
-              <ul className="files">
-                {[...neighbours(node.id).inputs.map((e) => ["← ", e.from, e.label]), ...neighbours(node.id).outputs.map((e) => ["→ ", e.to, e.label])].map(([arrow, id, label], i) => (
-                  <li key={i}>
-                    {arrow}
-                    {NODES.find((n) => n.id === id)?.title ?? id}
-                    <span className="muted"> · {label}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : (
-          <p className="muted small">Click a component for its description, its files and its connections.</p>
-        )}
+      <Panel title="The whole platform" subtitle="Every subsystem, component and connection, in 3D and as a map, with a guided tour for presenting it.">
+        <p className="muted">
+          The architecture has its own page: <Link to="/architecture">Architecture</Link>. Hover a component there to see what feeds it and what it feeds, and click it to open
+          the page where it runs.
+        </p>
       </Panel>
 
       <ErrorBox error={pipeline.error} onRetry={pipeline.reload} />

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cell, explainScore, inr, percent, ratio, RISK_COLORS, riskColor, routeLabel, rupeesCompact, scoreBreakdown, stateLabel } from "./format";
-import { EDGES, edgeSides, GROUPS, groupSize, neighbours, NODES } from "./architecture";
+import { DEMO, demoOf, EDGES, edgeSides, GROUPS, groupSize, neighbours, NODES, PAGES } from "./architecture";
+import { HARD_PROBLEMS, INVOICE_PATH, TOUR } from "./pitch";
 import { monthLabel, niceMax, short } from "./chart";
 import { changeRows } from "./policy";
 import { meanOver } from "./results";
@@ -100,6 +101,15 @@ describe("the architecture diagram", () => {
     const boxes = GROUPS.map((g) => ({ id: g.id, x: g.x, y: g.y, ...groupSize(g) }));
     const overlaps = boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h).map((b) => `${a.id}/${b.id}`));
     expect(overlaps).toEqual([]);
+  });
+
+  it("opens a page of the application for every component, and tours only components and pages that exist", () => {
+    expect(NODES.filter((n) => !DEMO[n.id] || !PAGES[DEMO[n.id]]).map((n) => n.id)).toEqual([]);
+    expect(TOUR.flatMap((t) => t.nodes).filter((id) => !ids.has(id))).toEqual([]);
+    expect([...TOUR.map((t) => t.page), ...HARD_PROBLEMS.map((h) => h.page)].filter((p) => !PAGES[p])).toEqual([]);
+    const edges = new Set(EDGES.map((e) => `${e.from}>${e.to}`));
+    expect(INVOICE_PATH.slice(1).map((id, i) => `${INVOICE_PATH[i]}>${id}`).filter((p) => !edges.has(p))).toEqual([]);   // the path follows real connections
+    expect(demoOf("controls")).toEqual({ to: "/ai", page: "Agents & pipeline" });
   });
 
   it("leaves a component sideways unless the two are stacked, and traces inputs and outputs", () => {

@@ -6,6 +6,7 @@ const PATHS: Record<string, string[]> = {
   invoice: ["M6 2h9l5 5v15H6z", "M14 2v6h6", "M9 13h8", "M9 17h6"],
   policy: ["M12 2 4 6v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6z", "m9 12 2 2 4-4"],
   copilot: ["M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z", "M19 17l.8 2.2L22 20l-2.2.8L19 23l-.8-2.2L16 20l2.2-.8z"],
+  architecture: ["M12 2.5 3.5 7.2v9.6l8.5 4.7 8.5-4.7V7.2z", "m3.5 7.2 8.5 4.7 8.5-4.7", "M12 11.9v9.6"],
   pipeline: ["M5 6h4v4H5z", "M15 14h4v4h-4z", "M15 4h4v4h-4z", "M9 8h3v8h3", "M12 6h3"],
   results: ["M4 20V10", "M10 20V4", "M16 20v-7", "M22 20H2"],
   analytics: ["M3 3v18h18", "M7 15l4-5 3 3 5-7", "M18 6h1v1"],

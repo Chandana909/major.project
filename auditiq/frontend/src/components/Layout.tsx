@@ -45,7 +45,8 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: "Platform",
     items: [
-      { to: "/pipeline", label: "Architecture", icon: "pipeline" },
+      { to: "/architecture", label: "Architecture", icon: "architecture" },
+      { to: "/pipeline", label: "Pipeline & configs", icon: "pipeline" },
       { to: "/results", label: "Results", icon: "results" },
     ],
   },

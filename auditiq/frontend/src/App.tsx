@@ -17,6 +17,7 @@ const KnowledgePage = lazy(() => import("./pages/KnowledgePage").then((m) => ({ 
 const GraphPage = lazy(() => import("./pages/GraphPage").then((m) => ({ default: m.GraphPage })));
 const RagPage = lazy(() => import("./pages/RagPage").then((m) => ({ default: m.RagPage })));
 const PipelinePage = lazy(() => import("./pages/PipelinePage").then((m) => ({ default: m.PipelinePage })));
+const ArchitecturePage = lazy(() => import("./pages/ArchitecturePage").then((m) => ({ default: m.ArchitecturePage })));
 const ResultsPage = lazy(() => import("./pages/ResultsPage").then((m) => ({ default: m.ResultsPage })));
 
 function NotFound() {
@@ -49,6 +50,7 @@ export function App() {
           <Route path="rag" element={<RagPage />} />
           <Route path="ask" element={<AskPage />} />
           <Route path="copilot" element={<Navigate to="/ask" replace />} />
+          <Route path="architecture" element={<ArchitecturePage />} />
           <Route path="pipeline" element={<PipelinePage />} />
           <Route path="results" element={<ResultsPage />} />
           <Route path="*" element={<NotFound />} />
