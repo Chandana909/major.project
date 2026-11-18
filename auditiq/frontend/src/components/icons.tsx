@@ -17,6 +17,7 @@ const PATHS: Record<string, string[]> = {
   graph: ["M6 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", "M18 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", "M12 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", "M7.7 5.8l8.6 1.4", "M7 6.8l4 10.4", "M16.9 8.7 13 17.2"],
   rag: ["M5 3h9l5 5v13H5z", "M14 3v5h5", "M10.5 16a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z", "m12.5 15.5 2 2"],
   search: ["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z", "m20 20-4-4"],
+  assurance: ["M7 11V7a5 5 0 0 1 10 0v4", "M5 11h14v10H5z", "M12 15v2"],
 };
 
 export function Icon({ name, size = 18 }: { name: keyof typeof PATHS | string; size?: number }) {

@@ -84,6 +84,52 @@ def test_the_analytics_and_the_rings_describe_the_ledger(client):
     assert client.get("/api/rings", params={"limit": "many"}).status_code == 422
 
 
+def test_the_assurance_endpoints_leads_sampling_and_the_sealed_trail(client, library):
+    out = client.get("/api/leads").json()
+    for key, clause in (("near_duplicates", "2.2.2"), ("structuring", "4.1.2")):
+        assert out[key]["clause"] == clause and out[key]["invoices"] > 0
+        assert out["answer_key"][clause]["precision"] == 1.0 and out["answer_key"][clause]["recall"] == 1.0
+    assert out["guide"]["window_days"] == 7 and out["guide"]["band_pct"] == 15.0
+    sample = client.get("/api/sampling", params={"seed": 5, "tolerable_pct": 5, "confidence": "0.95",
+                                                 "expected_pct": "0"}).json()            # as the web page sends it
+    assert sample["seed"] == 5 and sample["plan"]["tolerable_pct"] == 5.0 and sample["plan"]["confidence"] == 0.95
+    assert client.get("/api/sampling", params={"confidence": "0.99"}).json()["plan"]["confidence"] == 0.99
+    assert sample["plan"]["items"] == 20 and sample["drawn"] == len(sample["sample"]) > 0     # the 20 approved
+    assert client.get("/api/sampling", params={"seed": 5, "tolerable_pct": 5}).json()["sample"] == sample["sample"]
+    assert client.get("/api/sampling", params={"confidence": 0.8}).status_code == 422
+    assert client.get("/api/sampling", params={"tolerable_pct": 1, "expected_pct": 1}).status_code == 400
+    trail = client.get("/api/trail/verify").json()
+    assert trail["intact"] and trail["results"]["sealed"] == 60 and trail["runs"]["sealed"] == 1 and trail["digest"]
+    assert trail["evidence"]["current"] and trail["evidence"]["fingerprinted"] == 60
+    reliable = client.get("/api/reliability").json()
+    assert reliable["summary"]["reliable"] and len(reliable["fingerprint"]["ledger"]) == 64
+    assert {c["id"] for c in reliable["checks"]} >= {"approved", "total", "series-invoices", "received-not-invoiced"}
+    program = client.get("/api/program").json()
+    assert {"2.1.1", "5.1.1", "rings", "sample", "seal"} <= {t["id"] for t in program["tests"]}
+    assert program["answer_key"]["compared"] and "bid-rigging" in program["untested"]["schemes"]
+    papers = client.get("/api/workpapers")
+    assert papers.status_code == 200 and papers.headers["content-type"].startswith(api.XLSX)
+    assert papers.content[:2] == b"PK" and len(papers.headers["x-report-digest"]) == 64
+    assert client.get("/api/workpapers").headers["x-report-digest"] == papers.headers["x-report-digest"]
+    item = client.get("/api/queue").json()["items"][0]
+    assert client.get(f"/api/invoices/{item['invoice_id']}").json()["result"]["integrity"] == "intact"
+    conn = db.connect(library)                           # a finding changed in the database itself
+    conn.execute("UPDATE audit_flags SET severity = 'low' WHERE result_id = ?", (item["result_id"],))
+    conn.commit()
+    conn.close()
+    trail = client.get("/api/trail/verify").json()       # not cached: the change shows at once
+    assert not trail["intact"] and trail["results"]["altered_ids"] == [item["result_id"]]
+    assert client.get(f"/api/invoices/{item['invoice_id']}").json()["result"]["integrity"] == "altered"
+    other = client.get("/api/queue").json()["items"][1]
+    conn = db.connect(library)                           # the ledger changed after the audit: intact but stale
+    conn.execute("UPDATE invoices SET amount = amount + 1 WHERE invoice_id = ?", (other["invoice_id"],))
+    conn.commit()
+    conn.close()
+    assert client.get(f"/api/invoices/{other['invoice_id']}").json()["result"]["integrity"] == "stale"
+    drift = client.get("/api/trail/verify").json()["evidence"]
+    assert drift["changed_invoices"] == [{"invoice_id": other["invoice_id"], "changed": ["invoice"]}]
+
+
 def test_the_analyses_are_kept_until_the_store_changes(client, monkeypatch):
     calls = []
     real = analytics.ledger_analytics
@@ -522,6 +568,16 @@ def test_every_answer_carries_the_security_headers(client):
     page = client.get("/review").headers                     # the web application, not the API
     assert "script-src 'self'" in page["content-security-policy"] and "frame-ancestors 'none'" in page["content-security-policy"]
     assert "content-security-policy" not in client.get("/api/health").headers      # /api/docs loads its viewer from a CDN
+
+
+def test_a_large_answer_is_compressed_for_a_client_that_accepts_it(client):
+    plain = client.get("/api/risk-map", headers={"Accept-Encoding": "identity"})
+    packed = client.get("/api/risk-map", headers={"Accept-Encoding": "gzip"})
+    assert "content-encoding" not in plain.headers and packed.headers["content-encoding"] == "gzip"
+    assert packed.json() == plain.json()
+    assert int(packed.headers["content-length"]) < int(plain.headers["content-length"]) / 3
+    assert packed.headers["x-content-type-options"] == "nosniff"                     # still with the security headers
+    assert "content-encoding" not in client.get("/api/health", headers={"Accept-Encoding": "gzip"}).headers   # small
 
 
 def test_the_api_simulates_a_previewed_document_as_a_job(client, tmp_path):

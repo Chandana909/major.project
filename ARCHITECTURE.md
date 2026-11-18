@@ -103,7 +103,7 @@ of every step. A person reviews the escalated invoices and records approve, reje
 | Storage | SQLite (default, no server) or PostgreSQL 17, behind one interface |
 | Models | Any OpenAI-compatible chat endpoint (measured with Qwen2.5-7B through a local Ollama) and an embedding model (`nomic-embed-text`) |
 | Streaming | Apache Kafka: four topics (invoice, vendor, email, compliance), stateless workers, each message stored exactly once |
-| Interfaces | Command line, REST API (FastAPI, 40 endpoints), web application (14 pages), a lighter Streamlit dashboard, and one launcher (`start.bat`) that runs the whole thing |
+| Interfaces | Command line, REST API (FastAPI, 46 endpoints), web application (15 pages), a lighter Streamlit dashboard, and one launcher (`start.bat`) that runs the whole thing |
 | Data | Synthetic only: eight generated ledgers (the largest used day to day has 25,000 invoices) with the **ground truth of every invoice written at the moment each error is injected**, plus a 500,000-invoice ledger generated on request |
 | Origin | A college major project (phase 1) of the Department of Information Technology, CBIT Hyderabad, with a research paper. The project grew out of a hackathon prototype built in Flowise (a visual agent builder), which it replaced |
 
@@ -1359,10 +1359,10 @@ pp1/
   .github/workflows/ci.yml             five CI jobs
   auditiq/              the project (commands run from here)
     start.bat           the one-file launcher (calls scripts/live.py)
-    auditiq/            the application package (35 files); imports nothing from auditiq_bench
+    auditiq/            the application package (41 files); imports nothing from auditiq_bench
     auditiq_bench/      the dataset generator and validator; imports nothing from auditiq
     evaluation/         baselines, runners, metrics, statistics, reports, verification, graph evaluations
-    frontend/           React + TypeScript + React Three Fiber web application (src/pages: 14 pages)
+    frontend/           React + TypeScript + React Three Fiber web application (src/pages: 15 pages)
     app/dashboard.py    the Streamlit dashboard
     policy/             clause registry JSON, SOP templates, SOP text, sample PDFs, variants, held-out variants, demo/ (the five policies)
     data/               eight committed datasets (CSV, labels, manifests, datasheets)
@@ -2297,6 +2297,21 @@ For each item of `data["flags"]`:
 
 `graph.py`.
 
+**Direct path for a graph without a model (16 November 2026).** For a configuration with `agents="none"`, no
+reviewer's pause and no checkpointer (C1, so every batch and stream audit by the controls), `build_graph`
+returns a `DirectPipeline`: its `invoke({"txn": ...})` calls the node functions controls, confidence, risk
+score and audit pack in the graph's order and returns the same state as the LangGraph runtime, without the
+runtime's scheduling and checkpoint bookkeeping per step. Measured on the 25,000-invoice ledger
+`final_seed_2025` on one laptop: the audit without storage takes 1.4 s directly (57 µs per invoice, on battery,
+18 November); under the profiler the graph stage took 85 s through the runtime and 8 s directly. A whole run is
+bound by storing the results in SQLite (8 to 30 s on the same laptop, depending on the disk and the journal mode),
+so the measured run times vary with the machine's state far more than with the pipeline. The ground-truth check
+(`evaluation.final_check`) gives the same `verification.json` after the change as before it.
+`tests/test_pipeline.py` compares the two states on every flagged invoice of `pilot_seed_909` and on its first 300 invoices.
+The compiled graph stays reachable as `.compiled` and is used for anything else (`get_graph`, an invocation
+with a run configuration). Timings recorded in this file before that date were measured through the runtime.
+Responses of the API of 1 kB or more are gzip-compressed since the same date (`GZipMiddleware`).
+
 ### R12.1 Configuration
 
 ```python
@@ -3086,7 +3101,7 @@ refused with **409**:
 | `audit` | load-ledger |
 | `simulate` | load-ledger |
 
-### R20.5 The 40 endpoints
+### R20.5 The 46 endpoints
 
 | Method | Path | Role | What it does |
 |---|---|---|---|
@@ -3094,6 +3109,12 @@ refused with **409**:
 | GET | `/api/me` | viewer | who is calling: `{name, role, via}` |
 | GET | `/api/overview` | viewer | counts by state, route and risk level; findings by rule (rule, title, severity, source, count); 10 recent runs; 10 vendors with most invoices waiting; the 14 newest steps of the audit trail; invoices, vendors, audited, findings, reviewed; `coverage`: latest results per configuration, invoices checked by the controls and by the agents, findings approved without review, and on a benchmark ledger the answer key per configuration, scored only under the labels' policy version (docs/ANALYTICS.md) |
 | GET | `/api/risk-map` | viewer | one point per vendor: category, invoices, amount, invoices waiting, findings, max risk (Rc) of its latest results, blacklisted |
+| GET | `/api/leads` | viewer | the judgement-rule leads (Section R34): near duplicates (2.2.2) and structuring groups (4.1.2) with the policy's guide values, what the latest results did with them, and on a benchmark ledger the answer key; cached until the store changes |
+| GET | `/api/sampling` | viewer | a monetary-unit sample (ISA 530) of the invoices approved without a person: `confidence` (0.9, 0.95, 0.99), `tolerable_pct`, `expected_pct`, `seed`; the plan, the random start, the invoices to examine, and on a benchmark ledger the Stringer upper limit with the answer key as the examination (Section R34) |
+| GET | `/api/trail/verify` | viewer | recompute the seals of results, trail entries and finished runs (`auditiq/seal.py`, Section R34) and re-perform the evidence of the latest results (Section R35); `intact`, counts, the ids of altered items, `evidence`, the digest of the run seals; `?run=` for one run; not cached |
+| GET | `/api/reliability` | viewer | the data-reliability checks of the ledger (ISA 500, Section R35): references, approvals, arithmetic, date logic, goods received not invoiced, gaps in the numbered series, vendor master data, audit coverage; control totals; the ledger fingerprint; not cached |
+| GET | `/api/program` | viewer | the audit program (Section R35): every test with the assertions and fraud schemes it addresses and what it found, what no test covers, and on a benchmark ledger each scheme against the answer key; cached until the store changes |
+| GET | `/api/workpapers` | viewer | the working papers as an Excel workbook (Section R35), with the report digest in `X-Report-Digest`; `seed` overrides the sample's seed |
 | GET | `/api/analytics` | viewer | monthly volume, spend by category and month, Benford first-digit and first-two-digits tests (MAD with Nigrini's thresholds, z per digit, chi-square), invoices by quarter-decade of amount and just under / just over each approval limit, weekdays, findings by category and rule, top approvers, spend concentration (Lorenz, Gini, HHI, top ten) |
 | GET | `/api/policy/graph?version=` | viewer | the policy knowledge graph of a version (default: active): nodes (version, sections, rules, parameters, roles, control functions and agents, pages, other versions) and edges (has section, has rule, sets, limit, checked by, stated on, changes); 404 for an unknown version |
 | GET | `/api/policy/graph/ask?q=&version=` | viewer | what the question names, the facts the graph derives (routing an amount, the structuring band, round amounts, limits, changes, sets, checkers) with their citations, their passages, and the nodes used; 400 when empty |
@@ -3695,3 +3716,106 @@ environment, the dependencies of Section R4.
 
 Throughout: keep principle 2 (no threshold in code) and principle 6 (pipeline and generator share no code), and let
 no number into a document that a script did not produce.
+
+---
+
+## R34. Assurance: the sealed record, judgement-rule leads and statistical sampling (18 November 2026)
+
+Three additions for an auditor who has to rely on the audit, all on the web application's Assurance page
+(`/assurance`) and measured on `final_seed_2025` by `python -m evaluation.industry`
+(`results/final_seed_2025/industry.md`) and `python -m evaluation.leads_eval` (`results/leads/leads.md`).
+
+**The sealed record (`auditiq/seal.py`).** Each stored result carries `audit_results.seal`, a SHA-256 over a canonical
+JSON of its columns (with the workflow state it was stored with), its audit pack without the `review` entry, and its
+`audit_flags` rows in order. Each `audit_trail.entry_hash` is a SHA-256 over the entry and the hash before it, the first
+over the result's seal; the reviewer's decision is such an entry (`record_decision`), so a review extends the chain.
+`finish_run` seals the run (`audit_runs.seal`) over its columns and its results' seals in result order. `seal.verify`
+recomputes everything in chunks of 5,000 results (bounded memory on any store) and reports altered results, results
+whose state is not the decision their chained review entry records, broken entries (the first broken entry is where
+a change was made; every later entry of that result breaks too), and altered runs. A result changed and re-sealed by
+someone still breaks its trail and its run's seal. Rows stored before sealing are counted as unsealed, not altered;
+an older store gets the three columns when it is opened (`db.ADDED_COLUMNS`; the views are dropped and made again on
+both backends because PostgreSQL refuses a view whose columns move). Not covered: someone who recomputes every hash,
+and a run deleted whole; `seal.run_digest` (printed by `python -m auditiq verify`) is one value to keep outside the
+store against both. Measured: the 25,000 sealed results of a C1 run and the 50,000 unsealed older ones verify in
+3.1 s; `tests/test_seal.py` changes a finding, the route, the score, the pack, a trail entry, a review state, and takes a
+result out of a finished run, and each change is found. Commands and endpoints: `python -m auditiq verify [--run N]
+[--json]` (exit status 1 when altered), `GET /api/trail/verify`, and `integrity` in `GET /api/invoices/{id}`.
+
+**Judgement-rule leads (`auditiq/leads.py`).** Rules 2.2.2 and 4.1.2 are judgement rules, but the policy words them
+closely enough for code to list the invoices that fit, with the policy's guide values: near duplicates (the same
+vendor, PO, GRN and amount as an earlier invoice under a re-keyed number; the number is normalised group by group:
+case, separators, leading zeros of each digit group, a suffix of up to four letters after the last digit, and one
+substituted, added, removed or transposed character compared with and without the zeros) and structuring (invoices
+of one vendor approved by one role on different days within `guide_window_days`, each within `guide_band_pct` below
+the role's limit, together above it; the descriptions are shown, not compared, because the rule's "same goods" may
+be worded differently). A lead changes no result. Developed on `final_seed_2025`: the first version listed 136 of
+141 J1 and 35 of 141 J2 invoices (two number-reading defects, and descriptions compared as text); after one change
+it lists 141 of 141 of each with nothing else, and on the five held-out benchmark ledgers 30 of 30 of each with
+nothing else, hard negatives included. The generator plants J1 and J2 in the policy's pattern, so this shows the code
+follows the policy's wording; it bears on the open question whether J1 (and J2) should count as rule-defined.
+
+**Monetary-unit sampling (`auditiq/sampling.py`).** ISA 530 on the invoices whose latest result is `approve`: sample
+size n = BV x R(0, c) / (TM - E x EF(c)), R the Poisson reliability factor `chi2.ppf(c, 2(k+1)) / 2`, EF the AICPA
+expansion factor (0.90: 1.5, 0.95: 1.6, 0.99: 1.9); systematic selection by monetary unit from a seeded random start
+(an invoice of at least the interval is drawn with certainty); the Stringer upper limit from the taintings, largest
+first. On a benchmark ledger the answer key stands in for the examination (an anomalous invoice misstated in full).
+On `final_seed_2025` (C1): 23,342 approved invoices worth Rs 4,637,836,464 hold Rs 116,605,530 of anomalous invoices
+(2.5 %); at 95 % and a tolerable 2 % the sample is 150; over 1,000 random starts the upper limit covers the true
+amount in 97.4 % of draws and supports reliance in 2.6 %; with the anomalous invoices removed it supports reliance in
+100 %.
+
+**Optimisations made with these.** A batch run commits about once a second (`service.COMMIT_SECONDS`) instead of every
+200 invoices: 10 commits instead of 128 for 25,000 invoices, 10.0 and 10.2 s against 10.9 and 12.0 s in alternating
+rounds on one laptop. The GSTIN regular expressions are compiled once; `db.now()` formats the time once a second.
+scikit-learn (2.5 s to import) is imported by the retrieval index when it is built, SciPy by the sampling factors and
+ReportLab by the PDF maker: importing the command line went from 6.0 s to 2.3 s (`python -X importtime`), which every
+`python -m auditiq` command saves. Runs 2 and 3 of the 25,000-invoice store, audited before and after these changes,
+agree on every invoice (route, score, risk level, findings).
+
+---
+
+## R35. Evidence, data reliability, the audit program and the working papers (18 November 2026)
+
+Four additions for an auditor, on the Assurance page and measured on `final_seed_2025` by `python -m evaluation.industry`
+(`results/final_seed_2025/industry.md`).
+
+**Evidence fingerprints and re-performance (`seal.evidence`, `seal.evidence_drift`).** The seals of R34 protect the
+results, not the ledger they were based on: an invoice edited after its audit left its result intact and wrong. Each
+result now stores `audit_results.evidence`, a JSON object with the first 128 bits of the SHA-256 of each record the
+audit read (invoice, PO, GRN, vendor, approval entries; the vendor's other invoices are left out, as they grow with
+the ledger), and the result's seal covers it (results sealed before it existed still verify: the field is sealed
+only when present, and setting it to NULL afterwards is a change). `evidence_drift` re-extracts the latest results'
+records (`db.extract_many(..., history=False)`) and names the invoices whose records changed and which record moved;
+`python -m auditiq verify` prints it (`STALE`), `GET /api/trail/verify` returns it as `evidence`, and an invoice whose
+result is intact but whose records changed shows `integrity: "stale"`. Measured on the 25k store: 25,000 latest
+results re-performed in 1.6 s, all matching; the runs audited before and after the change agree on every invoice.
+
+**Data reliability (`auditiq/reliability.py`, ISA 500).** Nineteen checks of the ledger as data: invoices whose
+vendor, PO or GRN is not on file (the last two decided by rule 2.1.3), invoices billed by another vendor than their
+PO's, GRNs without their PO, invoices without an approval, approval entries without an invoice, recorded approver
+against the log, amount plus tax against total, quantity times unit price against amount, date logic, goods received
+but never invoiced (unrecorded liabilities), gaps in the company's four numbered series, vendor GSTIN and PAN, and
+audit coverage (never audited, or not under the version in force). Control totals and a SHA-256 over every row of
+every ledger table. The ledger is reliable when no check has exceptions that no rule decides. On the 25k ledger: 18 of
+19 checks clean, the 47 invoices naming a PO not on file decided by rule 2.1.3, 1.2 s. One query had to be a set
+difference: `NOT EXISTS` against the unindexed `invoices.grn_id` took 64 s.
+
+**The audit program (`auditiq/audit_program.py`).** Every test (the 16 rules, the two leads, the rings, Benford, the
+limit analysis, the sample, the reliability checks, the seals) mapped to the assertions (ISA 315 plus authorization)
+and fraud schemes (ACFE: shell company, overbilling, duplicate billing, not received, personal purchases, limit
+evasion, override, kickbacks, conflicts of interest, bid rigging, tax misuse) it addresses; the mapping is a written
+judgement in the module, the counts come from the store. Untested on this platform: bid rigging (no tender data);
+scope limits are stated for cut-off, completeness, conflicts of interest and personal purchases. On a benchmark
+ledger every scheme is scored against the answer key; a finding counts for a scheme only if its rule addresses that
+scheme. On the 25k ledger with C1 and the leads: shell company, duplicate billing, limit evasion, override, conflicts
+of interest and tax misuse 100 %, overbilling 90.5 %, goods not received 75.4 % and personal purchases 0 %: the last two
+are the description and receipt-remark rules that need the agents.
+
+**Working papers (`auditiq/workpapers.py`, ISA 230).** One workbook: summary, findings, review queue, leads, sample,
+reliability, program, integrity. The report digest is a SHA-256 over all its values except the time it was written:
+built again from an unchanged store it repeats, and `python -m auditiq workpapers --check <file>` says whether a
+workbook still matches the store (a review decision or a ledger edit makes it differ). The sample's seed is taken from
+the digest of the sealed runs, so nobody chose it and anyone with the store draws the same sample.
+`GET /api/workpapers` serves it with the digest in `X-Report-Digest`. On the 25k store: 7.1 s, 334,930 bytes, the
+digest repeats.

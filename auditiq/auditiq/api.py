@@ -40,26 +40,33 @@ from typing import Any, Literal
 
 import httpx
 import numpy as np
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import (
     __version__,
     analytics,
+    audit_program,
     copilot,
     db,
     emails,
+    leads,
     ledger_import,
     policy_extract,
     policy_llm,
+    reliability,
     retrieval,
     rings,
+    sampling,
+    seal,
     service,
     simulation,
     stream,
+    workpapers,
 )
 from .agents import AGENTS
 from .case_graph import CaseGraph
@@ -78,6 +85,7 @@ UPLOADS = PROJECT_ROOT / ".auditiq" / "uploads"
 RESULTS = PROJECT_ROOT / "results"
 MAX_UPLOAD = 20 * 1024 * 1024
 MAX_LEDGER = 100 * 1024 * 1024
+XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 # The web application loads nothing from another site. Style attributes are allowed: the labels of the 3D
 # views are placed with them. Everything else, scripts above all, comes from this server only.
 CONTENT_SECURITY_POLICY = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
@@ -182,6 +190,7 @@ class StoreCache:
 
     def __init__(self) -> None:
         self._entries: dict[str, tuple[tuple, Any]] = {}
+        self._computing: dict[str, threading.Lock] = {}
         self._lock = threading.Lock()
 
     def fingerprint(self, conn: db.Database) -> tuple:
@@ -191,11 +200,19 @@ class StoreCache:
         mark = self.fingerprint(conn)
         with self._lock:
             kept = self._entries.get(key)
+            computing = self._computing.setdefault(key, threading.Lock())
         if kept and kept[0] == mark:
             return kept[1]
-        value = compute()
-        with self._lock:
-            self._entries[key] = (mark, value)
+        # One request computes an analysis; the others that ask for it meanwhile wait and take its result,
+        # instead of each reading the whole ledger for the same answer.
+        with computing:
+            with self._lock:
+                kept = self._entries.get(key)
+            if kept and kept[0] == mark:
+                return kept[1]
+            value = compute()
+            with self._lock:
+                self._entries[key] = (mark, value)
         return value
 
 
@@ -402,6 +419,21 @@ def risk_map_of(conn: db.Database) -> dict:
     return {"vendors": vendors}
 
 
+def integrity_of(conn: db.Database, row) -> str:
+    """`intact`, `altered` or `unsealed` (stored before results were sealed): one result and its trail; `stale` when
+    they are intact but the ledger no longer holds the records the result was based on."""
+    if row["seal"] is None:
+        return "unsealed"
+    report = seal.verify(conn, result_ids=[int(row["result_id"])])
+    if not report["intact"]:
+        return "altered"
+    if row["evidence"] is not None:
+        txn = db.extract_one(conn, row["invoice_id"])
+        if txn is None or seal.evidence(txn) != row["evidence"]:
+            return "stale"
+    return "intact"
+
+
 def case_graph(app: FastAPI, conn: db.Database) -> CaseGraph:
     """The audited ledger as a graph, kept until the store changes (see StoreCache)."""
     return app.state.cache.get("case-graph", conn, lambda: CaseGraph.from_db(conn))
@@ -423,6 +455,9 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         o.strip() for o in os.environ.get("AUDITIQ_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
         if o.strip()]
     app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])
+    # Answers of a kilobyte or more are compressed for a browser that accepts it: the 3D chunk of the web
+    # application is about a megabyte as written, and the risk map of a large ledger a few hundred kilobytes.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
 
     @app.middleware("http")
     async def security_headers(request: Request, call_next):
@@ -529,6 +564,79 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         changes."""
         limit = max(1, min(limit, 200))
         return request.app.state.cache.get(f"rings:{limit}", conn, lambda: rings.find_rings(conn, limit=limit))
+
+    @app.get("/api/leads", tags=["analytics"], dependencies=viewer)
+    def judgement_leads(request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """Invoices for a reviewer under the two judgement rules the policy words most precisely, with its guide
+        values: near duplicates (2.2.2: the same vendor, PO, GRN and amount as an earlier invoice under a re-keyed
+        number) and structuring across days (4.1.2: invoices of one vendor and approving role within the guide
+        window, each within the guide band below the role's limit, together above it). A lead is not a finding and
+        changes no result. On a benchmark ledger, compared with its answer key. Kept until the store changes."""
+        return request.app.state.cache.get("leads", conn, lambda: leads.judgement_leads(conn))
+
+    @app.get("/api/sampling", tags=["analytics"], dependencies=viewer)
+    def sampling_plan(confidence: float = Query(0.95, description="0.9, 0.95 or 0.99"),
+                      tolerable_pct: float = Query(2.0, gt=0, le=20),
+                      expected_pct: float = Query(0.0, ge=0, le=10), seed: int | None = Query(None, ge=1),
+                      conn: db.Database = Depends(connection)) -> dict:
+        """A monetary-unit sample (ISA 530) of the invoices approved without a person: the plan (sample size and
+        sampling interval from the confidence, the tolerable and the expected misstatement, as a percentage of the
+        approved amount), the random start and its seed (give the seed to draw the same sample again), and the
+        invoices to examine. On a benchmark ledger, the answer key stands in for the examination: the misstatements
+        the sample would find, the Stringer upper limit and whether it holds against the truth."""
+        # A float Literal would refuse the query string "0.95"; the value is checked against the factors' table instead.
+        if confidence not in sampling.CONFIDENCES:
+            raise HTTPException(422, f"confidence must be one of {', '.join(str(c) for c in sampling.CONFIDENCES)}")
+        try:
+            return sampling.monetary_unit_sample(conn, confidence=float(confidence), tolerable_pct=tolerable_pct,
+                                                 expected_pct=expected_pct, seed=seed)
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from None
+
+    @app.get("/api/reliability", tags=["analytics"], dependencies=viewer)
+    def ledger_reliability(conn: db.Database = Depends(connection)) -> dict:
+        """Whether the ledger can be relied on (ISA 500): references to documents not on file, approvals, the
+        arithmetic of every invoice, date logic, goods received but not invoiced, gaps in the company's numbered
+        series, vendor master data and audit coverage, each with its exceptions and the rule that decides them if
+        one does; control totals; a SHA-256 fingerprint of every ledger table. Not cached: a change to the ledger
+        must show at once."""
+        return reliability.ledger_reliability(conn)
+
+    @app.get("/api/program", tags=["analytics"], dependencies=viewer)
+    def program(request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """The audit program: every test (the policy's rules, the leads, the analytics, the sample, the integrity
+        checks) with the assertions (ISA 315) and fraud schemes (ACFE) it addresses and what it found; the
+        assertions and schemes no test covers, with the scope limits; and on a benchmark ledger each scheme against
+        the answer key. Kept until the store changes."""
+        cache = request.app.state.cache
+        found_leads = cache.get("leads", conn, lambda: leads.judgement_leads(conn))
+        found_rings = cache.get("rings:40", conn, lambda: rings.find_rings(conn, limit=40))
+        return cache.get("program", conn, lambda: audit_program.program(conn, leads=found_leads, rings=found_rings))
+
+    @app.get("/api/workpapers", tags=["analytics"], dependencies=viewer, response_class=Response,
+             responses={200: {"content": {XLSX: {}}, "description": "the workbook"}})
+    def working_papers(seed: int | None = Query(None, ge=1), conn: db.Database = Depends(connection)) -> Response:
+        """The working papers as an Excel workbook (auditiq/workpapers.py): summary, findings, review queue, leads,
+        sample, reliability, audit program and integrity. The report digest, in the workbook and in the header
+        X-Report-Digest, is the same whenever the store is unchanged; `python -m auditiq workpapers --check` tells
+        whether a workbook still matches the store. The sample's seed comes from the digest of the sealed runs
+        unless one is given."""
+        report = workpapers.engagement(conn, seed)
+        name = re.sub(r"[^A-Za-z0-9._-]+", "_", str(report["data"]["scope"]["ledger"] or "store"))
+        return Response(workpapers.to_xlsx(report), media_type=XLSX, headers={
+            "Content-Disposition": f'attachment; filename="auditiq-workpapers-{name}.xlsx"',
+            "X-Report-Digest": report["digest"], "Access-Control-Expose-Headers": "X-Report-Digest"})
+
+    @app.get("/api/trail/verify", tags=["status"], dependencies=viewer)
+    def trail_verify(run: int | None = None, conn: db.Database = Depends(connection)) -> dict:
+        """Whether the audit record is as it was stored: the seal of every result (its decision, findings and audit
+        pack), the hash chain of every audit-trail entry, including the reviewers' decisions, and the seal of every
+        finished run are computed again and compared (auditiq/seal.py). `digest` is one value over the seals of
+        all finished runs, to keep outside the store. Not cached: a change made directly in the database must
+        show at once. `evidence` re-performs the extraction: whether the ledger still holds the records each latest
+        result was based on, and which invoices' records changed after their audit."""
+        return {**seal.verify(conn, run_id=run), "evidence": seal.evidence_drift(conn, run_id=run),
+                "digest": seal.run_digest(conn) if run is None else None}
 
     @app.get("/api/risk-map", tags=["status"], dependencies=viewer)
     def risk_map(request: Request, conn: db.Database = Depends(connection)) -> dict:
@@ -801,13 +909,17 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
 
     # -- review --------------------------------------------------------------
     @app.get("/api/queue", tags=["review"], dependencies=viewer)
-    def queue(limit: int = 200, level: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"] | None = None,
+    def queue(request: Request, limit: int = 200, level: Literal["CRITICAL", "HIGH", "MEDIUM", "LOW"] | None = None,
               conn: db.Database = Depends(connection)) -> dict:
         """Invoices waiting for review, highest weighted risk first (at most 2,000), of one risk level or of every
         level. Each item lists the rules its kept findings break, the most severe first; `rules` gives the title of
         each rule in the active policy; `total` counts the invoices waiting at the level asked; `levels` counts the
-        whole queue per risk level, with the amount at stake, whatever the list holds."""
+        whole queue per risk level, with the amount at stake, whatever the list holds. Kept until the store changes
+        (a decision changes it)."""
         limit = max(1, min(limit, 2000))
+        return request.app.state.cache.get(f"queue:{limit}:{level}", conn, lambda: queue_of(conn, limit, level))
+
+    def queue_of(conn: db.Database, limit: int, level: str | None) -> dict:
         where, params = ("WHERE risk_level = ? ", [level]) if level else ("", [])
         top = f"SELECT result_id FROM v_review_queue {where}ORDER BY rc DESC, invoice_id LIMIT {limit}"
         items = rows(conn.execute(top.replace("SELECT result_id", "SELECT *", 1), params))
@@ -860,7 +972,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
                                       "FROM audit_trail WHERE result_id = ? ORDER BY seq", (row["result_id"],)))
             result = {k: row[k] for k in ("result_id", "run_id", "route", "risk_level", "r0", "rc", "workflow_status",
                                           "configuration", "model", "policy_version", "created_at")}
-            result.update(pack=json.loads(row["audit_pack"]), trail=trail)
+            result.update(pack=json.loads(row["audit_pack"]), trail=trail, integrity=integrity_of(conn, row))
         history = txn.pop("vendor_history")
         out = {"records": txn, "history": {"total": len(history), "items": history[-40:]}, "result": result,
                "emails": emails.for_invoice(conn, invoice_id)}

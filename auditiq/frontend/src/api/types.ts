@@ -251,9 +251,178 @@ export interface InvoiceResult {
   created_at: string;
   pack: AuditPack;
   trail: TrailEntry[];
+  /** Whether the result and its trail still match their seals, and the ledger the records the result was based on. */
+  integrity?: "intact" | "altered" | "unsealed" | "stale";
+}
+
+export interface EvidenceDrift {
+  checked: number;
+  fingerprinted: number;
+  without_fingerprint: number;
+  unchanged: number;
+  changed: number;
+  changed_by_record: Record<string, number>;
+  missing: number;
+  changed_invoices: { invoice_id: string; changed: string[] }[];
+  current: boolean;
+}
+
+export interface ReliabilityCheck {
+  id: string;
+  title: string;
+  assertion: string;
+  exceptions: number;
+  examples: string[];
+  decided_by: string | null;
+  note: string;
+}
+
+export interface Reliability {
+  ledger: string | null;
+  totals: { table: string; records: number; amount: number | null }[];
+  fingerprint: { tables: Record<string, string>; ledger: string };
+  checks: ReliabilityCheck[];
+  summary: { checks: number; without_exceptions: number; open: string[]; decided_by_rules: string[]; coverage: string[]; reliable: boolean; conclusion: string };
+}
+
+export interface ProgramTest {
+  id: string;
+  title: string;
+  how: string;
+  assertions: string[];
+  schemes: string[];
+  in_policy: boolean | null;
+  found: number | null;
+  listed: number | null;
+  ran: boolean;
+}
+
+export interface AuditProgram {
+  policy_version: string | null;
+  assertions: Record<string, string>;
+  schemes: Record<string, string>;
+  tests: ProgramTest[];
+  by_assertion: Record<string, string[]>;
+  by_scheme: Record<string, string[]>;
+  untested: { assertions: string[]; schemes: string[] };
+  limits: Record<string, string>;
+  agents_ran: number;
+  answer_key: { policy_version: string; compared: boolean; schemes?: Record<string, { labelled: number; found: number; lead_only: number; missed: number; reached: number | null }> } | null;
 }
 
 export type RecordMap = Record<string, unknown>;
+
+// ---- assurance: the sealed record, judgement-rule leads, monetary-unit sampling
+
+export interface TrailCheck {
+  intact: boolean;
+  results: { checked: number; sealed: number; unsealed: number; altered: number; altered_ids: number[]; review_inconsistent: number; review_inconsistent_ids: number[] };
+  entries: { checked: number; broken: number; broken_ids: number[]; unsealed: number };
+  runs: { sealed: number; open: number; unsealed: number; altered: number; altered_ids: number[] };
+  evidence?: EvidenceDrift;
+  digest: string | null;
+}
+
+export interface DuplicateLead {
+  invoice_id: string;
+  original_id: string;
+  vendor_id: string;
+  vendor_name: string;
+  number: string;
+  original_number: string;
+  date: string;
+  original_date: string;
+  amount: number;
+  po_id: string;
+  grn_id: string;
+  reason: string;
+}
+
+export interface StructuringLead {
+  vendor_id: string;
+  vendor_name: string;
+  role: string;
+  limit: number;
+  invoices: string[];
+  first: string;
+  last: string;
+  total: number;
+  amounts: number[];
+  descriptions: string[];
+  same_description: boolean;
+}
+
+export interface LeadOutcome {
+  clause: string;
+  count: number;
+  invoices: number;
+  amount: number;
+  approved: number;
+  to_a_person: number;
+  unaudited: number;
+  configurations: Record<string, number>;
+}
+
+export interface LeadKey {
+  labelled: number;
+  listed: number;
+  listed_labelled: number;
+  recall: number | null;
+  precision: number | null;
+  listed_otherwise: Record<string, number>;
+}
+
+export interface Leads {
+  policy_version: string | null;
+  guide: { window_days: number; band_pct: number; limits: Record<string, number> };
+  near_duplicates: LeadOutcome & { pairs: DuplicateLead[] };
+  structuring: LeadOutcome & { groups: StructuringLead[] };
+  answer_key: ({ policy_version: string; compared: boolean } & Partial<Record<"2.2.2" | "4.1.2", LeadKey>>) | null;
+}
+
+export interface SamplePlan {
+  book_value: number;
+  items: number;
+  confidence: number;
+  tolerable_pct: number;
+  tolerable: number;
+  expected_pct: number;
+  expected: number;
+  reliability_factor: number;
+  expansion_factor: number;
+  size: number;
+  interval: number;
+}
+
+export interface SampledInvoice {
+  invoice_id: string;
+  amount: number;
+  vendor_name: string | null;
+  findings: number;
+  date: string | null;
+  units: number;
+  certain: boolean;
+}
+
+export interface MonetaryUnitSample {
+  plan: SamplePlan;
+  seed: number;
+  start: number;
+  drawn: number;
+  certain: number;
+  sample: SampledInvoice[];
+  answer_key: {
+    misstatements: number;
+    top_stratum_actual: number;
+    projected: number;
+    basic_precision: number;
+    upper_limit: number;
+    true_misstatement: number;
+    bound_holds: boolean;
+    conclusion: string;
+    sampled_anomalous: string[];
+  } | null;
+}
 
 /** A vendor e-mail that names an invoice; it arrived through the Kafka topic of e-mails. */
 export interface VendorEmail {

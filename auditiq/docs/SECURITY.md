@@ -100,6 +100,18 @@ settings from it (`AUDITIQ_NO_DOTENV`). `auditiq status` and the logs show a
 database's host, never its password. The browser keeps the API token in
 `sessionStorage`, which is cleared when the tab is closed.
 
+**Tamper evidence of the audit record** (`auditiq/seal.py`). Every stored
+result is sealed with a SHA-256 hash over its decision, its findings and its
+audit pack; every audit-trail entry, the reviewer's decision included, is
+chained to the hash before it; every finished run is sealed over its results'
+seals. `python -m auditiq verify`, `GET /api/trail/verify` and the Assurance
+page recompute them and name what no longer matches, and the invoice page
+says whether its result does. A change made directly in the database is found
+even if the one who made it seals the result again: its trail and its run no
+longer match. Each result also seals a fingerprint of the records it was
+based on (invoice, PO, GRN, vendor, approvals), so a ledger edited after the
+audit shows the results it made stale (`python -m auditiq verify`).
+
 **Dependencies.** CI audits the Python dependencies (`pip-audit`) and the
 frontend's (`npm audit --omit=dev`). The lower bounds in `pyproject.toml`
 exclude the releases of `python-multipart`, `starlette` and `python-dotenv`
@@ -133,6 +145,11 @@ with published vulnerabilities.
 - **Jobs live in memory.** A restart forgets running jobs (their stored work
   remains).
 - **The SQLite file** is protected only by the file system's permissions.
+- **The seals are in the store they protect.** Someone with write access who
+  recomputes every hash after a change, or deletes a whole run, is not caught
+  by the store alone. The digest that `python -m auditiq verify` prints, kept
+  outside the store (in the report, with the auditee, on write-once storage),
+  shows both.
 
 ## 5. Before a deployment
 

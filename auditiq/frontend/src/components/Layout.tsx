@@ -40,6 +40,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
     items: [
       { to: "/analytics", label: "Audit analytics", icon: "analytics" },
       { to: "/rings", label: "Vendor collusion", icon: "rings" },
+      { to: "/assurance", label: "Assurance", icon: "assurance" },
     ],
   },
   {
@@ -122,7 +123,8 @@ export function Layout() {
   const system = useApi(() => api.system());
   const reloadSystem = system.reload;
   useEffect(() => {
-    const timer = window.setInterval(reloadSystem, 20000);          // the system bar follows what starts and stops
+    // The system bar follows what starts and stops; a tab nobody is looking at does not ask.
+    const timer = window.setInterval(() => !document.hidden && reloadSystem(), 20000);
     return () => window.clearInterval(timer);
   }, [reloadSystem]);
   const sys = system.data;

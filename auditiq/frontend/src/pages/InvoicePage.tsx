@@ -378,7 +378,21 @@ function InvoiceView({ id }: { id: string }) {
             </Panel>
           ) : null}
           {result && (
-            <Panel title="Audit trail" subtitle="Every step, in order: what ran, who or what did it, what it cost.">
+            <Panel
+              title="Audit trail"
+              subtitle="Every step, in order: what ran, who or what did it, what it cost."
+              actions={
+                result.integrity === "intact" ? (
+                  <Badge tone="good">sealed · intact</Badge>
+                ) : result.integrity === "altered" ? (
+                  <Badge tone="bad">altered after it was stored</Badge>
+                ) : result.integrity === "stale" ? (
+                  <Badge tone="warn">the ledger changed since: audit again</Badge>
+                ) : result.integrity === "unsealed" ? (
+                  <Badge>stored before sealing</Badge>
+                ) : null
+              }
+            >
               <ol className="trail">
                 {result.trail.map((t) => (
                   <li key={t.seq}>

@@ -69,14 +69,17 @@ def approving_entry(txn: dict) -> dict | None:
     return latest
 
 
+ALPHANUMERIC = re.compile(r"[A-Za-z0-9]+")
+STATE_CODE = re.compile(r"[0-9]{2}")
+
+
 def gstin_checks(gstin, clauses: dict) -> tuple[str, bool, bool]:
     g = "" if gstin is None else str(gstin)
     fmt, state = clauses.get("3.1.1"), clauses.get("3.1.2")
-    format_ok = fmt is None or (len(g) == fmt["params"]["gstin_length"]
-                                and re.fullmatch(r"[A-Za-z0-9]+", g) is not None)
+    format_ok = fmt is None or (len(g) == fmt["params"]["gstin_length"] and ALPHANUMERIC.fullmatch(g) is not None)
     state_ok = True
     if state is not None:
-        code = int(g[:2]) if re.match(r"[0-9]{2}", g) else None
+        code = int(g[:2]) if STATE_CODE.match(g) else None
         state_ok = code is not None and state["params"]["state_code_min"] <= code <= state["params"]["state_code_max"]
     return g, format_ok, state_ok
 

@@ -34,7 +34,8 @@ GROUPS = [
     ("Audit", "What the audit produced. Every audit of an invoice adds rows, so an invoice that is audited "
               "again has one result per run and the earlier ones remain. The only later change to a result "
               "is its review: the decision sets the status of the result, is added to its audit pack and "
-              "closes its audit trail.",
+              "closes its audit trail. Results, trail entries and finished runs are sealed with SHA-256 hashes, "
+              "so that a later change to any of them is found by `python -m auditiq verify`.",
      ["audit_runs", "audit_results", "latest_results", "audit_flags", "audit_trail", "review_decisions"]),
     ("Other", "", ["benchmark_labels", "meta"]),
     ("Access", "Who may use the REST API, and with which role (docs/SECURITY.md). Created with "
@@ -272,6 +273,9 @@ TABLES: dict[str, dict] = {
             "note": "Free text given when the run was started.",
             "started_at": "When the run started.",
             "finished_at": "When the run finished. NULL while it is running or if it was interrupted.",
+            "seal": "SHA-256 over the run's columns and the seal of every result it produced, in order, made when "
+                    "the run finished (`auditiq/seal.py`): a result removed from the run or added to it later "
+                    "changes it. NULL while the run is open, and for runs stored before results were sealed.",
         },
     },
     "audit_results": {
@@ -302,6 +306,15 @@ TABLES: dict[str, dict] = {
                           "its confidence, the findings the challenger removed and why, the scores, the route, "
                           "the policy citations and, after review, the decision.",
             "created_at": "When the result was stored.",
+            "seal": "SHA-256 over the result as it was stored: these columns (with the workflow state it was "
+                    "stored with), the audit pack without its `review` entry, and its rows of `audit_flags`, in "
+                    "order (`auditiq/seal.py`). `python -m auditiq verify` recomputes it. NULL for results "
+                    "stored before results were sealed.",
+            "evidence": "Fingerprint of the records the audit read for the invoice, sealed with the result: a JSON "
+                        "object with the first 128 bits of the SHA-256 of the invoice, its PO, its GRN, its vendor "
+                        "and its approval entries, each as the audit read it. `python -m auditiq verify` compares it "
+                        "with the ledger as it is now and names the invoices whose records changed after their "
+                        "audit (`seal.evidence_drift`). NULL for results stored before 18 November 2026.",
         },
     },
     "latest_results": {
@@ -354,6 +367,10 @@ TABLES: dict[str, dict] = {
             "prompt_tokens": "Tokens sent, for a model call.",
             "completion_tokens": "Tokens returned, for a model call.",
             "latency_ms": "Time the call took, in milliseconds.",
+            "entry_hash": "SHA-256 over this entry and the hash before it: for the first entry of a result, the "
+                          "result's `seal`; for each later one, the previous entry's hash. The reviewer's decision "
+                          "is an entry too, so the review extends the chain (`auditiq/seal.py`). NULL for entries "
+                          "of results stored before results were sealed.",
         },
     },
     "review_decisions": {

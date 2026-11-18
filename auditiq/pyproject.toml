@@ -19,6 +19,7 @@ dependencies = [
     "Faker>=20",
     "scikit-learn>=1.5",
     "statsmodels>=0.14",
+    "scipy>=1.11",          # Poisson reliability factors of monetary-unit sampling (auditiq/sampling.py)
     "reportlab>=4",
     "PyMuPDF>=1.24.3",
     "streamlit>=1.46",

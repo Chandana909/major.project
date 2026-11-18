@@ -26,7 +26,6 @@ from typing import Protocol
 
 import httpx
 import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 from .config import load_env
 from .db import Database
@@ -127,6 +126,9 @@ class PolicyIndex:
     def __init__(self, chunks: list[dict], embedder: Embedder | None = None):
         if not chunks:
             raise ValueError("no policy document has been ingested")
+        # scikit-learn takes seconds to import; only an index needs it, so a command that searches nothing does not wait.
+        from sklearn.feature_extraction.text import TfidfVectorizer
+
         self.chunks = chunks
         self.embedder = embedder
         texts = [chunk_text(c) for c in chunks]

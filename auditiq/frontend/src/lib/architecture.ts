@@ -417,6 +417,7 @@ export const PAGES: Record<string, string> = {
   "/policy": "Policy",
   "/analytics": "Audit analytics",
   "/rings": "Vendor collusion",
+  "/assurance": "Assurance",
   "/pipeline": "Pipeline & configurations",
   "/results": "Results",
 };

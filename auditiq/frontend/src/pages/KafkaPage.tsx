@@ -103,7 +103,7 @@ export function KafkaPage() {
   useEffect(() => {
     void refresh();
     const period = busy || lag ? 1500 : 6000;              // faster while messages move
-    timer.current = window.setInterval(() => void refresh(), period);
+    timer.current = window.setInterval(() => !document.hidden && void refresh(), period);   // not from a hidden tab
     return () => {
       if (timer.current) window.clearInterval(timer.current);
     };

@@ -115,6 +115,23 @@ def test_c1_needs_no_model():
     assert state["score"]["route"] == "approve"
 
 
+def test_a_graph_without_a_model_runs_directly_and_gives_the_state_of_the_graph_runtime():
+    """C1 is run as the sequence of its nodes, not by the graph runtime (graph.DirectPipeline). The two must not
+    differ: every invoice of the development ledger with a finding, and the first 300, through both."""
+    pipeline = build_graph(PRESETS["C1"], POLICY)
+    transactions = extract(ROOT / "data" / "pilot_seed_909")
+    direct = [pipeline.invoke({"txn": txn}) for txn in transactions]
+    compared = [k for k, state in enumerate(direct) if state["flags"] or k < 300]
+    assert sum(bool(direct[k]["flags"]) for k in compared) >= 300
+    for k in compared:
+        by_runtime = pipeline.compiled.invoke({"txn": transactions[k]})
+        assert direct[k] == by_runtime and list(direct[k]) == list(by_runtime)
+    # With a run configuration, a reviewer's pause or a model, the graph runtime does the work.
+    assert pipeline.invoke({"txn": transactions[0]}, {"tags": ["traced"]}) == direct[0]
+    assert not hasattr(build_graph(preset("C1", review=True), POLICY, checkpointer=InMemorySaver()), "compiled")
+    assert not hasattr(build_graph(PRESETS["C3"], POLICY, scripted({})), "compiled")
+
+
 # ------------------------------------------------------------------- stages
 def test_c3_adds_the_agent_flag_and_scores_by_count():
     result, client = run("C3", short_delivery_txn(), {"math_approvals": {"flags": [J4_FLAG]}})

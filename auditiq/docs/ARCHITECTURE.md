@@ -125,6 +125,15 @@ flowchart LR
 
 The pipeline is a LangGraph `StateGraph`. One invocation audits one invoice.
 
+A configuration without a model stage (C1) is a straight line of four nodes: controls, confidence, risk score,
+audit pack. `build_graph` returns it as a `DirectPipeline`, whose `invoke` calls those node functions in order
+instead of handing each step to the graph runtime, which on a ledger cost several times what the controls do.
+On the 25,000-invoice ledger (one laptop, on battery, 18 November 2026) the audit itself takes 1.4 s directly
+(57 µs per invoice; under the profiler the graph runtime took 85 s against 8 s directly); storing the results
+in SQLite then takes most of a run's time, 8 to 30 s depending on the disk and the journal mode.
+The state it returns is the runtime's (`tests/test_pipeline.py` compares the two on a ledger). Configurations
+with a model, a reviewer's pause or a run configuration go through the runtime as before.
+
 | Stage | What it does |
 |---|---|
 | Extraction | Builds the transaction: the invoice, its PO and GRN (when they exist), the vendor, the approval log oldest first, and the vendor's other invoices. Only the audited columns are read (see the data dictionary). |

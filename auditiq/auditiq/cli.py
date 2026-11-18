@@ -10,6 +10,8 @@ Audit:
     python -m auditiq run --config C5 --invoice INV40042   one or more invoices, full pipeline
     python -m auditiq audit --invoice INV40042 --config C5 --review
     python -m auditiq show --invoice INV40042              stored audit pack and audit trail
+    python -m auditiq verify                               no stored result, trail entry or run changed (seals)
+    python -m auditiq workpapers --out engagement.xlsx     the working papers, with a digest tied to the store
 
 Review:
     python -m auditiq queue
@@ -56,9 +58,16 @@ from .config import configure_logging
 from .extraction import extract
 from .graph import PRESETS, build_graph, preset
 from .llm import LLMError, LLMSettings, OpenAIChatClient, ResponseCache
-from .policy import load_policy
-from .policy_pdf import PDF_DIR, make_sample_pdfs
+from .policy import POLICY_DIR, load_policy
 from .retrieval import EndpointEmbedder, PolicyIndex, embed_chunks
+
+PDF_DIR = POLICY_DIR / "pdf"            # as auditiq.policy_pdf, which loads ReportLab and is imported when PDFs are made
+
+
+def make_sample_pdfs():
+    from .policy_pdf import make_sample_pdfs as make
+
+    return make()
 
 
 def make_client(use_cache: bool = True) -> OpenAIChatClient:
@@ -484,6 +493,58 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_verify(args: argparse.Namespace) -> int:
+    """Recompute the seals of the stored results, trail entries and runs; exit status 1 if anything was altered."""
+    from . import seal
+
+    conn = open_db(args)
+    report = seal.verify(conn, run_id=args.run_id)
+    drift = seal.evidence_drift(conn, run_id=args.run_id)
+    if args.json:
+        print(json.dumps({**report, "evidence": drift, "digest": seal.run_digest(conn)}, indent=1))
+        return 0 if report["intact"] else 1
+    r, e, u = report["results"], report["entries"], report["runs"]
+    print(f"results   {r['checked']:,} checked: {r['sealed']:,} sealed and intact, {r['altered']:,} altered, "
+          f"{r['unsealed']:,} stored before sealing" + (f"; altered: {r['altered_ids']}" if r["altered"] else ""))
+    if r["review_inconsistent"]:
+        print(f"reviews   {r['review_inconsistent']:,} results whose state is not the decision their trail records: "
+              f"{r['review_inconsistent_ids']}")
+    print(f"trail     {e['checked']:,} entries: {e['broken']:,} broken, {e['unsealed']:,} stored before sealing"
+          + (f"; broken: {e['broken_ids']}" if e["broken"] else ""))
+    print(f"runs      {u['sealed']:,} sealed and intact, {u['altered']:,} altered, {u['open']:,} open, "
+          f"{u['unsealed']:,} finished before sealing" + (f"; altered: {u['altered_ids']}" if u["altered"] else ""))
+    moved = ", ".join(f"{part} {n:,}" for part, n in drift["changed_by_record"].items() if n)
+    print(f"evidence  {drift['fingerprinted']:,} latest results fingerprinted: {drift['unchanged']:,} still match the "
+          f"ledger, {drift['changed']:,} were based on records changed since ({moved or 'none'})"
+          + (f"; audit again: {', '.join(c['invoice_id'] for c in drift['changed_invoices'][:10])}"
+             if drift["changed"] else ""))
+    if args.run_id is None:
+        print(f"digest    {seal.run_digest(conn) or 'no sealed run'}  (keep it outside the store: it shows later "
+              "that no sealed run was changed or deleted)")
+    print("INTACT: nothing stored has been changed" if report["intact"] else "ALTERED: the audit record was changed")
+    if drift["changed"]:
+        print("STALE: the ledger changed after some invoices were audited; their results no longer describe them")
+    return 0 if report["intact"] else 1
+
+
+def cmd_workpapers(args: argparse.Namespace) -> int:
+    """Write the working papers as a workbook, or check that a workbook still matches the store."""
+    from . import workpapers
+
+    conn = open_db(args)
+    if args.check:
+        out = workpapers.check(conn, Path(args.check))
+        print(f"workbook digest  {out['stored']}\nstore now        {out['current']}")
+        print("MATCHES: the workbook is the store's report" if out["matches"] else
+              "DIFFERS: the store changed after the workbook was written (or the workbook was edited)")
+        return 0 if out["matches"] else 1
+    report = workpapers.write(conn, Path(args.out), seed=args.seed)
+    print(f"wrote {args.out}: {len(report['data']['findings']):,} findings, {len(report['data']['queue']):,} waiting "
+          f"for review, sample seed {report['seed']}")
+    print(f"report digest {report['digest']}")
+    return 0
+
+
 def cmd_graph(args: argparse.Namespace) -> int:
     from .llm import ScriptedClient
     config = preset(args.config, review=args.review)
@@ -673,6 +734,19 @@ def main(argv: list[str] | None = None) -> int:
 
     status = sub.add_parser("status", help="show the backend, the loaded ledger and the row count of every table")
     status.set_defaults(run=cmd_status)
+
+    verify = sub.add_parser("verify", help="check that no stored result, trail entry or run was changed (seals)")
+    verify.add_argument("--run", type=int, dest="run_id", help="only this run")
+    verify.add_argument("--json", action="store_true", help="the full report as JSON")
+    verify.set_defaults(run=cmd_verify)
+
+    papers = sub.add_parser("workpapers", help="write the working papers (xlsx) with a digest tied to the store, "
+                                               "or check that a workbook still matches the store")
+    target = papers.add_mutually_exclusive_group(required=True)
+    target.add_argument("--out", help="the workbook to write")
+    target.add_argument("--check", help="a workbook written before")
+    papers.add_argument("--seed", type=int, help="the sample's seed (default: from the digest of the sealed runs)")
+    papers.set_defaults(run=cmd_workpapers)
 
     user = sub.add_parser("user", help="users of the REST API and their roles: add (prints the token once), list, "
                                        "disable")

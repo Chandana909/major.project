@@ -258,7 +258,7 @@ One row per passage of a policy document: a clause, or a paragraph that is not a
 
 ## Audit
 
-What the audit produced. Every audit of an invoice adds rows, so an invoice that is audited again has one result per run and the earlier ones remain. The only later change to a result is its review: the decision sets the status of the result, is added to its audit pack and closes its audit trail.
+What the audit produced. Every audit of an invoice adds rows, so an invoice that is audited again has one result per run and the earlier ones remain. The only later change to a result is its review: the decision sets the status of the result, is added to its audit pack and closes its audit trail. Results, trail entries and finished runs are sealed with SHA-256 hashes, so that a later change to any of them is found by `python -m auditiq verify`.
 
 ### `audit_runs`
 
@@ -277,6 +277,7 @@ One row per run: one configuration applied to a set of invoices under one policy
 | `note` | TEXT | TEXT | Free text given when the run was started. |
 | `started_at` | TEXT | TIMESTAMP | When the run started. |
 | `finished_at` | TEXT | TIMESTAMP | When the run finished. NULL while it is running or if it was interrupted. |
+| `seal` | TEXT | TEXT | SHA-256 over the run's columns and the seal of every result it produced, in order, made when the run finished (`auditiq/seal.py`): a result removed from the run or added to it later changes it. NULL while the run is open, and for runs stored before results were sealed. |
 
 ### `audit_results`
 
@@ -304,6 +305,8 @@ One row per invoice per run: the decision of the audit.
 | `failed_stages` | INTEGER | INTEGER | Stages whose reply could not be used even after one request to repair it. A failed stage contributes no finding; the others continue. |
 | `audit_pack` | TEXT NOT NULL | TEXT NOT NULL | The complete result as JSON: the records examined, every finding with its evidence and its confidence, the findings the challenger removed and why, the scores, the route, the policy citations and, after review, the decision. |
 | `created_at` | TEXT | TIMESTAMP | When the result was stored. |
+| `seal` | TEXT | TEXT | SHA-256 over the result as it was stored: these columns (with the workflow state it was stored with), the audit pack without its `review` entry, and its rows of `audit_flags`, in order (`auditiq/seal.py`). `python -m auditiq verify` recomputes it. NULL for results stored before results were sealed. |
+| `evidence` | TEXT | TEXT | Fingerprint of the records the audit read for the invoice, sealed with the result: a JSON object with the first 128 bits of the SHA-256 of the invoice, its PO, its GRN, its vendor and its approval entries, each as the audit read it. `python -m auditiq verify` compares it with the ledger as it is now and names the invoices whose records changed after their audit (`seal.evidence_drift`). NULL for results stored before 18 November 2026. |
 
 Also: `UNIQUE (run_id, invoice_id)`; `INDEX (invoice_id)`; `INDEX (workflow_status)`.
 
@@ -363,6 +366,7 @@ One row per step taken for a result, in order: what ran, who or what did it, and
 | `prompt_tokens` | INTEGER | INTEGER | Tokens sent, for a model call. |
 | `completion_tokens` | INTEGER | INTEGER | Tokens returned, for a model call. |
 | `latency_ms` | REAL | DOUBLE PRECISION | Time the call took, in milliseconds. |
+| `entry_hash` | TEXT | TEXT | SHA-256 over this entry and the hash before it: for the first entry of a result, the result's `seal`; for each later one, the previous entry's hash. The reviewer's decision is an entry too, so the review extends the chain (`auditiq/seal.py`). NULL for entries of results stored before results were sealed. |
 
 Also: `INDEX (result_id)`.
 
@@ -539,6 +543,8 @@ The most recent result of every audited invoice, with the configuration, policy 
 | `failed_stages` | As `audit_results.failed_stages`. |
 | `audit_pack` | As `audit_results.audit_pack`. |
 | `created_at` | As `audit_results.created_at`. |
+| `seal` | As `audit_results.seal`. |
+| `evidence` | As `audit_results.evidence`. |
 | `configuration` | `audit_runs.configuration` of the result's run. |
 | `policy_version` | `audit_runs.policy_version` of the result's run. |
 | `model` | `audit_runs.model` of the result's run. |

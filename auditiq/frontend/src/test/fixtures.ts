@@ -1,5 +1,5 @@
 // Responses of the API used by the page tests, shaped as auditiq/api.py returns them.
-import type { AiLayer, Analytics, GraphAnswer, Health, InvoiceDetail, KnowledgeLayer, Overview, PolicyGraphData, PolicyOverview, Preview, RagTrace, Results, Rings, StreamSources, StreamStatus, SystemStatus, CaseAnswer, CaseGraphView } from "../api/types";
+import type { AiLayer, Analytics, AuditProgram, GraphAnswer, Health, InvoiceDetail, KnowledgeLayer, Leads, MonetaryUnitSample, Reliability, Overview, PolicyGraphData, PolicyOverview, Preview, RagTrace, Results, Rings, StreamSources, StreamStatus, SystemStatus, CaseAnswer, CaseGraphView, TrailCheck } from "../api/types";
 
 export const health: Health = {
   status: "ok", version: "0.4.0", backend: "sqlite", ledger: "small_seed_7", policy_version: "2.5", model: null, auth: false,
@@ -133,7 +133,7 @@ export const invoice: InvoiceDetail = {
   history: { total: 1, items: [{ invoice_id: "INV40001", amount: 1000 }] },
   result: {
     result_id: 7, run_id: 1, route: "escalate", risk_level: "CRITICAL", r0: 70, rc: 70, workflow_status: "PENDING_REVIEW",
-    configuration: "C1", model: null, policy_version: "2.5", created_at: "2026-10-14 10:00:00",
+    configuration: "C1", model: null, policy_version: "2.5", created_at: "2026-10-14 10:00:00", integrity: "intact",
     pack: {
       invoice_id: "INV40237", vendor_id: "VEND1001", vendor_name: "Kurian LLC", policy_version: "2.5", configuration: "C1", model: null,
       route: "escalate", risk_level: "CRITICAL", count_based_risk: 70, weighted_risk: 70, threshold: 50,
@@ -389,4 +389,83 @@ export const caseAnswer: CaseAnswer = {
       kind: "approvers", version: "2.5", clause: "5.1.1", source: null, chunk_id: null, data: {},
     },
   ],
+};
+
+export const trailCheck: TrailCheck = {
+  intact: false,
+  results: { checked: 60, sealed: 59, unsealed: 0, altered: 1, altered_ids: [7], review_inconsistent: 0, review_inconsistent_ids: [] },
+  entries: { checked: 180, broken: 0, broken_ids: [], unsealed: 0 },
+  runs: { sealed: 1, open: 0, unsealed: 0, altered: 0, altered_ids: [] },
+  digest: "9f2c4e0b7d1a5c3e8f6b2a9d4c7e1f0b3a5d8c2e6f9b1a4d7c0e3f5b8a2d6c9e",
+};
+
+export const judgementLeads: Leads = {
+  policy_version: "2.5",
+  guide: { window_days: 7, band_pct: 15, limits: { Manager: 100000, "Senior Manager": 500000 } },
+  near_duplicates: {
+    clause: "2.2.2", count: 1, invoices: 1, amount: 56766.16, approved: 1, to_a_person: 0, unaudited: 0, configurations: { C1: 1 },
+    pairs: [{
+      invoice_id: "INV41933", original_id: "INV40012", vendor_id: "VEND1435", vendor_name: "Mann, Maharaj and Basu", number: "INV-UGW-0590-R",
+      original_number: "INV-UGW-0590", date: "2025-04-28", original_date: "2025-04-01", amount: 56766.16, po_id: "PO20309", grn_id: "GRN30278",
+      reason: "re-keyed: case, separators, leading zeros or a suffix",
+    }],
+  },
+  structuring: {
+    clause: "4.1.2", count: 1, invoices: 3, amount: 278059.25, approved: 3, to_a_person: 0, unaudited: 0, configurations: { C1: 3 },
+    groups: [{
+      vendor_id: "VEND1001", vendor_name: "Kurian LLC", role: "Manager", limit: 100000, invoices: ["INV41355", "INV41492", "INV41662"], first: "2025-04-18",
+      last: "2025-04-23", total: 278059.25, amounts: [92156.78, 95334.6, 90567.87],
+      descriptions: ["Supply of: Endpoint security licences, annual", "Endpoint security licences, annual", "Antivirus endpoint subscriptions (1 year)"],
+      same_description: false,
+    }],
+  },
+  answer_key: {
+    policy_version: "2.5", compared: true,
+    "2.2.2": { labelled: 1, listed: 1, listed_labelled: 1, recall: 1, precision: 1, listed_otherwise: {} },
+    "4.1.2": { labelled: 3, listed: 3, listed_labelled: 3, recall: 1, precision: 1, listed_otherwise: {} },
+  },
+};
+
+export const monetaryUnitSample: MonetaryUnitSample = {
+  plan: {
+    book_value: 4637836463.78, items: 23342, confidence: 0.95, tolerable_pct: 2, tolerable: 92756729.28, expected_pct: 0, expected: 0,
+    reliability_factor: 2.9957, expansion_factor: 1.6, size: 150, interval: 30918909.76,
+  },
+  seed: 7, start: 1234567.89, drawn: 2, certain: 0,
+  sample: [
+    { invoice_id: "INV40012", amount: 56766.16, vendor_name: "Mann, Maharaj and Basu", findings: 0, date: "2025-04-01", units: 1, certain: false },
+    { invoice_id: "INV41933", amount: 56766.16, vendor_name: "Mann, Maharaj and Basu", findings: 0, date: "2025-04-28", units: 1, certain: false },
+  ],
+  answer_key: {
+    misstatements: 1, top_stratum_actual: 0, projected: 30918909.76, basic_precision: 92624775.83, upper_limit: 146675118.95, true_misstatement: 116605529.92,
+    bound_holds: true, conclusion: "the upper limit exceeds the tolerable misstatement: the approval cannot be relied on without further work",
+    sampled_anomalous: ["INV41933"],
+  },
+};
+
+export const reliabilityReport: Reliability = {
+  ledger: "small_seed_7",
+  totals: [{ table: "invoices", records: 1200, amount: 258993321.45 }, { table: "vendor_master", records: 60, amount: null }],
+  fingerprint: { tables: { invoices: "a".repeat(64) }, ledger: "db6d43da06847a0ca3446d6a69193ba91912e93afe75cab4b8c06798225417f5" },
+  checks: [
+    { id: "po-on-file", title: "Invoices naming a purchase order that is not on file", assertion: "occurrence", exceptions: 3, examples: ["INV40286"], decided_by: "2.1.3", note: "" },
+    { id: "received-not-invoiced", title: "Goods received that no invoice bills (possible unrecorded liabilities)", assertion: "completeness", exceptions: 0, examples: [], decided_by: null, note: "A receipt not yet invoiced may be a liability missing from the books." },
+  ],
+  summary: { checks: 2, without_exceptions: 1, open: [], decided_by_rules: ["po-on-file"], coverage: [], reliable: true, conclusion: "the ledger's records are complete and consistent for the audit's purpose" },
+};
+
+export const auditProgram: AuditProgram = {
+  policy_version: "2.5",
+  assertions: { occurrence: "The invoice is for goods actually ordered", authorization: "Approved by someone allowed to approve it" },
+  schemes: { "duplicate-billing": "Billing: the same goods billed twice", "bid-rigging": "Corruption: rigged quotations or tenders" },
+  tests: [
+    { id: "2.2.1", title: "Invoice number used before by the vendor", how: "control", assertions: ["occurrence"], schemes: ["duplicate-billing"], in_policy: true, found: 30, listed: null, ran: true },
+    { id: "2.2.2", title: "Near duplicate under a re-keyed number", how: "agent and lead", assertions: ["occurrence"], schemes: ["duplicate-billing"], in_policy: true, found: 0, listed: 30, ran: true },
+  ],
+  by_assertion: { occurrence: ["2.2.1", "2.2.2"], authorization: [] },
+  by_scheme: { "duplicate-billing": ["2.2.1", "2.2.2"], "bid-rigging": [] },
+  untested: { assertions: ["authorization"], schemes: ["bid-rigging"] },
+  limits: { "bid-rigging": "No quotation or tender data: not tested." },
+  agents_ran: 0,
+  answer_key: { policy_version: "2.5", compared: true, schemes: { "duplicate-billing": { labelled: 60, found: 30, lead_only: 30, missed: 0, reached: 1 } } },
 };

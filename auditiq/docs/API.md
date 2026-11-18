@@ -1,6 +1,6 @@
 # REST API reference
 
-All 40 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m auditiq serve`). **This file is generated** from the application by `python -m auditiq.apidoc`; a test checks that it is current. How to use the API (jobs, errors, the token, how the web application calls it) is in [`WEB.md`](WEB.md), Section 4; the interactive version of this reference is at `/api/docs` on a running server.
+All 46 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m auditiq serve`). **This file is generated** from the application by `python -m auditiq.apidoc`; a test checks that it is current. How to use the API (jobs, errors, the token, how the web application calls it) is in [`WEB.md`](WEB.md), Section 4; the interactive version of this reference is at `/api/docs` on a running server.
 
 **Common to every endpoint.** Requests and answers are JSON, except the two uploads (multipart). An error answer carries `detail`: a message, or `{"message", "problems"}`. When the server has users (`python -m auditiq user add`) or a shared token (`AUDITIQ_API_TOKEN`), every endpoint but the open ones needs the header `Authorization: Bearer <token>`, and the token's role must be at least the one listed: a `viewer` reads, a `reviewer` also records decisions and audits invoices again, an `admin` also changes the policy and the ledger. The shared token acts as an admin; a server with neither is open. Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer`.
 
@@ -13,6 +13,12 @@ All 40 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m audi
 | GET | [`/api/overview`](#get-apioverview) | viewer | 200, 401, 503 |
 | GET | [`/api/analytics`](#get-apianalytics) | viewer | 200, 401, 503 |
 | GET | [`/api/rings`](#get-apirings) | viewer | 200, 401, 422, 503 |
+| GET | [`/api/leads`](#get-apileads) | viewer | 200, 401, 503 |
+| GET | [`/api/sampling`](#get-apisampling) | viewer | 200, 400, 401, 422, 503 |
+| GET | [`/api/reliability`](#get-apireliability) | viewer | 200, 401, 503 |
+| GET | [`/api/program`](#get-apiprogram) | viewer | 200, 401, 503 |
+| GET | [`/api/workpapers`](#get-apiworkpapers) | viewer | 200, 401, 422, 503 |
+| GET | [`/api/trail/verify`](#get-apitrailverify) | viewer | 200, 401, 422, 503 |
 | GET | [`/api/risk-map`](#get-apirisk-map) | viewer | 200, 401, 503 |
 | GET | [`/api/stream`](#get-apistream) | viewer | 200, 401, 503 |
 | GET | [`/api/stream/sources`](#get-apistreamsources) | viewer | 200, 401, 503 |
@@ -84,6 +90,23 @@ Answers:
 
 - **200**: the answer, as JSON
 - **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+### GET `/api/trail/verify`
+
+Whether the audit record is as it was stored: the seal of every result (its decision, findings and audit pack), the hash chain of every audit-trail entry, including the reviewers' decisions, and the seal of every finished run are computed again and compared (auditiq/seal.py). `digest` is one value over the seals of all finished runs, to keep outside the store. Not cached: a change made directly in the database must show at once. `evidence` re-performs the extraction: whether the ledger still holds the records each latest result was based on, and which invoices' records changed after their audit.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `run` | query | integer or null | null |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
 - **503**: the database cannot be reached
 
 ### GET `/api/risk-map`
@@ -185,6 +208,80 @@ Role: at least `viewer` when the server has users or a token.
 | Parameter | In | Type | Default |
 |---|---|---|---|
 | `limit` | query | integer | `40` |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/leads`
+
+Invoices for a reviewer under the two judgement rules the policy words most precisely, with its guide values: near duplicates (2.2.2: the same vendor, PO, GRN and amount as an earlier invoice under a re-keyed number) and structuring across days (4.1.2: invoices of one vendor and approving role within the guide window, each within the guide band below the role's limit, together above it). A lead is not a finding and changes no result. On a benchmark ledger, compared with its answer key. Kept until the store changes.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+### GET `/api/sampling`
+
+A monetary-unit sample (ISA 530) of the invoices approved without a person: the plan (sample size and sampling interval from the confidence, the tolerable and the expected misstatement, as a percentage of the approved amount), the random start and its seed (give the seed to draw the same sample again), and the invoices to examine. On a benchmark ledger, the answer key stands in for the examination: the misstatements the sample would find, the Stringer upper limit and whether it holds against the truth.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `confidence` | query | number | `annotation=float required=False default=0.95 alias='confidence' description='0.9, 0.95 or 0.99'` |
+| `tolerable_pct` | query | number | `annotation=float required=False default=2.0 alias='tolerable_pct' metadata=[Gt(gt=0), Le(le=20)]` |
+| `expected_pct` | query | number | `annotation=float required=False default=0.0 alias='expected_pct' metadata=[Ge(ge=0), Le(le=10)]` |
+| `seed` | query | integer or null | `annotation=Union[int, NoneType] required=False default=None alias='seed' metadata=[Ge(ge=1)]` |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **400**: the request was refused; `detail` says why
+- **401**: the server requires a token, and the request has none or a wrong one
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/reliability`
+
+Whether the ledger can be relied on (ISA 500): references to documents not on file, approvals, the arithmetic of every invoice, date logic, goods received but not invoiced, gaps in the company's numbered series, vendor master data and audit coverage, each with its exceptions and the rule that decides them if one does; control totals; a SHA-256 fingerprint of every ledger table. Not cached: a change to the ledger must show at once.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+### GET `/api/program`
+
+The audit program: every test (the policy's rules, the leads, the analytics, the sample, the integrity checks) with the assertions (ISA 315) and fraud schemes (ACFE) it addresses and what it found; the assertions and schemes no test covers, with the scope limits; and on a benchmark ledger each scheme against the answer key. Kept until the store changes.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+### GET `/api/workpapers`
+
+The working papers as an Excel workbook (auditiq/workpapers.py): summary, findings, review queue, leads, sample, reliability, audit program and integrity. The report digest, in the workbook and in the header X-Report-Digest, is the same whenever the store is unchanged; `python -m auditiq workpapers --check` tells whether a workbook still matches the store. The sample's seed comes from the digest of the sealed runs unless one is given.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `seed` | query | integer or null | `annotation=Union[int, NoneType] required=False default=None alias='seed' metadata=[Ge(ge=1)]` |
 
 Answers:
 
@@ -589,7 +686,7 @@ Answers:
 
 ### GET `/api/queue`
 
-Invoices waiting for review, highest weighted risk first (at most 2,000), of one risk level or of every level. Each item lists the rules its kept findings break, the most severe first; `rules` gives the title of each rule in the active policy; `total` counts the invoices waiting at the level asked; `levels` counts the whole queue per risk level, with the amount at stake, whatever the list holds.
+Invoices waiting for review, highest weighted risk first (at most 2,000), of one risk level or of every level. Each item lists the rules its kept findings break, the most severe first; `rules` gives the title of each rule in the active policy; `total` counts the invoices waiting at the level asked; `levels` counts the whole queue per risk level, with the amount at stake, whatever the list holds. Kept until the store changes (a decision changes it).
 
 Role: at least `viewer` when the server has users or a token.
 

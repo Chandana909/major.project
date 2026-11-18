@@ -1,0 +1,470 @@
+{
+ "dataset": "final_seed_2025",
+ "invoices": 25000,
+ "labels": {
+  "clean": 22425,
+  "hard_negative": 300,
+  "anomalous": 2275
+ },
+ "workload": {
+  "to_a_person": 1658,
+  "to_a_person_share": 0.0663,
+  "spend_to_a_person_share": 0.1411,
+  "anomalous_among_them": 1658,
+  "queue_precision": 1.0,
+  "clean_to_a_person": 0,
+  "hard_negative_to_a_person": 0
+ },
+ "money": {
+  "spend": 5399865632.22,
+  "anomalous_spend": 878634698.36,
+  "anomalous_spend_to_a_person": 762029168.44,
+  "anomalous_spend_to_a_person_share": 0.8673,
+  "invoice_recall": 0.7288
+ },
+ "by_class": {
+  "J1": {
+   "labelled": 141,
+   "to_a_person": 0,
+   "approved_no_finding": 141
+  },
+  "J2": {
+   "labelled": 141,
+   "to_a_person": 0,
+   "approved_no_finding": 141
+  },
+  "J3": {
+   "labelled": 141,
+   "to_a_person": 58,
+   "approved_no_finding": 83
+  },
+  "J4": {
+   "labelled": 141,
+   "to_a_person": 66,
+   "approved_no_finding": 75
+  },
+  "R1": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R2": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R3": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R4": {
+   "labelled": 141,
+   "to_a_person": 45,
+   "approved_with_finding": 96
+  },
+  "R5": {
+   "labelled": 157,
+   "to_a_person": 157
+  },
+  "R6": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R7": {
+   "labelled": 426,
+   "to_a_person": 426
+  },
+  "R8": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R9": {
+   "labelled": 141,
+   "to_a_person": 141
+  },
+  "R10": {
+   "labelled": 141,
+   "to_a_person": 60,
+   "approved_with_finding": 81
+  }
+ },
+ "missed": {
+  "approved_no_finding": 440,
+  "approved_with_finding": 177,
+  "levels_of_approved_with_finding": {
+   "MEDIUM": 143,
+   "LOW": 34
+  }
+ },
+ "hard_negatives": {
+  "HN_DAILY_LIMIT": {
+   "invoices": 60,
+   "to_a_person": 0
+  },
+  "HN_NEAR_LIMIT": {
+   "invoices": 60,
+   "to_a_person": 0
+  },
+  "HN_RECURRING": {
+   "invoices": 60,
+   "to_a_person": 0
+  },
+  "HN_SIMILAR_NUMBER": {
+   "invoices": 60,
+   "to_a_person": 0
+  },
+  "HN_TOLERANCE": {
+   "invoices": 60,
+   "to_a_person": 0
+  }
+ },
+ "ranking": {
+  "C1 risk score": {
+   "average_precision": 0.8242,
+   "roc_auc": 0.9033,
+   "distinct_scores": 9,
+   "precision_at": {
+    "100": 1.0,
+    "250": 1.0,
+    "500": 1.0,
+    "1000": 1.0,
+    "2000": 0.9191
+   }
+  },
+  "C0-IF": {
+   "average_precision": 0.5532,
+   "roc_auc": 0.893,
+   "distinct_scores": 21378,
+   "precision_at": {
+    "100": 0.8,
+    "250": 0.772,
+    "500": 0.688,
+    "1000": 0.702,
+    "2000": 0.6105
+   }
+  },
+  "C0-SVM": {
+   "average_precision": 0.6057,
+   "roc_auc": 0.882,
+   "distinct_scores": 24693,
+   "precision_at": {
+    "100": 0.91,
+    "250": 0.932,
+    "500": 0.84,
+    "1000": 0.748,
+    "2000": 0.6525
+   }
+  }
+ },
+ "repeatability": {
+  "runs": [
+   3,
+   4
+  ],
+  "invoices": 25000,
+  "differ": 0,
+  "examples": []
+ },
+ "benford_first_digit": {
+  "mad": 0.004835830527908261,
+  "chi2": 80.52670398861811,
+  "dof": 8,
+  "conformity": "close conformity"
+ },
+ "sealed_record": {
+  "intact": true,
+  "results": {
+   "checked": 100000,
+   "sealed": 50000,
+   "unsealed": 50000,
+   "altered": 0,
+   "altered_ids": [],
+   "review_inconsistent": 0,
+   "review_inconsistent_ids": []
+  },
+  "entries": {
+   "checked": 300000,
+   "broken": 0,
+   "broken_ids": [],
+   "unsealed": 150000
+  },
+  "runs": {
+   "sealed": 2,
+   "open": 0,
+   "unsealed": 2,
+   "altered": 0,
+   "altered_ids": []
+  },
+  "seconds": 3.2,
+  "digest": "bc5ee88642bb022e3498d9caaacd71f836d20264feaf13774f643e780e1bf60f",
+  "evidence": {
+   "fingerprinted": 25000,
+   "unchanged": 25000,
+   "changed": 0,
+   "without_fingerprint": 0
+  },
+  "evidence_seconds": 1.55
+ },
+ "leads": {
+  "near_duplicates": {
+   "invoices": 141,
+   "amount": 21402193.84,
+   "approved": 141
+  },
+  "structuring": {
+   "count": 47,
+   "invoices": 141,
+   "amount": 36179517.6,
+   "approved": 141
+  },
+  "answer_key": {
+   "policy_version": "2.5",
+   "compared": true,
+   "2.2.2": {
+    "labelled": 141,
+    "listed": 141,
+    "listed_labelled": 141,
+    "recall": 1.0,
+    "precision": 1.0,
+    "listed_otherwise": {}
+   },
+   "4.1.2": {
+    "labelled": 141,
+    "listed": 141,
+    "listed_labelled": 141,
+    "recall": 1.0,
+    "precision": 1.0,
+    "listed_otherwise": {}
+   }
+  }
+ },
+ "sampling": {
+  "plan": {
+   "book_value": 4637836463.78,
+   "items": 23342,
+   "confidence": 0.95,
+   "tolerable_pct": 2.0,
+   "tolerable": 92756729.28,
+   "expected_pct": 0.0,
+   "expected": 0.0,
+   "reliability_factor": 2.9957,
+   "expansion_factor": 1.6,
+   "size": 150,
+   "interval": 30918909.758533332
+  },
+  "as_approved": {
+   "starts": 1000,
+   "true_misstatement": 116605529.92,
+   "bound_holds_share": 0.974,
+   "upper_limit_median": 239734606.49,
+   "upper_limit_p05": 146675118.95,
+   "misstatements_found_mean": 3.69,
+   "misstatements_found_range": [
+    0,
+    12
+   ],
+   "within_tolerable_share": 0.026
+  },
+  "anomalies_removed": {
+   "starts": 1000,
+   "true_misstatement": 0.0,
+   "bound_holds_share": 1.0,
+   "upper_limit_median": 90295982.83,
+   "upper_limit_p05": 90295982.83,
+   "misstatements_found_mean": 0.0,
+   "misstatements_found_range": [
+    0,
+    0
+   ],
+   "within_tolerable_share": 1.0
+  }
+ },
+ "reliability": {
+  "seconds": 1.25,
+  "summary": {
+   "checks": 19,
+   "without_exceptions": 18,
+   "open": [],
+   "decided_by_rules": [
+    "po-on-file"
+   ],
+   "coverage": [],
+   "reliable": true,
+   "conclusion": "the ledger's records are complete and consistent for the audit's purpose: the exceptions found are findings the audit's rules decide"
+  },
+  "exceptions": {
+   "po-on-file": 47
+  },
+  "fingerprint": "db6d43da06847a0ca3446d6a69193ba91912e93afe75cab4b8c06798225417f5"
+ },
+ "program": {
+  "untested": {
+   "assertions": [],
+   "schemes": [
+    "bid-rigging"
+   ]
+  },
+  "schemes": {
+   "shell-company": {
+    "labelled": 914,
+    "found": 914,
+    "lead_only": 0,
+    "missed": 0,
+    "reached": 1.0
+   },
+   "overbilling": {
+    "labelled": 914,
+    "found": 827,
+    "lead_only": 0,
+    "missed": 87,
+    "reached": 0.9048
+   },
+   "duplicate-billing": {
+    "labelled": 282,
+    "found": 141,
+    "lead_only": 141,
+    "missed": 0,
+    "reached": 1.0
+   },
+   "not-received": {
+    "labelled": 573,
+    "found": 432,
+    "lead_only": 0,
+    "missed": 141,
+    "reached": 0.7539
+   },
+   "personal-purchases": {
+    "labelled": 141,
+    "found": 0,
+    "lead_only": 0,
+    "missed": 141,
+    "reached": 0.0
+   },
+   "limit-evasion": {
+    "labelled": 282,
+    "found": 141,
+    "lead_only": 141,
+    "missed": 0,
+    "reached": 1.0
+   },
+   "override": {
+    "labelled": 601,
+    "found": 601,
+    "lead_only": 0,
+    "missed": 0,
+    "reached": 1.0
+   },
+   "conflict-of-interest": {
+    "labelled": 141,
+    "found": 141,
+    "lead_only": 0,
+    "missed": 0,
+    "reached": 1.0
+   },
+   "tax-misuse": {
+    "labelled": 704,
+    "found": 704,
+    "lead_only": 0,
+    "missed": 0,
+    "reached": 1.0
+   }
+  }
+ },
+ "workpapers": {
+  "seconds": 7.1,
+  "digest": "10e23ea26b08089e6d881c6c0f37dc80e9f137130a204c4ffa016aaedf30fa2f",
+  "repeats": true,
+  "seed": 160336519,
+  "findings": 2442,
+  "queue": 1658,
+  "bytes": 334930
+ },
+ "latency": [
+  {
+   "endpoint": "/api/overview",
+   "status": 200,
+   "first_ms": 170.5,
+   "median_ms": 7.2,
+   "p95_ms": 8.1,
+   "bytes_on_the_wire": 1382
+  },
+  {
+   "endpoint": "/api/queue",
+   "status": 200,
+   "first_ms": 58.6,
+   "median_ms": 9.1,
+   "p95_ms": 10.2,
+   "bytes_on_the_wire": 6184
+  },
+  {
+   "endpoint": "/api/risk-map",
+   "status": 200,
+   "first_ms": 126.4,
+   "median_ms": 16.7,
+   "p95_ms": 27.4,
+   "bytes_on_the_wire": 30939
+  },
+  {
+   "endpoint": "/api/analytics",
+   "status": 200,
+   "first_ms": 318.1,
+   "median_ms": 7.7,
+   "p95_ms": 9.5,
+   "bytes_on_the_wire": 7106
+  },
+  {
+   "endpoint": "/api/rings",
+   "status": 200,
+   "first_ms": 299.9,
+   "median_ms": 9.9,
+   "p95_ms": 11.3,
+   "bytes_on_the_wire": 12534
+  },
+  {
+   "endpoint": "/api/case-graph",
+   "status": 200,
+   "first_ms": 435.6,
+   "median_ms": 10.4,
+   "p95_ms": 11.6,
+   "bytes_on_the_wire": 5616
+  },
+  {
+   "endpoint": "/api/invoices?q=INV41",
+   "status": 200,
+   "first_ms": 14.3,
+   "median_ms": 7.7,
+   "p95_ms": 8.9,
+   "bytes_on_the_wire": 1491
+  },
+  {
+   "endpoint": "/api/policy",
+   "status": 200,
+   "first_ms": 120.9,
+   "median_ms": 7.4,
+   "p95_ms": 8.6,
+   "bytes_on_the_wire": 860
+  },
+  {
+   "endpoint": "/api/leads",
+   "status": 200,
+   "first_ms": 337.5,
+   "median_ms": 10.9,
+   "p95_ms": 13.5,
+   "bytes_on_the_wire": 12511
+  },
+  {
+   "endpoint": "/api/sampling?seed=1",
+   "status": 200,
+   "first_ms": 181.7,
+   "median_ms": 214.3,
+   "p95_ms": 235.2,
+   "bytes_on_the_wire": 4063
+  },
+  {
+   "endpoint": "/api/trail/verify",
+   "status": 200,
+   "first_ms": 5027.3,
+   "median_ms": 5229.5,
+   "p95_ms": 5583.4,
+   "bytes_on_the_wire": 607
+  }
+ ]
+}

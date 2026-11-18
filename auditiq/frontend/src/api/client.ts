@@ -1,5 +1,5 @@
 // A small typed client for the AuditIQ REST API.
-import type { AiLayer, Analytics, ApplySummary, CaseAnswer, CaseGraphView, ConfigName, GraphAnswer, KnowledgeLayer, PeekMessage, RagTrace, StreamLogRow, StreamSources, SystemStatus, CopilotAnswer, DataAnswer, Health, Hit, InvoiceDetail, InvoiceRow, Job, LedgerLoad, Me, Overview, Pipeline, PolicyGraphData, PolicyOverview, Preview, Proposal, QueueItem, Results, Rings, Simulation, StreamStatus, VendorPoint } from "./types";
+import type { AiLayer, Analytics, ApplySummary, AuditProgram, CaseAnswer, CaseGraphView, ConfigName, GraphAnswer, KnowledgeLayer, Leads, MonetaryUnitSample, Reliability, PeekMessage, RagTrace, StreamLogRow, StreamSources, SystemStatus, CopilotAnswer, DataAnswer, Health, Hit, InvoiceDetail, InvoiceRow, Job, LedgerLoad, Me, Overview, Pipeline, PolicyGraphData, PolicyOverview, Preview, Proposal, QueueItem, Results, Rings, Simulation, StreamStatus, TrailCheck, VendorPoint } from "./types";
 
 const TOKEN_KEY = "auditiq.token";
 
@@ -154,6 +154,39 @@ export const api = {
   askData: (question: string) => request<Job<DataAnswer>>("/api/copilot/data", json({ question })),
   job: <T>(id: string) => request<Job<T>>(`/api/jobs/${id}`),
   results: () => request<Results>("/api/results"),
+  trailVerify: () => request<TrailCheck>("/api/trail/verify"),
+  reliability: () => request<Reliability>("/api/reliability"),
+  program: () => request<AuditProgram>("/api/program"),
+  /** The working papers as a file: fetched with the token (a plain link would not carry it). */
+  workpapers: async (): Promise<{ blob: Blob; digest: string | null; filename: string }> => {
+    const headers = new Headers();
+    const token = getToken();
+    if (token) headers.set("Authorization", `Bearer ${token}`);
+    const response = await fetch("/api/workpapers", { headers });
+    if (!response.ok) {
+      const text = await response.text();
+      let body: unknown = text;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        // not JSON: the text itself is the message
+      }
+      throw describe(response.status, body);
+    }
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const filename = /filename="([^"]+)"/.exec(disposition)?.[1] ?? "auditiq-workpapers.xlsx";
+    return { blob: await response.blob(), digest: response.headers.get("X-Report-Digest"), filename };
+  },
+  leads: () => request<Leads>("/api/leads"),
+  sampling: (options: { confidence: number; tolerable_pct: number; expected_pct: number; seed?: number | null }) => {
+    const query = new URLSearchParams({
+      confidence: String(options.confidence),
+      tolerable_pct: String(options.tolerable_pct),
+      expected_pct: String(options.expected_pct),
+    });
+    if (options.seed) query.set("seed", String(options.seed));
+    return request<MonetaryUnitSample>(`/api/sampling?${query}`);
+  },
 };
 
 /** Poll a background job until it is done or has failed. */

@@ -2,19 +2,20 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getToken, setToken } from "../api/client";
 import { App } from "../App";
 import { Layout } from "../components/Layout";
 import {
-  aiLayer, analytics, caseAnswer, caseGraph, graphAnswer, health, invoice, knowledge, noRings, overview, policy, policyGraph, preview, queue, ragTrace, results, rings, streamSources,
-  streamStatus, system,
+  aiLayer, analytics, auditProgram, caseAnswer, caseGraph, graphAnswer, health, invoice, judgementLeads, knowledge, monetaryUnitSample, noRings, overview, policy, policyGraph,
+  preview, queue, ragTrace, reliabilityReport, results, rings, streamSources, streamStatus, system, trailCheck,
 } from "../test/fixtures";
 import { error, mockApi } from "../test/mockApi";
 import { InvoicePage } from "./InvoicePage";
 import { AiLayerPage } from "./AiLayerPage";
 import { ArchitecturePage } from "./ArchitecturePage";
 import { AnalyticsPage } from "./AnalyticsPage";
+import { AssurancePage } from "./AssurancePage";
 import { GraphPage } from "./GraphPage";
 import { KafkaPage } from "./KafkaPage";
 import { KnowledgePage } from "./KnowledgePage";
@@ -216,6 +217,7 @@ describe("an invoice", () => {
     expect(screen.getByText("Obtain approval from a Director (limit 2500000) before payment.")).toBeInTheDocument();
     expect(screen.getByText("invoice.amount")).toBeInTheDocument();
     expect(screen.getByText("1 flags")).toBeInTheDocument();
+    expect(screen.getByText("sealed · intact")).toBeInTheDocument();                 // the result matches its seal
     // Without a model only C1 can be run again.
     expect(within(screen.getByLabelText("Configuration")).getAllByRole("option").map((o) => o.textContent)).toEqual(["C1"]);
     await userEvent.click(screen.getByRole("tab", { name: "Purchase order" }));
@@ -398,6 +400,62 @@ describe("the audit findings graph", () => {
     await userEvent.type(screen.getByLabelText("Open a node of the ledger graph"), "Frado Deep");
     await userEvent.click(screen.getByRole("button", { name: "Open" }));
     await waitFor(() => expect(calls.some((c) => c.url.includes("/api/case-graph?focus=Frado%20Deep"))).toBe(true));
+  });
+});
+
+describe("the assurance page", () => {
+  it("lists the judgement-rule leads, verifies the sealed record and draws a statistical sample", async () => {
+    const { calls } = mockApi([
+      ["/api/leads", () => judgementLeads],
+      ["/api/trail/verify", () => trailCheck],
+      ["/api/sampling", () => monetaryUnitSample],
+      ["/api/program", () => auditProgram],
+      ["/api/reliability", () => reliabilityReport],
+      ["/api/workpapers", () => new Response(new Blob(["PK"]), {
+        status: 200,
+        headers: { "Content-Disposition": 'attachment; filename="auditiq-workpapers-small_seed_7.xlsx"', "X-Report-Digest": "f".repeat(64) },
+      })],
+    ]);
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:papers"), revokeObjectURL: vi.fn() }));
+    const saved = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => undefined);   // jsdom cannot navigate
+    renderAt("/assurance", "/assurance", <AssurancePage />);
+    // The program loads with the page: a scheme no test covers is named.
+    expect(await screen.findByText("Near duplicate under a re-keyed number")).toBeInTheDocument();
+    expect(screen.getByText("no test")).toBeInTheDocument();
+    expect(screen.getByText(/No quotation or tender data: not tested\./)).toBeInTheDocument();
+    // The ledger is checked on request.
+    await userEvent.click(screen.getByRole("button", { name: "Check the ledger" }));
+    expect(await screen.findByText(/the ledger's records are complete and consistent/)).toBeInTheDocument();
+    expect(screen.getByText("rule 2.1.3")).toBeInTheDocument();
+    // The working papers come with their digest.
+    await userEvent.click(screen.getByRole("button", { name: "Download the working papers (.xlsx)" }));
+    expect(await screen.findByText("f".repeat(64))).toBeInTheDocument();
+    expect(screen.getByText("auditiq-workpapers-small_seed_7.xlsx")).toBeInTheDocument();
+    expect(saved).toHaveBeenCalledTimes(1);
+    // The leads load with the page, each with the answer key's verdict.
+    expect(await screen.findByText("INV-UGW-0590-R")).toBeInTheDocument();
+    expect(within(kpi("Near duplicates (2.2.2)")).getByText("1")).toBeInTheDocument();
+    expect(screen.getByText("Antivirus endpoint subscriptions (1 year)")).toBeInTheDocument();
+    expect(screen.getByText("worded differently")).toBeInTheDocument();
+    expect(screen.getByText(/Answer key, rule 4.1.2: 3 of 3 labelled invoices listed \(recall 100.0%\)/)).toBeInTheDocument();
+    // The record is verified only when asked, and an altered result is named.
+    expect(calls.some((c) => c.url.includes("/api/trail/verify"))).toBe(false);
+    await userEvent.click(screen.getByRole("button", { name: "Verify the record" }));
+    expect(within(await screen.findByText("Record", { selector: ".kpi-label" }).then((e) => e.closest(".kpi") as HTMLElement)).getByText("Altered")).toBeInTheDocument();
+    expect(screen.getByText("Altered results: 7")).toBeInTheDocument();
+    expect(screen.getByText(trailCheck.digest as string)).toBeInTheDocument();
+    // A sample with the plan's parameters, and the examination against the answer key.
+    await userEvent.clear(screen.getByLabelText("Tolerable misstatement"));
+    await userEvent.type(screen.getByLabelText("Tolerable misstatement"), "3");
+    await userEvent.click(screen.getByRole("button", { name: "Draw the sample" }));
+    expect(await screen.findByText(/the approval cannot be relied on without further work/)).toBeInTheDocument();
+    expect(within(kpi("Sample size")).getByText("150")).toBeInTheDocument();
+    expect(screen.getByText("anomalous")).toBeInTheDocument();
+    const asked = calls.find((c) => c.url.includes("/api/sampling"))?.url ?? "";
+    expect(asked).toContain("tolerable_pct=3");
+    expect(asked).toContain("confidence=0.95");
+    expect(asked).not.toContain("seed=");
+    expect(screen.getByLabelText("Seed")).toHaveValue(7);                // the seed drawn is kept to draw the sample again
   });
 });
 

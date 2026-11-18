@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from . import seal
 from .config import load_env
 from .extraction import GRN_FIELDS, HISTORY_FIELDS, INVOICE_FIELDS, LOG_FIELDS, PO_FIELDS, VENDOR_FIELDS
 from .history import History, VendorIndex
@@ -194,7 +195,8 @@ CREATE TABLE IF NOT EXISTS audit_runs (
   prompt_hash    TEXT,
   note           TEXT,
   started_at     {timestamp},
-  finished_at    {timestamp}
+  finished_at    {timestamp},
+  seal           TEXT
 );
 CREATE TABLE IF NOT EXISTS audit_results (
   result_id         {pk},
@@ -214,6 +216,8 @@ CREATE TABLE IF NOT EXISTS audit_results (
   failed_stages     INTEGER,
   audit_pack        TEXT NOT NULL,
   created_at        {timestamp},
+  seal              TEXT,
+  evidence          TEXT,
   UNIQUE (run_id, invoice_id)
 );
 CREATE INDEX IF NOT EXISTS idx_results_invoice ON audit_results(invoice_id);
@@ -249,7 +253,8 @@ CREATE TABLE IF NOT EXISTS audit_trail (
   detail            TEXT,
   prompt_tokens     INTEGER,
   completion_tokens INTEGER,
-  latency_ms        {real}
+  latency_ms        {real},
+  entry_hash        TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_trail_result ON audit_trail(result_id);
 CREATE TABLE IF NOT EXISTS review_decisions (
@@ -340,6 +345,7 @@ WHERE l.workflow_status = 'PENDING_REVIEW';
 # reader (the web application analysing a large ledger) can hold its lock for half a minute: an audit run that
 # gave up after the default 5 s would stop half done.
 LOCK_WAIT = 60.0
+FEW = 500           # up to this many invoices are looked up by key (within every backend's parameter limit)
 # AUDITIQ_SQLITE_JOURNAL chooses the journal of a SQLite store. Unset, SQLite's own default (a rollback journal:
 # a reader and a writer wait for each other) stays. "wal" lets the web application read while workers write,
 # which a live run needs; a write-ahead log wants a local disk, so not a folder a sync client rewrites.
@@ -361,21 +367,38 @@ AUTO_APPROVED, PENDING_REVIEW, NOT_SAMPLED = "AUTO_APPROVED", "PENDING_REVIEW", 
 REVIEWED = {"approve": "REVIEW_APPROVED", "reject": "REVIEW_REJECTED", "override": "REVIEW_OVERRIDDEN"}
 
 
+_NOW: list = [None, ""]          # the second last formatted, and its text
+
+
 def now() -> str:
-    return time.strftime("%Y-%m-%d %H:%M:%S")
+    """The local time to the second, as stored. Formatted once per second: a run stores thousands of results a second."""
+    second = int(time.time())
+    if _NOW[0] != second:
+        _NOW[0], _NOW[1] = second, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(second))
+    return _NOW[1]
 
 
 class Row(tuple):
     """A result row readable by position and by column name, on both backends."""
 
-    def __new__(cls, values, names):
+    def __new__(cls, values, names, positions=None):
         row = super().__new__(cls, values)
         row._names = names
+        # Name -> position, made once per statement and shared by its rows (connect), so that reading a
+        # column by name does not search the names again for every value of every row.
+        row._positions = positions if positions is not None else Row.positions(names)
         return row
+
+    @staticmethod
+    def positions(names) -> dict[str, int]:
+        return {name: k for k, name in reversed(list(enumerate(names)))}      # of two columns of a name, the first
 
     def __getitem__(self, key):
         if isinstance(key, str):
-            return tuple.__getitem__(self, self._names.index(key))
+            try:
+                return tuple.__getitem__(self, self._positions[key])
+            except KeyError:
+                raise ValueError(f"no column {key!r}") from None
         return tuple.__getitem__(self, key)
 
     def keys(self):
@@ -490,12 +513,19 @@ def recorded_stamp(db: Database) -> str | None:
 
 def create_schema(db: Database) -> None:
     db.execute("DROP INDEX IF EXISTS idx_results_vendor")      # briefly in the schema; it slowed the queue
-    if db.backend == "sqlite":            # CREATE VIEW IF NOT EXISTS would keep a view of an older schema
-        db.execute("DROP VIEW IF EXISTS v_review_queue")
-        db.execute("DROP VIEW IF EXISTS v_latest_results")
+    # The views are made anew: CREATE VIEW IF NOT EXISTS would keep a view of an older schema on SQLite, and on
+    # PostgreSQL CREATE OR REPLACE VIEW refuses a view whose columns moved (a column added to audit_results comes
+    # before the run's columns in v_latest_results).
+    db.execute("DROP VIEW IF EXISTS v_review_queue")
+    db.execute("DROP VIEW IF EXISTS v_latest_results")
+    migrated = False
     for statement in SCHEMA.format(**TYPES[db.backend]).split(";\n"):
-        if statement.strip():
-            db.execute(statement)
+        if not statement.strip():
+            continue
+        if statement.lstrip().startswith(TYPES[db.backend]["view"]) and not migrated:   # tables made; views next
+            add_columns(db)
+            migrated = True
+        db.execute(statement)
     # A store made before latest_results existed: record the latest result of every invoice once.
     if not db.scalar("SELECT 1 FROM latest_results LIMIT 1"):
         db.execute("INSERT INTO latest_results (invoice_id, result_id) "
@@ -508,6 +538,18 @@ def create_schema(db: Database) -> None:
     db.execute("INSERT INTO meta (key, value) VALUES ('schema', ?) "
                "ON CONFLICT (key) DO UPDATE SET value = excluded.value", (schema_stamp(db),))
     db.commit()
+
+
+# Columns added to a table after stores with that table existed: (table, column, type). CREATE TABLE IF NOT EXISTS
+# leaves an existing table as it is, so a store made before gets them here, at the end, where a new store has them.
+ADDED_COLUMNS = [("audit_runs", "seal", "TEXT"), ("audit_results", "seal", "TEXT"), ("audit_results", "evidence", "TEXT"),
+                 ("audit_trail", "entry_hash", "TEXT")]
+
+
+def add_columns(db: Database) -> None:
+    for table, column, kind in ADDED_COLUMNS:
+        if column not in db.columns(table):
+            db.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
 
 
 def ensure_schema(db: Database) -> None:
@@ -550,8 +592,11 @@ def connect(target: Path | str | None = None, read_only: bool = False) -> Databa
         raw.adapters.register_loader("numeric", FloatLoader)
         for type_name in ("date", "timestamp"):
             raw.adapters.register_loader(type_name, TextLoader)
-        raw.row_factory = lambda cursor: (lambda values, names=tuple(c.name for c in cursor.description or ()):
-                                          Row(values, names))
+        def rows_of(cursor):
+            names = tuple(c.name for c in cursor.description or ())
+            positions = Row.positions(names)
+            return lambda values: Row(values, names, positions)
+        raw.row_factory = rows_of
         db = Database(raw, "postgres", target)
     else:
         path = Path(target)
@@ -693,13 +738,14 @@ def extract_one(db: Database, invoice_id: str) -> dict | None:
     }
 
 
-def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
+def extract_many(db: Database, invoice_ids: list[str], history: bool = True) -> list[dict]:
     """Evidence extraction for a batch: the transactions `extract_one` returns, read with five queries.
 
     `extract_one` asks the database six questions per invoice, which is right
     for one invoice and slow for a ledger. Here the five ledger tables are read
     once and joined in memory. The history records of a vendor are shared by
-    its transactions; the stages only read them.
+    its transactions; the stages only read them. Without ``history`` the vendor
+    histories are left empty: the invoice's own records, for checking evidence.
     """
     invoices = {r["invoice_id"]: r for r in db.execute("SELECT * FROM invoices").fetchall()}
     unknown = [i for i in invoice_ids if i not in invoices]
@@ -719,15 +765,16 @@ def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
                 "approver_name": last["approver_name"] if last else None}
 
     by_vendor: dict[str, list[dict]] = {}
-    for r in sorted(invoices.values(), key=lambda r: (r["date"], r["invoice_id"])):
-        by_vendor.setdefault(r["vendor_id"], []).append({**_row(r, HISTORY_FIELDS), **approver(r["invoice_id"])})
+    if history:
+        for r in sorted(invoices.values(), key=lambda r: (r["date"], r["invoice_id"])):
+            by_vendor.setdefault(r["vendor_id"], []).append({**_row(r, HISTORY_FIELDS), **approver(r["invoice_id"])})
 
     indexes: dict[str, VendorIndex] = {}           # one per vendor asked about, shared by its transactions
     transactions = []
     for invoice_id in invoice_ids:
         r = invoices[invoice_id]
         vendor_id = r["vendor_id"]
-        if vendor_id not in indexes:
+        if history and vendor_id not in indexes:
             indexes[vendor_id] = VendorIndex(by_vendor[vendor_id])
         transactions.append({
             "invoice": _row(r, INVOICE_FIELDS),
@@ -736,7 +783,7 @@ def extract_many(db: Database, invoice_ids: list[str]) -> list[dict]:
             "vendor": vendor.get(vendor_id),
             "approvals": [_row(e, LOG_FIELDS) for e in logs.get(invoice_id, [])],
             "vendor_history": History([h for h in by_vendor[vendor_id] if h["invoice_id"] != invoice_id],
-                                      indexes[vendor_id]),
+                                      indexes[vendor_id]) if history else [],
         })
     return transactions
 
@@ -917,9 +964,13 @@ def versions_in_force(db: Database, invoice_ids: list[str] | None = None) -> dic
     timeline = policy_timeline(db)
     if not timeline:
         return {}
+    sql = "SELECT invoice_id, CAST(date AS TEXT) FROM invoices"
+    if invoice_ids is not None and len(invoice_ids) <= FEW:     # a few invoices: by their key, not the whole ledger
+        wanted = list(dict.fromkeys(invoice_ids))
+        found = db.execute(f"{sql} WHERE invoice_id IN ({', '.join('?' for _ in wanted)})", wanted) if wanted else []
+        return {invoice_id: version_in_force(timeline, day) for invoice_id, day in found}
     wanted = None if invoice_ids is None else set(invoice_ids)
-    return {invoice_id: version_in_force(timeline, day)
-            for invoice_id, day in db.execute("SELECT invoice_id, CAST(date AS TEXT) FROM invoices")
+    return {invoice_id: version_in_force(timeline, day) for invoice_id, day in db.execute(sql)
             if wanted is None or invoice_id in wanted}
 
 
@@ -956,33 +1007,56 @@ def start_run(db: Database, configuration: str, policy_version: str, model: str 
 
 
 def finish_run(db: Database, run_id: int) -> None:
+    """Close a run and seal it over its results' seals (auditiq/seal.py): a result taken out of the run or added to
+    it later changes the seal."""
     db.execute("UPDATE audit_runs SET finished_at = ? WHERE run_id = ?", (now(), run_id))
+    run = db.execute("SELECT * FROM audit_runs WHERE run_id = ?", (run_id,)).fetchone()
+    members = [(int(r), s) for r, s in db.execute(
+        "SELECT result_id, seal FROM audit_results WHERE run_id = ? ORDER BY result_id", (run_id,))]
+    db.execute("UPDATE audit_runs SET seal = ? WHERE run_id = ?", (seal.run_seal(dict(zip(run.keys(), run)), members),
+                                                                   run_id))
     db.commit()
+
+
+FLAG_COLUMNS = ("clause", "severity", "source", "agent", "status", "g", "p", "a", "confidence", "message", "evidence",
+                "removal_reason")
+TRAIL_COLUMNS = ("seq", "stage", "actor", "detail", "prompt_tokens", "completion_tokens", "latency_ms")
 
 
 def save_result(db: Database, run_id: int, state: dict, result: dict, workflow_status: str,
                 commit: bool = True) -> int:
-    """Store one audited transaction: result row, flags (kept and removed) and audit trail."""
+    """Store one audited transaction: result row, flags (kept and removed) and audit trail, sealed (auditiq/seal.py):
+    the result over its fields, its pack and its flags; each trail entry over the hash before it."""
     pack, cost = state["audit_pack"], result["cost"]
+    pack_text = json.dumps(pack, ensure_ascii=False)
+    record = {"run_id": run_id, "invoice_id": result["invoice_id"], "vendor_id": pack["vendor_id"],
+              "route": result["route"], "risk_level": pack["risk_level"], "r0": result["r0"], "rc": result["rc"],
+              "flag_count": len(result["flags"]), "workflow_status": workflow_status, "llm_calls": cost["llm_calls"],
+              "prompt_tokens": cost["prompt_tokens"], "completion_tokens": cost["completion_tokens"],
+              "latency_ms": cost["latency_ms"], "failed_stages": result["issues"]["failed_stages"], "created_at": now(),
+              "evidence": seal.evidence(state["txn"])}
+    flags = [(f["clause"], f["severity"], f["source"], f.get("agent") or f.get("control"), status, f.get("g"),
+              f.get("p"), f.get("a"), f.get("confidence"), f.get("message"),
+              json.dumps(f.get("evidence", []), ensure_ascii=False), f.get("removal_reason"))
+             for f, status in [(f, "kept") for f in result["flags"]] + [(f, "removed") for f in result["removed_flags"]]]
+    sealed = seal.result_seal(seal.result_record(record), json.loads(pack_text),
+                              [seal.flag_record(dict(zip(FLAG_COLUMNS, f))) for f in flags])
     result_id = db.insert(
         "INSERT INTO audit_results (run_id, invoice_id, vendor_id, route, risk_level, r0, rc, flag_count, "
         "workflow_status, llm_calls, prompt_tokens, completion_tokens, latency_ms, failed_stages, audit_pack, "
-        "created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (run_id, result["invoice_id"], pack["vendor_id"], result["route"], pack["risk_level"], result["r0"],
-         result["rc"], len(result["flags"]), workflow_status, cost["llm_calls"], cost["prompt_tokens"],
-         cost["completion_tokens"], cost["latency_ms"], result["issues"]["failed_stages"],
-         json.dumps(pack, ensure_ascii=False), now()), "result_id")
+        "created_at, seal, evidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (run_id, record["invoice_id"], record["vendor_id"], record["route"], record["risk_level"], record["r0"],
+         record["rc"], record["flag_count"], workflow_status, record["llm_calls"], record["prompt_tokens"],
+         record["completion_tokens"], record["latency_ms"], record["failed_stages"], pack_text, record["created_at"],
+         sealed, record["evidence"]), "result_id")
     # Results are only added, and a later one has a larger id: it becomes the invoice's latest.
     db.execute("INSERT INTO latest_results (invoice_id, result_id) VALUES (?, ?) "
                "ON CONFLICT (invoice_id) DO UPDATE SET result_id = excluded.result_id",
                (result["invoice_id"], result_id))
-    flags = [(f, "kept") for f in result["flags"]] + [(f, "removed") for f in result["removed_flags"]]
     db.executemany(
         "INSERT INTO audit_flags (result_id, clause, severity, source, agent, status, g, p, a, confidence, "
         "message, evidence, removal_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [(result_id, f["clause"], f["severity"], f["source"], f.get("agent") or f.get("control"), status,
-          f.get("g"), f.get("p"), f.get("a"), f.get("confidence"), f.get("message"),
-          json.dumps(f.get("evidence", []), ensure_ascii=False), f.get("removal_reason")) for f, status in flags])
+        [(result_id, *f) for f in flags])
 
     # The audit trail: one entry per stage, in the order of the pipeline.
     control_flags = [f for f in result["flags"] if f["source"] == "D"]
@@ -995,10 +1069,12 @@ def save_result(db: Database, run_id: int, state: dict, result: dict, workflow_s
                       call["prompt_tokens"], call["completion_tokens"], call["latency_ms"]))
     trail.append(("scoring", "code", f"count-based {result['r0']:.1f}, weighted {result['rc']:.1f}, "
                   f"route {result['route']}", None, None, None))
+    entries = [(seq, *entry) for seq, entry in enumerate(trail, start=1)]
+    hashes = seal.chain(sealed, [seal.entry_record(dict(zip(TRAIL_COLUMNS, e))) for e in entries])
     db.executemany(
         "INSERT INTO audit_trail (result_id, seq, stage, actor, detail, prompt_tokens, completion_tokens, "
-        "latency_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        [(result_id, seq, *entry) for seq, entry in enumerate(trail, start=1)])
+        "latency_ms, entry_hash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [(result_id, *entry, h) for entry, h in zip(entries, hashes)])
     if commit:
         db.commit()
     return result_id
@@ -1033,11 +1109,17 @@ def record_decision(db: Database, result_id: int, decision: str, reviewer: str, 
                "VALUES (?, ?, ?, ?, ?)", (result_id, decision, reviewer.strip(), justification.strip(), now()))
     db.execute("UPDATE audit_results SET workflow_status = ?, audit_pack = ? WHERE result_id = ?",
                (REVIEWED[decision], json.dumps(pack, ensure_ascii=False), result_id))
-    # The decision closes the audit trail of the result.
-    seq = db.scalar("SELECT COALESCE(MAX(seq), 0) + 1 FROM audit_trail WHERE result_id = ?", (result_id,))
+    # The decision closes the audit trail of the result, chained to the entry before it (unless the result was
+    # stored before results were sealed).
+    last = db.execute("SELECT seq, entry_hash FROM audit_trail WHERE result_id = ? ORDER BY seq DESC, entry_id DESC "
+                      "LIMIT 1", (result_id,)).fetchone()
+    seq = (int(last["seq"]) if last else 0) + 1
     detail = decision + (f": {justification.strip()}" if justification.strip() else "")
-    db.execute("INSERT INTO audit_trail (result_id, seq, stage, actor, detail) VALUES (?, ?, ?, ?, ?)",
-               (result_id, seq, "review", reviewer.strip(), detail))
+    entry = (seq, "review", reviewer.strip(), detail, None, None, None)
+    previous = last["entry_hash"] if last else None
+    chained = seal.entry_hash(previous, seal.entry_record(dict(zip(TRAIL_COLUMNS, entry)))) if previous else None
+    db.execute("INSERT INTO audit_trail (result_id, seq, stage, actor, detail, entry_hash) VALUES (?, ?, ?, ?, ?, ?)",
+               (result_id, seq, "review", reviewer.strip(), detail, chained))
     db.commit()
 
 

@@ -11,6 +11,7 @@ const PolicyPage = lazy(() => import("./pages/PolicyPage").then((m) => ({ defaul
 const AskPage = lazy(() => import("./pages/AskPage").then((m) => ({ default: m.AskPage })));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage").then((m) => ({ default: m.AnalyticsPage })));
 const RingsPage = lazy(() => import("./pages/RingsPage").then((m) => ({ default: m.RingsPage })));
+const AssurancePage = lazy(() => import("./pages/AssurancePage").then((m) => ({ default: m.AssurancePage })));
 const KafkaPage = lazy(() => import("./pages/KafkaPage").then((m) => ({ default: m.KafkaPage })));
 const AiLayerPage = lazy(() => import("./pages/AiLayerPage").then((m) => ({ default: m.AiLayerPage })));
 const KnowledgePage = lazy(() => import("./pages/KnowledgePage").then((m) => ({ default: m.KnowledgePage })));
@@ -43,6 +44,7 @@ export function App() {
           <Route path="policy" element={<PolicyPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="rings" element={<RingsPage />} />
+          <Route path="assurance" element={<AssurancePage />} />
           <Route path="kafka" element={<KafkaPage />} />
           <Route path="ai" element={<AiLayerPage />} />
           <Route path="knowledge" element={<KnowledgePage />} />

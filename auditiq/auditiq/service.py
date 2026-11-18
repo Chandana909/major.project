@@ -9,6 +9,7 @@ the database, so it survives a restart.
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Callable
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
@@ -20,6 +21,10 @@ from .policy_ingest import clause_citations
 
 log = logging.getLogger(__name__)
 BULK = 200      # from this many invoices on, the ledger is read in bulk
+# A run commits its results about once a second, not after a fixed number of invoices. A commit waits for the disk
+# (75 ms each on a laptop on battery, 18 November 2026): committing every 200 invoices made the commits most of a
+# controls-only run. A second keeps every transaction short, so a reader of the store never waits long for one.
+COMMIT_SECONDS = 1.0
 
 
 def workflow_status(route: str, invoice_id: str, sample_rate: float) -> str:
@@ -57,14 +62,15 @@ def audit_invoices(conn: db.Database, config: PipelineConfig, policy: Policy,
              len(invoice_ids), model or "none")
     # Where each clause stands in the ingested policy documents (empty if none was ingested).
     citations = clause_citations(conn, policy.version)
-    done = 0
+    done, committed = 0, time.monotonic()
 
     def store(state: dict) -> None:
-        nonlocal done
+        nonlocal done, committed
         store_result(conn, run_id, state, config, policy, model, citations, sample_rate)
         done += 1
-        if done % 200 == 0:
+        if time.monotonic() - committed >= COMMIT_SECONDS:
             conn.commit()
+            committed = time.monotonic()
         if progress:
             progress(done, len(invoice_ids))
 

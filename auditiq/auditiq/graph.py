@@ -218,7 +218,39 @@ def build_graph(config: PipelineConfig, policy: Policy, client: ChatClient | Non
     else:
         graph.add_edge("risk_score", "write_audit_pack")
     graph.add_edge("write_audit_pack", END)
-    return graph.compile(checkpointer=checkpointer)
+    compiled = graph.compile(checkpointer=checkpointer)
+    if config.agents == "none" and not config.review and checkpointer is None:
+        return DirectPipeline(compiled, [controls_node, confidence_node, score_node, pack_node])
+    return compiled
+
+
+class DirectPipeline:
+    """A graph without a model stage, run as the plain sequence of its node functions.
+
+    Such a graph is one line: controls, confidence, risk score, audit pack. Nothing in it runs in parallel,
+    pauses or is checkpointed, yet the graph runtime prepares, schedules and records every step, which on a
+    ledger costs several times what the controls themselves do. ``invoke`` calls the same node functions in
+    the graph's order and returns the same state; everything else (the drawing of the graph, streaming, an
+    invocation with a run configuration) goes to the compiled graph. tests/test_pipeline.py holds the two to
+    the same state on every invoice of a ledger.
+    """
+
+    def __init__(self, compiled, steps: list):
+        self.compiled, self._steps = compiled, steps
+
+    def invoke(self, state: dict, config=None, **options) -> dict:
+        if config is not None or options or set(state) != {"txn"}:
+            return self.compiled.invoke(state, config, **options)
+        # The channels that add up start empty, as the graph starts them.
+        out = {"txn": state["txn"], "control_flags": [], "proposed": [], "flags": [], "score": {},
+               "audit_pack": {}, "calls": [], "notes": []}
+        for step in self._steps:
+            for key, value in step(out).items():
+                out[key] = out[key] + value if key in ("proposed", "calls", "notes") else value
+        return out
+
+    def __getattr__(self, name: str):
+        return getattr(self.compiled, name)
 
 
 def to_result(state: dict, config: PipelineConfig, policy: Policy, model: str | None = None) -> dict:
