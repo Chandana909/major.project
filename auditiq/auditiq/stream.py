@@ -244,6 +244,7 @@ class Worker:
         self.known_vendors: set[str] = set()
         self.waiting_since: dict[tuple[int, int], float] = {}
         self.counts: dict[str, int] = {}
+        self.handover, self.assigned = time.monotonic(), False      # the last handover of partitions (run, below)
         if conn.backend == "sqlite":        # other workers may be writing: wait for the lock instead of failing
             conn.raw.execute("PRAGMA busy_timeout = 60000")
 
@@ -263,17 +264,28 @@ class Worker:
                 if p.partition in stored:
                     p.offset = int(stored[p.partition])     # the database, not Kafka, says where to go on
             consumer.assign(partitions)
+            self.handover, self.assigned = time.monotonic(), True
             log.info("%s: assigned partitions %s", self.topic, sorted(p.partition for p in partitions))
 
-        consumer.subscribe([self.topic], on_assign=on_assign)
+        def on_revoke(consumer, partitions):
+            self.handover = time.monotonic()   # the group is handing partitions over: no message is lost time
+
+        consumer.subscribe([self.topic], on_assign=on_assign, on_revoke=on_revoke)
         return consumer
 
     def run(self, idle_exit: float | None = None, max_messages: int | None = None) -> dict[str, int]:
         """Consume until stopped (Ctrl+C); with ``idle_exit``, also stop after that many seconds without a message.
-        Returns the number of messages per outcome."""
+        Returns the number of messages per outcome.
+
+        The idle time counts from the later of the last message and the last handover of partitions, and only once
+        the group has assigned this worker its share: joining the group and every rebalance (another worker joining
+        or leaving) take seconds without a message, and a worker that stopped then would leave its partitions to a
+        worker that might stop too. A worker the group never assigns stops after ``max(60, 10 * idle_exit)``."""
         from confluent_kafka import KafkaError, KafkaException, TopicPartition
+        self.handover, self.assigned = time.monotonic(), False
         consumer = self._consumer()
-        idle_since, seen = time.monotonic(), 0
+        started = idle_since = time.monotonic()
+        seen = 0
         try:
             while max_messages is None or seen < max_messages:
                 messages = []
@@ -283,7 +295,10 @@ class Worker:
                     elif m.error().code() != KafkaError._PARTITION_EOF:
                         raise KafkaException(m.error())
                 if not messages:
-                    if idle_exit is not None and time.monotonic() - idle_since >= idle_exit:
+                    now = time.monotonic()
+                    if idle_exit is not None and (
+                            (self.assigned and now - max(idle_since, self.handover) >= idle_exit)
+                            or now - started >= max(60.0, 10 * idle_exit)):
                         break
                     continue
                 idle_since = time.monotonic()

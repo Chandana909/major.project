@@ -162,3 +162,19 @@ def lib(library):
 def sqlite_library(make_store, small_dataset, pdfs) -> str:
     """SQLite only: for tests of things that do not depend on the backend."""
     return fill(make_store("sqlite"), small_dataset, pdfs)
+
+
+def pytest_runtest_logreport(report):
+    """On GitHub Actions, a failed test becomes an error annotation on its file and line: the run's summary and the
+    public API (check-runs/<id>/annotations) then show what failed and why, which the job's log shows only to
+    signed-in users. Elsewhere nothing is printed."""
+    if os.environ.get("GITHUB_ACTIONS") != "true" or not report.failed:
+        return
+    path, line, _ = report.location
+    text = str(report.longrepr)
+    text = text[-3000:] if len(text) > 3000 else text            # the end holds the assertion and its values
+    escape = {"%": "%25", "\r": "%0D", "\n": "%0A"}
+    message = "".join(escape.get(c, c) for c in text)
+    title = "".join(escape.get(c, c) for c in f"{report.nodeid} ({report.when})").replace(",", "%2C").replace(":", "%3A")
+    print(f"\n::error file=auditiq/{path.replace(os.sep, '/')},line={(line or 0) + 1},title={title}::{message}",
+          flush=True)

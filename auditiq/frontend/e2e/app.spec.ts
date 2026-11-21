@@ -149,13 +149,31 @@ test("the measured results are shown", async ({ page }) => {
 test("the pipeline is drawn for every configuration", async ({ page }) => {
   await page.goto("/pipeline");
   await expect(page.getByRole("heading", { name: "The pipeline" })).toBeVisible();
-  await expect(page.getByRole("img", { name: /^Architecture of AuditIQ/ })).toBeVisible();
   const configurations = page.getByRole("tablist", { name: "Configuration", exact: true });   // not "Highlight a configuration"
   for (const config of ["C1", "C2", "C3", "C4", "C5"]) {
     await configurations.getByRole("tab", { name: config, exact: true }).click();
     await expect(configurations.getByRole("tab", { name: config, exact: true })).toHaveAttribute("aria-selected", "true");
     await expect(page.locator("canvas").first()).toBeVisible();
   }
+});
+
+test("the architecture is drawn as a 3D city and as a map", async ({ page }) => {
+  // The diagram moved from the pipeline page to its own tab on 15 November.
+  await page.goto("/architecture");
+  await expect(page.getByRole("heading", { name: "AuditIQ, end to end" })).toBeVisible();
+  await expect(page.locator("canvas").first()).toBeVisible(); // the 3D city
+  await page.getByRole("tablist", { name: "View", exact: true }).getByRole("tab", { name: "2D map" }).click();
+  await expect(page.getByRole("img", { name: /^Architecture of AuditIQ/ })).toBeVisible();
+});
+
+test("the assurance page verifies the sealed record and checks the ledger", async ({ page }) => {
+  await page.goto("/assurance");
+  await expect(page.getByRole("heading", { name: "Assurance", exact: true })).toBeVisible();
+  await expect(page.locator(".kpi-label", { hasText: "Near duplicates (2.2.2)" })).toBeVisible(); // the leads load
+  await page.getByRole("button", { name: "Verify the record" }).click();
+  await expect(kpi(page, "Record")).toHaveText("Intact", { timeout: HEAVY }); // the review decision extended the chain
+  await page.getByRole("button", { name: "Check the ledger" }).click();
+  await expect(page.getByRole("status").filter({ hasText: /checks without exceptions/ })).toBeVisible({ timeout: HEAVY });
 });
 
 test("Ask AI works without a model and says what needs one", async ({ page }) => {
