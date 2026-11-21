@@ -163,7 +163,8 @@ test("the architecture is drawn as a 3D city and as a map", async ({ page }) => 
   await expect(page.getByRole("heading", { name: "AuditIQ, end to end" })).toBeVisible();
   await expect(page.locator("canvas").first()).toBeVisible(); // the 3D city
   await page.getByRole("tablist", { name: "View", exact: true }).getByRole("tab", { name: "2D map" }).click();
-  await expect(page.getByRole("img", { name: /^Architecture of AuditIQ/ })).toBeVisible();
+  // The React Flow map carries the label, not the image role the SVG diagram had before 15 November.
+  await expect(page.locator('[aria-label="Architecture of AuditIQ"]')).toBeVisible();
 });
 
 test("the assurance page verifies the sealed record and checks the ledger", async ({ page }) => {
