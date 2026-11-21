@@ -25,8 +25,26 @@ writes `frontend/dist`, which `python -m auditiq serve` serves.
 
 ## 2. First run, without a model or a server
 
-Nothing needs configuring for this: the database is a SQLite file and
-configuration C1 uses the controls only.
+**The quickest way: one command.** From the repository's root, in bash (Linux, macOS, Windows Git Bash):
+
+```bash
+./run.sh
+```
+
+It needs Python 3.11 or later and, the first time, an internet connection. It makes `auditiq/.venv` and installs
+the packages (again only when `pyproject.toml` changes), then `scripts/bootstrap.py` downloads into `auditiq/.tools/`
+whatever is missing, each checked against its published checksum: Java 17 (Adoptium), Node.js 20 (nodejs.org, to
+build the web application once) and Kafka 4.3.2 (Apache). It starts the local broker, creates the store (SQLite),
+starts the stream workers and the web application, streams the final ledger through Kafka, warms the slow pages and
+opens http://127.0.0.1:8000. Options: `--huge` (the 500,000-invoice ledger, unpacked once into `data_huge/`; about an
+hour to stream), `--limit N`, `--keep`, `--port`, `--no-browser`, and `stop` / `reset` for the broker. If it stops:
+on Debian or Ubuntu, `sudo apt install python3-venv` when the environment cannot be made; port 8000 in use means
+another server runs (`--port 8001`); the broker's log is `~/.local/share/auditiq/kafka.log`
+(`%LOCALAPPDATA%\auditiq\kafka.log` on Windows), and the web application's and workers' logs are in `live/logs/`
+beside it.
+
+The rest of this section does the same by hand, without Kafka. Nothing needs configuring for this: the database is a
+SQLite file and configuration C1 uses the controls only.
 
 ```bash
 python -m auditiq setup --dataset data/large_seed_505

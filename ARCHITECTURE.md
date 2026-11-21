@@ -103,7 +103,7 @@ of every step. A person reviews the escalated invoices and records approve, reje
 | Storage | SQLite (default, no server) or PostgreSQL 17, behind one interface |
 | Models | Any OpenAI-compatible chat endpoint (measured with Qwen2.5-7B through a local Ollama) and an embedding model (`nomic-embed-text`) |
 | Streaming | Apache Kafka: four topics (invoice, vendor, email, compliance), stateless workers, each message stored exactly once |
-| Interfaces | Command line, REST API (FastAPI, 46 endpoints), web application (15 pages), a lighter Streamlit dashboard, and one launcher (`start.bat`) that runs the whole thing |
+| Interfaces | Command line, REST API (FastAPI, 53 endpoints), web application (21 pages), a lighter Streamlit dashboard, and one launcher (`run.sh` in bash, `start.bat` on Windows) that runs the whole thing |
 | Data | Synthetic only: eight generated ledgers (the largest used day to day has 25,000 invoices) with the **ground truth of every invoice written at the moment each error is injected**, plus a 500,000-invoice ledger generated on request |
 | Origin | A college major project (phase 1) of the Department of Information Technology, CBIT Hyderabad, with a research paper. The project grew out of a hackathon prototype built in Flowise (a visual agent builder), which it replaced |
 
@@ -1375,7 +1375,7 @@ pp1/
     auditiq/            the application package (41 files); imports nothing from auditiq_bench
     auditiq_bench/      the dataset generator and validator; imports nothing from auditiq
     evaluation/         baselines, runners, metrics, statistics, reports, verification, graph evaluations
-    frontend/           React + TypeScript + React Three Fiber web application (src/pages: 15 pages)
+    frontend/           React + TypeScript + React Three Fiber web application (src/pages: 21 pages)
     app/dashboard.py    the Streamlit dashboard
     policy/             clause registry JSON, SOP templates, SOP text, sample PDFs, variants, held-out variants, demo/ (the five policies)
     data/               eight committed datasets (CSV, labels, manifests, datasheets)
@@ -3114,7 +3114,7 @@ refused with **409**:
 | `audit` | load-ledger |
 | `simulate` | load-ledger |
 
-### R20.5 The 46 endpoints
+### R20.5 The 53 endpoints
 
 | Method | Path | Role | What it does |
 |---|---|---|---|
