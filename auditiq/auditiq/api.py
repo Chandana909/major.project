@@ -50,22 +50,28 @@ from pydantic import BaseModel, Field
 from . import (
     __version__,
     analytics,
+    audit_agent,
     audit_program,
     copilot,
+    counterfactual,
     db,
     emails,
+    investigator,
     leads,
     ledger_import,
     policy_extract,
     policy_llm,
+    process_mining,
     reliability,
     retrieval,
     rings,
     sampling,
+    screen,
     seal,
     service,
     simulation,
     stream,
+    triage,
     workpapers,
 )
 from .agents import AGENTS
@@ -149,6 +155,13 @@ class DataQuestionIn(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
 
 
+class AgentIn(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    mode: Literal["auto", "rules", "model"] = Field(
+        default="auto", description="rules: tools chosen by the question's words, no model; model: the model plans "
+                                    "(ReAct); auto: rules when they recognise the question, else the model")
+
+
 # --------------------------------------------------------------------- jobs
 @dataclasses.dataclass
 class Job:
@@ -186,7 +199,8 @@ class StoreCache:
                    "SELECT COALESCE(CAST(MIN(effective_date) AS TEXT), '') || ':' || "
                    "COALESCE(CAST(MAX(effective_date) AS TEXT), '') FROM company_policies",
                    "SELECT COALESCE(SUM(next_offset), 0) FROM stream_offsets",
-                   "SELECT value FROM meta WHERE key = 'labels_policy'")
+                   "SELECT value FROM meta WHERE key = 'labels_policy'",
+                   "SELECT COUNT(*) FROM emails")
 
     def __init__(self) -> None:
         self._entries: dict[str, tuple[tuple, Any]] = {}
@@ -432,6 +446,63 @@ def integrity_of(conn: db.Database, row) -> str:
         if txn is None or seal.evidence(txn) != row["evidence"]:
             return "stale"
     return "intact"
+
+
+SCREEN_LIMIT = 50_000           # invoices the model page scores at most (the first by id); the page says so
+IMPORTANCE_ROWS = 600           # invoices drawn at random for the SHAP importance and the dot plot
+EVALUATION = RESULTS / "risk_screen" / "screen.json"
+
+
+def _plain(value: Any) -> Any:
+    """A value made JSON-ready: numpy arrays and numbers as lists and floats."""
+    if isinstance(value, dict):
+        return {k: _plain(v) for k, v in value.items() if k != "row"}
+    if isinstance(value, (list, tuple)):
+        return [_plain(v) for v in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def model_view(conn: db.Database, found: "screen.Screen") -> dict:
+    """The figures of the model page (see the endpoint)."""
+    rows = audit_agent.screen_store(conn, found, limit=SCREEN_LIMIT)
+    total = int(conn.scalar("SELECT COUNT(*) FROM invoices") or 0)
+    X = np.vstack([r["row"] for r in rows]) if rows else np.zeros((0, len(screen.FEATURE_NAMES)))
+    rng = np.random.default_rng(7)
+    pick = np.sort(rng.choice(len(rows), size=min(IMPORTANCE_ROWS, len(rows)), replace=False)) if rows else []
+    importance = screen.importance(found, X[pick] if len(rows) else X, beeswarm=300)
+    bins = 20
+    distribution: dict[str, list[int]] = {}
+    for r in rows:
+        key = r["route"] or "unaudited"
+        distribution.setdefault(key, [0] * bins)[min(bins - 1, int(r["any"] * bins))] += 1
+    score = {}
+    for rc, n in conn.execute("SELECT ROUND(rc), COUNT(*) FROM v_latest_results GROUP BY ROUND(rc) ORDER BY ROUND(rc)"):
+        score[str(int(float(rc or 0)))] = int(n)
+    passed = sorted((r for r in rows if r["route"] in ("approve", None)), key=lambda r: -r["judgement"])
+    amounts = {}
+    top = passed[:60]
+    if top:
+        ids = [r["invoice_id"] for r in top]
+        amounts = {i: (v, float(a or 0), d) for i, v, a, d in conn.execute(
+            f"SELECT i.invoice_id, v.vendor_name, i.amount, CAST(i.date AS TEXT) FROM invoices i JOIN vendor_master v "
+            f"ON v.vendor_id = i.vendor_id WHERE i.invoice_id IN ({', '.join('?' for _ in ids)})", ids)}
+    evaluation = read_json(EVALUATION)
+    return {"trained": True, "training": found.training, "heads": screen.HEADS,
+            "features": [{"feature": n, "meaning": m} for n, m in screen.FEATURES],
+            "invoices": total, "scored": len(rows), "limited": total > len(rows),
+            "importance": importance, "distribution": {"bins": bins, "by_route": distribution}, "paper_score": score,
+            "above_half": {h: int(sum(1 for r in rows if (r["any"] if h == "any" else r["judgement"]) >= 0.5))
+                           for h in ("any", "judgement")},
+            "second_opinion": [{"invoice_id": r["invoice_id"], "route": r["route"], "suggested_rule": r["suggested"],
+                                "rule_title": screen.HEADS[r["suggested"]], "probability": round(r["judgement"], 6),
+                                "any": round(r["any"], 6), "vendor_name": amounts.get(r["invoice_id"], ("", 0, ""))[0],
+                                "amount": amounts.get(r["invoice_id"], ("", 0, ""))[1],
+                                "date": amounts.get(r["invoice_id"], ("", 0, ""))[2]} for r in top],
+            "evaluation": evaluation.get("summary") if isinstance(evaluation, dict) else None}
 
 
 def case_graph(app: FastAPI, conn: db.Database) -> CaseGraph:
@@ -975,7 +1046,7 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
             result.update(pack=json.loads(row["audit_pack"]), trail=trail, integrity=integrity_of(conn, row))
         history = txn.pop("vendor_history")
         out = {"records": txn, "history": {"total": len(history), "items": history[-40:]}, "result": result,
-               "emails": emails.for_invoice(conn, invoice_id)}
+               "emails": emails.for_invoice(conn, invoice_id), "email_triage": triage.for_invoice(conn, invoice_id)}
         if with_label:
             label = conn.execute("SELECT label, class_id, clause_ids, hard_negative_type, note FROM benchmark_labels "
                                  "WHERE invoice_id = ?", (invoice_id,)).fetchone()
@@ -1291,6 +1362,127 @@ def create_app(target: str | None = None, token: str | None = None, frontend: Pa
         found = case_graph(app, conn).query(question)
         return {"question": question, "recognised": found.recognised, "facts": [f.public() for f in found.facts],
                 "nodes": found.nodes}
+
+    # -- explainable AI, investigation, e-mail triage, the audit agent ---------
+    def risk_screen(app_: FastAPI):
+        """The trained risk screen, read once per application (None when no model file exists)."""
+        if not hasattr(app_.state, "screen"):
+            try:
+                app_.state.screen = screen.Screen.load()
+            except screen.ScreenUnavailable:
+                app_.state.screen = None
+        return app_.state.screen
+
+    @app.get("/api/model", tags=["explain"], dependencies=viewer)
+    def model_overview(request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """The risk screen (auditiq/screen.py): how it was trained, its five heads (any anomaly and one per judgement
+        rule), each feature's importance over the store's invoices (mean absolute SHAP value, exact TreeSHAP) with a
+        dot plot of a sample, the distribution of its probability by route next to the paper's score, the invoices
+        the audit passed that the screen rates highest for a judgement rule (a second opinion, not a finding), and
+        its measured accuracy on ledgers it was not trained on. Kept until the store changes."""
+        found = risk_screen(request.app)
+        if found is None:
+            return {"trained": False, "detail": "no trained screen: python -m auditiq model train"}
+        return request.app.state.cache.get("model", conn, lambda: model_view(conn, found))
+
+    @app.get("/api/invoices/{invoice_id}/explain", tags=["explain"], dependencies=viewer)
+    def explain_invoice(invoice_id: str, request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """Why an invoice scores as it does: each head of the risk screen with its probability and the SHAP value of
+        every feature (they add up to the model's output exactly), and for each finding of a control its margin
+        beyond the rule and the changes of the records or of the policy that would clear it, each verified by
+        running the controls again, with how many other findings a policy change would also clear."""
+        invoice_id = invoice_id.strip().upper()
+        if not INVOICE_ID.match(invoice_id):
+            raise HTTPException(400, "not an invoice id")
+        txn = db.extract_one(conn, invoice_id)
+        if txn is None:
+            raise HTTPException(404, f"{invoice_id} is not in the ledger")
+        version = db.versions_in_force(conn, [invoice_id]).get(invoice_id)
+        policy = db.read_policy(conn, version)
+        found = risk_screen(request.app)
+        out: dict[str, Any] = {"invoice_id": invoice_id, "policy_version": policy.version, "screen": None}
+        if found is not None:
+            values = screen.features(txn, screen.policy_parameters(policy))
+            heads = screen.explain_row(found, [values[n] for n in screen.FEATURE_NAMES], top=10)
+            best = max(screen.JUDGEMENT_HEADS, key=lambda h: heads[h]["probability"])
+            out["screen"] = {"heads": heads, "suggested_rule": best, "values": values}
+        cache = request.app.state.cache
+
+        def flagged(clause: str) -> list[dict]:
+            def compute() -> list[dict]:
+                ids = [r[0] for r in conn.execute(
+                    "SELECT DISTINCT m.invoice_id FROM audit_flags f JOIN latest_results m ON m.result_id = f.result_id "
+                    "WHERE f.status = 'kept' AND f.clause = ? ORDER BY m.invoice_id", (clause,))]
+                return db.extract_many(conn, ids) if ids else []
+            return cache.get(f"flagged:{clause}", conn, compute)
+
+        out["counterfactuals"] = counterfactual.explain(txn, policy, flagged)
+        return out
+
+    @app.get("/api/invoices/{invoice_id}/story", tags=["explain"], dependencies=viewer)
+    def invoice_story(invoice_id: str, conn: db.Database = Depends(connection)) -> dict:
+        """The life of an invoice in order: its purchase order, goods receipt, approvals, the vendor e-mails that name
+        it, every audit of it with its findings and trail, every review decision, and where it stands now."""
+        invoice_id = invoice_id.strip().upper()
+        if not INVOICE_ID.match(invoice_id):
+            raise HTTPException(400, "not an invoice id")
+        told = investigator.story(conn, invoice_id)
+        if told is None:
+            raise HTTPException(404, f"{invoice_id} is not in the ledger")
+        return told
+
+    @app.get("/api/investigation", tags=["explain"], dependencies=viewer)
+    def investigation(sla_days: float = Query(investigator.SLA_DAYS, gt=0, le=365),
+                      conn: db.Database = Depends(connection)) -> dict:
+        """The trail investigator (auditiq/investigator.py) audits the audit: the seals, the evidence, the stages of
+        every trail, coverage under the policy in force, failed model stages, the review backlog, reasons given,
+        the pace of decisions, segregation of duties, critical findings cleared, rejections undone by a later audit
+        and outcomes that changed between audits; each check with what it found and where, the timeline, the
+        reviewers, and the report as Markdown. Not cached: a change made directly in the store must show at once."""
+        return investigator.investigate(conn, sla_days=sla_days)
+
+    @app.get("/api/mail", tags=["explain"], dependencies=viewer)
+    def mail_triage(request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """Every stored vendor e-mail triaged by code (auditiq/triage.py): its category, the signals of payment
+        redirection (a look-alike or new domain, urgency, secrecy, an account change, an unpaid invoice) and text
+        addressed to a model, its risk and the action; the alerts, and the invoices whose payment to hold. Kept
+        until the store changes."""
+        return request.app.state.cache.get("mail", conn, lambda: triage.triage_store(conn))
+
+    @app.get("/api/process", tags=["analytics"], dependencies=viewer)
+    def process(request: Request, conn: db.Database = Depends(connection)) -> dict:
+        """Process mining of procure-to-pay (auditiq/process_mining.py): the event log of every invoice (PO raised,
+        goods received, invoice dated, escalations, approval, due date), the process map (how often one step directly
+        follows another and the median days between them), the variants, conformance to the reference path with how
+        many deviating invoices the audit already flagged, cycle times by stage and approval time by role. Kept until
+        the store changes."""
+        return request.app.state.cache.get("process", conn, lambda: process_mining.mine(conn))
+
+    @app.post("/api/agent/ask", tags=["copilot"], dependencies=viewer, status_code=202)
+    def agent_ask(body: AgentIn, request: Request) -> dict:
+        """The audit agent (auditiq/audit_agent.py), a job: the question is turned into calls to tools that read the
+        audit (results, records, the screen's SHAP values, counterfactuals, stories, leads, rings, e-mail triage, the
+        trail investigation), planned by rules or, in the model mode, by the model in a ReAct loop; the answer cites
+        each observation, and numbers no tool returned are listed."""
+        client = chat_client() if body.mode in ("auto", "model") else None
+        if body.mode == "model" and client is None:
+            raise HTTPException(400, "the model mode needs a model; none is configured or it does not answer")
+        target, app_ = request.app.state.target, request.app
+
+        def work(job: Job) -> dict:
+            conn = db.connect(target)
+            try:
+                shared = app_.state.cache.get("agent-shared", conn, dict)
+                out = audit_agent.ask(body.question, conn, client=client, mode=body.mode, screen=risk_screen(app_),
+                                      shared=shared)
+            finally:
+                conn.close()
+            for step in out["steps"]:
+                step["data"] = _plain(step["data"])
+            out["model"] = model_name() if out["mode"] == "model" else None
+            return out
+
+        return request.app.state.jobs.start("agent", work).public()
 
     # -- copilot -------------------------------------------------------------
     @app.post("/api/copilot/ask", tags=["copilot"], dependencies=viewer, status_code=202)

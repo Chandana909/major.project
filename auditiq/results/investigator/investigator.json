@@ -1,0 +1,239 @@
+{
+ "date": "2026-11-21",
+ "ledger": "bench_seed_101",
+ "seconds": 7.1,
+ "scenarios": {
+  "clean": {
+   "status": {
+    "integrity": "pass",
+    "evidence": "pass",
+    "completeness": "pass",
+    "coverage": "pass",
+    "model_failures": "pass",
+    "backlog": "pass",
+    "documentation": "pass",
+    "pace": "pass",
+    "segregation": "pass",
+    "overrides": "pass",
+    "superseded": "pass",
+    "flips": "pass"
+   },
+   "verdict": "The audit record holds: 0 check(s) failed, 0 need attention, 12 passed.",
+   "comparison": {
+    "integrity": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "completeness": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "documentation": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "segregation": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "overrides": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "overrides_pair": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "evidence": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "coverage": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "model_failures": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "superseded": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "flips": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "pace": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    },
+    "flips_unexplained": {
+     "planted": 0,
+     "found": 0,
+     "missed": [],
+     "extra": []
+    }
+   },
+   "counts": {
+    "integrity": 0,
+    "evidence": 0,
+    "completeness": 0,
+    "coverage": 0,
+    "model_failures": 0,
+    "backlog": 0,
+    "documentation": 0,
+    "pace": 0,
+    "segregation": 0,
+    "overrides": 0,
+    "superseded": 0,
+    "flips": 0
+   },
+   "backlog_after_six_days": {
+    "waiting": 180,
+    "reported_late": 180
+   },
+   "backlog_after_one_hour": 0
+  },
+  "planted": {
+   "status": {
+    "integrity": "fail",
+    "completeness": "fail",
+    "coverage": "fail",
+    "documentation": "fail",
+    "pace": "fail",
+    "segregation": "fail",
+    "overrides": "fail",
+    "flips": "fail",
+    "evidence": "attention",
+    "model_failures": "attention",
+    "superseded": "attention",
+    "backlog": "pass"
+   },
+   "verdict": "The audit record needs action: 8 check(s) failed, 3 need attention, 1 passed.",
+   "comparison": {
+    "integrity": {
+     "planted": 5,
+     "found": 5,
+     "missed": [],
+     "extra": []
+    },
+    "completeness": {
+     "planted": 2,
+     "found": 2,
+     "missed": [],
+     "extra": []
+    },
+    "documentation": {
+     "planted": 8,
+     "found": 8,
+     "missed": [],
+     "extra": []
+    },
+    "segregation": {
+     "planted": 5,
+     "found": 5,
+     "missed": [],
+     "extra": []
+    },
+    "overrides": {
+     "planted": 11,
+     "found": 11,
+     "missed": [],
+     "extra": []
+    },
+    "overrides_pair": {
+     "planted": 1,
+     "found": 1,
+     "missed": [],
+     "extra": []
+    },
+    "evidence": {
+     "planted": 4,
+     "found": 4,
+     "missed": [],
+     "extra": []
+    },
+    "coverage": {
+     "planted": 6,
+     "found": 6,
+     "missed": [],
+     "extra": []
+    },
+    "model_failures": {
+     "planted": 2,
+     "found": 2,
+     "missed": [],
+     "extra": []
+    },
+    "superseded": {
+     "planted": 3,
+     "found": 3,
+     "missed": [],
+     "extra": []
+    },
+    "flips": {
+     "planted": 6,
+     "found": 6,
+     "missed": [],
+     "extra": []
+    },
+    "pace": {
+     "planted": 1,
+     "found": 1,
+     "missed": [],
+     "extra": []
+    },
+    "flips_unexplained": {
+     "planted": 3,
+     "found": 3,
+     "missed": [],
+     "extra": []
+    }
+   },
+   "counts": {
+    "integrity": 5,
+    "completeness": 2,
+    "coverage": 6,
+    "documentation": 8,
+    "pace": 12,
+    "segregation": 5,
+    "overrides": 11,
+    "flips": 6,
+    "evidence": 4,
+    "model_failures": 2,
+    "superseded": 3,
+    "backlog": 0
+   },
+   "backlog_after_six_days": {
+    "waiting": 146,
+    "reported_late": 146
+   },
+   "backlog_after_one_hour": 0
+  }
+ }
+}

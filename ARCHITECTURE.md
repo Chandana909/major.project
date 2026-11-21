@@ -14,7 +14,7 @@ It has two halves.
 - **Parts 1 to 11 (the context, the reasoning and the operating knowledge)** were written on 14 November 2026 from the
   code, the generated datasets, the result files and the project's design records. They answer *what, why, with what
   alternatives, on what data, how to run it, what was found.*
-- **Part 12 (the technical reference, sections R1 to R33)** is the complete engineering description of every module,
+- **Part 12 (the technical reference, sections R1 to R36)** is the complete engineering description of every module,
   formula, prompt, table, endpoint and test. It was written on 30 October to 4 November 2026 and was checked against the
   code on 14 November, with the differences found since then patched in (section 3.5 lists them).
 
@@ -63,7 +63,7 @@ throughout (all paths relative to `pp1/auditiq/` unless they begin with `pp1/`).
 13. [The repository and its documents](#13-the-repository-and-its-documents)
 
 **Part VII. The technical reference**
-14. [Reference sections R1 to R33](#r1-what-auditiq-is) (the table of contents of the reference follows its first
+14. [Reference sections R1 to R36](#r1-what-auditiq-is) (the table of contents of the reference follows its first
     heading)
 
 ---
@@ -640,6 +640,15 @@ goes into a document only if a script in the repository produced it** (the owner
 # Part III. Running it
 
 ## 5. How to run it
+
+**One command (added 21 November 2026).** From the repository's root, in bash (Linux, macOS, Windows Git Bash):
+`./run.sh`. It needs only Python 3.11 or later and, the first time, an internet connection: it makes
+`auditiq/.venv` and installs the packages, then `auditiq/scripts/bootstrap.py` downloads into `auditiq/.tools/`
+whatever is missing (Java 17 from Adoptium, Node.js 20 from nodejs.org, Kafka 4.3.2 from Apache; each verified
+against its published SHA-256 or SHA-512), sets up the local broker, and hands over to `scripts/live.py` (Section
+5.2: the store, the workers, the web application, the ledger streamed through Kafka, the browser). `./run.sh --huge`
+unpacks and streams the 500,000-invoice ledger instead of the final one (about an hour on a laptop);
+`--limit N`, `--keep`, `stop` and `reset` work as for `start.bat`.
 
 ### 5.1 What you need
 
@@ -1257,6 +1266,10 @@ Every result below was produced by a script of the repository on the data stated
 | 19 | The final ledger audited through Kafka | 25,000 invoices in 209 s after publishing: 1,658 sent to a person, 868 critical, 790 high, 143 medium; rule-decided clauses precision and recall 100%, 0 false alarms on 22,425 clean and 300 hard negatives, 10 of 10 planted rings recovered; **scores cluster** (section 8.4) | Measured |
 | 20 | Do the demonstration policies change the output? | held for review 1,658 (baseline), 1,157, 3,263, 1,754, 1,369, 1,705 under the five policies; the real upload-adopt-apply flow reproduced the offline numbers | Measured |
 | 21 | Does the audit graph return what the audit stored? | 78 of 78 questions right (policy-only retrieval 0); ten ring questions not held out | Measured (small; computed answers) |
+| 22 | Does a learned screen find the judgement anomalies the controls let through? (R36) | trained on the development ledger only; six held-out ledgers: AUC 1.000 (2.1.4, 2.2.2, 4.1.2) and 0.993 (2.1.5) against 0.47 to 0.98 for an isolation forest; 890 of 1,040 judgement anomalies C1 approves in the top 2% of what it approves; the two SHAP implementations agree within 1.8e-15 | Measured (generator data) |
+| 23 | Does the trail investigator find faults in the audit record? (R36) | 54 planted faults of 11 kinds: all found at their place, 0 missed, 0 extra; nothing on a store run properly | Measured (planted faults) |
+| 24 | Does the e-mail triage catch payment redirection? (R36) | 17,011 generated e-mails: categories 100%, 54 of 54 redirection requests caught, 0 false alarms | Measured (template data) |
+| 25 | Does the audit agent answer without a model? (R36) | 30 of 30 questions (dev wording), 27 of 30 (frozen test wording) | Measured (small; questions by the author) |
 
 ### 11.2 The language-model pilots (20 invoices, `results/pilot_seed_909/pilot20.md`; Pilot)
 
@@ -1406,7 +1419,7 @@ a ledger audited in it) and `container` (the image built and run). The CI databa
 
 ---
 
-# Part VII. The technical reference (sections R1 to R33)
+# Part VII. The technical reference (sections R1 to R36)
 
 This part is the complete engineering description: every module, formula, threshold, prompt, table, endpoint and test, written for a person or a model that has to **rebuild
 the system** (section R33 gives the order of work, with a check for each step). It was written between 30 October and 4 November 2026 from the code, and on 14 November it was
@@ -3114,6 +3127,13 @@ refused with **409**:
 | GET | `/api/trail/verify` | viewer | recompute the seals of results, trail entries and finished runs (`auditiq/seal.py`, Section R34) and re-perform the evidence of the latest results (Section R35); `intact`, counts, the ids of altered items, `evidence`, the digest of the run seals; `?run=` for one run; not cached |
 | GET | `/api/reliability` | viewer | the data-reliability checks of the ledger (ISA 500, Section R35): references, approvals, arithmetic, date logic, goods received not invoiced, gaps in the numbered series, vendor master data, audit coverage; control totals; the ledger fingerprint; not cached |
 | GET | `/api/program` | viewer | the audit program (Section R35): every test with the assertions and fraud schemes it addresses and what it found, what no test covers, and on a benchmark ledger each scheme against the answer key; cached until the store changes |
+| GET | `/api/model` | viewer | the risk screen (Section R36): training, heads, mean absolute SHAP value of every feature over a random sample with a dot plot, the distribution of its probability by route beside the paper's score, the invoices the audit passed that a judgement head rates highest, the held-out measurement; `trained: false` without a model file; cached until the store changes |
+| GET | `/api/invoices/{id}/explain` | viewer | the screen's five heads for one invoice with their SHAP values (they add up to the output), and the counterfactuals of each control finding: margin, record and policy changes verified by running the controls again, how many other findings a policy change would also clear (Section R36) |
+| GET | `/api/invoices/{id}/story` | viewer | the invoice's life in order: PO, GRN, approvals, e-mails, every audit with findings and trail, every decision, where it stands (Section R36) |
+| GET | `/api/investigation?sla_days=` | viewer | the trail investigator's report (Section R36): 12 checks with what they found and where, the timeline, the reviewers, the report as Markdown; not cached |
+| GET | `/api/process` | viewer | process mining (Section R36): the process map, variants, conformance with how many deviating invoices the audit flagged, cycle times, approval time by role; cached until the store changes |
+| GET | `/api/mail` | viewer | every stored vendor e-mail triaged (Section R36): category, signals, risk and action; alerts; payments to hold; cached until the store changes |
+| POST | `/api/agent/ask` | viewer | the audit agent as a job (Section R36): `{question, mode: auto, rules or model}`; the steps (tool, arguments, observation, time), the answer citing them, numbers no tool returned; 400 for the model mode without a model |
 | GET | `/api/workpapers` | viewer | the working papers as an Excel workbook (Section R35), with the report digest in `X-Report-Digest`; `seed` overrides the sample's seed |
 | GET | `/api/analytics` | viewer | monthly volume, spend by category and month, Benford first-digit and first-two-digits tests (MAD with Nigrini's thresholds, z per digit, chi-square), invoices by quarter-decade of amount and just under / just over each approval limit, weekdays, findings by category and rule, top approvers, spend concentration (Lorenz, Gini, HHI, top ten) |
 | GET | `/api/policy/graph?version=` | viewer | the policy knowledge graph of a version (default: active): nodes (version, sections, rules, parameters, roles, control functions and agents, pages, other versions) and edges (has section, has rule, sets, limit, checked by, stated on, changes); 404 for an unknown version |
@@ -3819,3 +3839,78 @@ workbook still matches the store (a review decision or a ledger edit makes it di
 the digest of the sealed runs, so nobody chose it and anyone with the store draws the same sample.
 `GET /api/workpapers` serves it with the digest in `X-Report-Digest`. On the 25k store: 7.1 s, 334,930 bytes, the
 digest repeats.
+
+## R36. The intelligence layer: risk screen, counterfactuals, trail investigator, e-mail triage, audit agent (21 November 2026)
+
+Five additions, listed with the ideas not built in `auditiq/docs/NEW_FEATURES.md`; measured in RESULTS.md, Section
+14, and REPORT.md, Section 21. None changes a result, score or route of the audit: equations (2) to (5) are
+untouched, and every new part only reads the store.
+
+**The risk screen** (`auditiq/screen.py`, `auditiq/treeshap.py`, model `auditiq/models/risk_screen.json`). 24
+features of the transaction the controls see (how far the amount is from the approver's limit or the PO, the
+overlap of the invoice's and the PO's wording, whether a receipt remark states a quantity or a rejection, whether
+an earlier invoice bills the same receipt, how many invoices of the vendor sit in the guide band under one limit
+within the guide window, and others), computed under the thresholds of the policy in force on the invoice's date.
+Five heads, each a scikit-learn `GradientBoostingClassifier` (150 trees of depth 3, learning rate 0.1): "any"
+(anomalous at all, a continuous risk index next to the paper's score, which sits on its floors) and one per
+judgement rule (2.1.4, 2.1.5, 2.2.2, 4.1.2); the judgement head with the highest probability is the suggested
+rule. Trained once on the answer key of `pilot_seed_909` (`python -m auditiq model train`); the store's labels are
+never read. The trees are stored as plain arrays, and prediction and SHAP read them with numpy. Why gradient
+boosting and not a neural network: tabular features, a few thousand rows, and exact explanations; why trained on
+the development ledger: it is the only ledger anything was ever tuned on. SHAP values: two implementations,
+TreeSHAP (Algorithm 2 of Lundberg, Erion and Lee, 2018) for one invoice and the Shapley formula over the features
+each tree splits on (vectorised) for a ledger, checked against each other and against a brute-force enumeration.
+Measured on six held-out ledgers: AUC 1.000 for 2.1.4, 2.2.2 and 4.1.2 and 0.993 for 2.1.5, against 0.47 to 0.98
+for an isolation forest; 890 of the 1,040 judgement anomalies that C1 approves are in the top 2% of what C1
+approves; the two implementations agree within 1.8e-15. Every ledger is from the same generator: the numbers do
+not say how it would do on real invoices.
+
+**Counterfactuals** (`auditiq/counterfactual.py`). For each control finding: the margin past the rule (for 5.1.1,
+the rupees and the share above the approver's limit), the smallest change of the records that clears it (the role
+whose limit covers the amount, the quantity received, the vendor master's GSTIN, the next business day), and the
+change of the rule's parameter that clears it, each applied to a copy and checked by running all twelve controls
+again (a change that would raise another finding says so), with how many other invoices whose latest result
+carries a finding of that rule the same policy change would clear. A counterfactual explains; a change that would
+hide what the rule is for (a fresh number on a duplicate) carries a caution.
+
+**The trail investigator** (`auditiq/investigator.py`, `python -m auditiq investigate`). Twelve checks of the
+stored record: the seals (ISA 230), the evidence against the ledger (ISA 500), the stages of every trail, coverage
+under the policy in force (ISA 330), failed model stages, the review backlog against a service level, decisions
+without a reason (ISA 230, paragraph 8), bursts of decisions too fast to read the evidence (ISA 220), a reviewer who
+approved the payment or raised the PO (COSO principle 10), critical findings cleared and one reviewer clearing one
+vendor's critical invoices again and again (ISA 240), rejections undone by a later audit, and outcomes that changed
+between audits with their cause (another policy version, configuration or records) or with none. Each check states
+what it found and where, why it matters and what to do; the report adds the timeline, the reviewers and a Markdown
+text; `story()` tells one invoice's life in order. Measured with 54 faults planted in an audited store: all found
+at their place, none missed, none extra, nothing on a store run properly.
+
+**E-mail triage** (`auditiq/triage.py`, `python -m auditiq mail load|triage`). The Review-1 deck's e-mail triage:
+the category of each vendor e-mail by its wording, and the signals of payment redirection (a domain that reads like
+the vendor's usual one, or like its name, without being it; a domain never used before; urgency; a request not to
+call back; a new bank account; an unpaid invoice), with text written to instruct an AI system flagged and withheld
+from model prompts. High risk holds the payment until it is confirmed by telephone with the contact on the vendor
+master; a bank change from the vendor's own domain is sent for that confirmation. `mail load` stores an mbox file
+without Kafka. Measured on four generated mailboxes: categories 100% right, 54 of 54 redirection requests caught,
+0 false alarms (template data).
+
+**The audit agent** (`auditiq/audit_agent.py`, `python -m auditiq agent "..."`). Fifteen read-only tools (audit
+result, records, the screen's explanation and the counterfactuals, the story, vendor profile, top vendors, findings,
+review queue, the role an amount needs, a rule's wording, the leads, the screen's leads, the investigation, the mail
+alerts, the rings). Two planners: rules (the question's ids, amounts, rule numbers and words choose the tools; no
+model, milliseconds) and, with a model, a ReAct loop (one JSON tool request per step, at most five, unknown tools
+refused). The answer cites each observation as [T1], [T2]; every number in it is looked for in the observations and
+listed when no tool returned it. Measured in the rules mode: 30 of 30 questions in the dev wording, 27 of 30 in a
+frozen test wording (the misses are kept as found).
+
+**Process mining** (`auditiq/process_mining.py`, second round). The ledger as an event log (PO raised, goods
+received, invoice dated, escalations, approval, due date), the directly-follows graph with median days, the variants,
+conformance to the reference path with how many deviating invoices the audit flagged, cycle times and approval time
+by role. On `collusion_seed_707`: 99.4% follow the reference path, and every deviation is an invoice without a PO or
+a goods receipt that rule 2.1.3 already flags. A description, not a measurement.
+
+New endpoints: `GET /api/model`, `/api/invoices/{id}/explain`, `/api/invoices/{id}/story`, `/api/investigation`,
+`/api/mail`, `/api/process`, `POST /api/agent/ask` (53 in all). New pages: Audit agent (`/agent`), Explainable AI
+(`/explain`), Trail investigator (`/investigator`), Mail triage (`/mail`), Process mining (`/process`); on the invoice page the SHAP waterfall, what would
+clear each finding, the story, and the triage of its e-mails. Tests: `tests/test_screen.py`,
+`test_counterfactual.py`, `test_investigator.py`, `test_triage.py`, `test_audit_agent.py`, the new cases of
+`test_api.py`, and `frontend/src/pages/intel.test.tsx`.

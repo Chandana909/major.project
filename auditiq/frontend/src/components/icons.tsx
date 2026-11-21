@@ -18,6 +18,11 @@ const PATHS: Record<string, string[]> = {
   rag: ["M5 3h9l5 5v13H5z", "M14 3v5h5", "M10.5 16a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z", "m12.5 15.5 2 2"],
   search: ["M11 18a7 7 0 1 1 0-14 7 7 0 0 1 0 14z", "m20 20-4-4"],
   assurance: ["M7 11V7a5 5 0 0 1 10 0v4", "M5 11h14v10H5z", "M12 15v2"],
+  agent: ["M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z", "M5 21v-2a7 7 0 0 1 14 0v2", "M17 8h4", "M19 6v4"],
+  explain: ["M4 20h16", "M6 16V10", "M10 16V6", "M14 16v-8", "M18 16v-3", "M5 6l4-2 4 3 6-4"],
+  investigator: ["M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13z", "m21 21-5.6-5.6", "M8 10.5l2 2 3.5-4"],
+  mail: ["M3 6h18v12H3z", "m3 7 9 6 9-6", "M16 15l2 2 3-3"],
+  process: ["M3 6h5v4H3z", "M16 6h5v4h-5z", "M9.5 15h5v4h-5z", "M8 8h8", "M18.5 10v2.5H12V15", "M5.5 10v2.5H12"],
 };
 
 export function Icon({ name, size = 18 }: { name: keyof typeof PATHS | string; size?: number }) {

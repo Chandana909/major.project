@@ -13,3 +13,6 @@
 # The datasets keep LF line endings on every platform, so that the SHA-256 of each file
 # in its manifest.json holds after a checkout on Windows too.
 auditiq/data/** text eol=lf
+
+# shell scripts keep LF line endings on every platform, or bash cannot run them
+*.sh text eol=lf

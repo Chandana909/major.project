@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api, waitForJob } from "../api/client";
 import type { ConfigName, InvoiceDetail, Job, PackFlag, RecordMap } from "../api/types";
+import { CounterfactualPanel, RiskBadge, ScreenPanel, StoryPanel } from "../components/InvoiceInsight";
 import { Badge, Empty, ErrorBox, JobProgress, Loading, Panel, RouteBadge, ScoreComposition, SeverityBadge } from "../components/ui";
 import { cell, inr, ratio, SEVERITY_COLORS, SEVERITY_WEIGHTS, stateLabel } from "../lib/format";
 import { useApi } from "../lib/useApi";
@@ -339,6 +340,8 @@ function InvoiceView({ id }: { id: string }) {
               <Empty>This invoice has not been audited yet.</Empty>
             </Panel>
           )}
+          <CounterfactualPanel id={id} />
+          <ScreenPanel id={id} />
 
           <Panel title="Records">
             <div className="tabs" role="tablist">
@@ -412,20 +415,29 @@ function InvoiceView({ id }: { id: string }) {
             </Panel>
           )}
           {d.emails && d.emails.length > 0 && (
-            <Panel title={`Vendor e-mails (${d.emails.length})`} subtitle="Correspondence that names this invoice, as it arrived through the e-mail topic.">
-              {d.emails.map((e) => (
-                <details key={e.message_id} className="hit">
-                  <summary>
-                    <strong>{e.subject}</strong>
-                    <div className="muted small">
-                      {e.sender} · {e.sent_at ?? "undated"}
-                    </div>
-                  </summary>
-                  <p className="small mail-body">{e.body}</p>
-                </details>
-              ))}
+            <Panel title={`Vendor e-mails (${d.emails.length})`} subtitle="Correspondence that names this invoice, as it arrived through the e-mail topic, with the triage of each.">
+              {d.emails.map((e) => {
+                const verdict = d.email_triage?.find((t) => t.message_id === e.message_id);
+                return (
+                  <details key={e.message_id} className="hit" open={verdict?.risk === "high"}>
+                    <summary>
+                      <strong>{e.subject}</strong> {verdict && verdict.risk !== "none" && <RiskBadge risk={verdict.risk} />}
+                      <div className="muted small">
+                        {e.sender} · {e.sent_at ?? "undated"}
+                      </div>
+                    </summary>
+                    {verdict && verdict.risk !== "none" && (
+                      <p className={`small ${verdict.risk === "high" ? "bad-text" : "warn-text"}`}>
+                        {verdict.reasons.join("; ")}. <strong>{verdict.action}.</strong>
+                      </p>
+                    )}
+                    <p className="small mail-body">{e.body}</p>
+                  </details>
+                );
+              })}
             </Panel>
           )}
+          <StoryPanel id={id} />
           <Panel title="Benchmark answer key" subtitle="Synthetic ledgers only: what was injected into this invoice. The audit never reads it.">
             <label className="toggle">
               <input type="checkbox" checked={withLabel} onChange={(e) => setWithLabel(e.target.checked)} /> Show the answer key

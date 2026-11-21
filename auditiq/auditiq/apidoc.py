@@ -41,7 +41,8 @@ ANSWERS = {
     503: "the database cannot be reached",
 }
 TAG_TITLES = {"status": "Status", "stream": "Stream (Kafka)", "analytics": "Analytics", "review": "Review", "policy": "Policy", "ledger": "Ledger",
-              "copilot": "Ask AI (copilot)", "jobs": "Jobs", "results": "Results"}
+              "copilot": "Ask AI (copilot) and the audit agent", "jobs": "Jobs", "results": "Results",
+              "explain": "Explainable AI, investigation and e-mail triage"}
 
 
 def type_name(annotation) -> str:

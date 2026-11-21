@@ -1,0 +1,174 @@
+{
+ "date": "2026-11-21",
+ "seed": 7,
+ "ledgers": [
+  {
+   "ledger": "bench_seed_101",
+   "emails": 2102,
+   "stored": 2102,
+   "linked": 2102,
+   "category_accuracy": 1.0,
+   "confusion": {
+    "bank_change -> bank_change": 22,
+    "invoice_submission -> invoice_submission": 1748,
+    "payment_reminder -> payment_reminder": 302,
+    "quantity_query -> quantity_query": 30
+   },
+   "redirection": {
+    "attempts": 5,
+    "true_positives": 5,
+    "false_positives": 0,
+    "missed": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_alarms": [],
+    "misses": []
+   },
+   "callback": {
+    "genuine_bank_changes": 17,
+    "sent_for_confirmation": 17
+   },
+   "holds": {
+    "invoices": 5,
+    "of_attempts": 5,
+    "amount": 867431.74
+   },
+   "by_risk": {
+    "high": 5,
+    "medium": 17,
+    "low": 0,
+    "none": 2080
+   },
+   "seconds": {
+    "store": 5.5,
+    "triage": 0.3
+   }
+  },
+  {
+   "ledger": "bench_seed_202",
+   "emails": 2105,
+   "stored": 2105,
+   "linked": 2105,
+   "category_accuracy": 1.0,
+   "confusion": {
+    "bank_change -> bank_change": 20,
+    "invoice_submission -> invoice_submission": 1751,
+    "payment_reminder -> payment_reminder": 304,
+    "quantity_query -> quantity_query": 30
+   },
+   "redirection": {
+    "attempts": 5,
+    "true_positives": 5,
+    "false_positives": 0,
+    "missed": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_alarms": [],
+    "misses": []
+   },
+   "callback": {
+    "genuine_bank_changes": 15,
+    "sent_for_confirmation": 15
+   },
+   "holds": {
+    "invoices": 5,
+    "of_attempts": 5,
+    "amount": 2094493.29
+   },
+   "by_risk": {
+    "high": 5,
+    "medium": 15,
+    "low": 0,
+    "none": 2085
+   },
+   "seconds": {
+    "store": 5.3,
+    "triage": 0.3
+   }
+  },
+  {
+   "ledger": "collusion_seed_707",
+   "emails": 2104,
+   "stored": 2104,
+   "linked": 2104,
+   "category_accuracy": 1.0,
+   "confusion": {
+    "bank_change -> bank_change": 19,
+    "invoice_submission -> invoice_submission": 1758,
+    "payment_reminder -> payment_reminder": 297,
+    "quantity_query -> quantity_query": 30
+   },
+   "redirection": {
+    "attempts": 4,
+    "true_positives": 4,
+    "false_positives": 0,
+    "missed": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_alarms": [],
+    "misses": []
+   },
+   "callback": {
+    "genuine_bank_changes": 15,
+    "sent_for_confirmation": 15
+   },
+   "holds": {
+    "invoices": 4,
+    "of_attempts": 4,
+    "amount": 738300.18
+   },
+   "by_risk": {
+    "high": 4,
+    "medium": 15,
+    "low": 0,
+    "none": 2085
+   },
+   "seconds": {
+    "store": 5.8,
+    "triage": 0.37
+   }
+  },
+  {
+   "ledger": "final_seed_2025",
+   "emails": 10700,
+   "stored": 10700,
+   "linked": 10700,
+   "category_accuracy": 1.0,
+   "confusion": {
+    "bank_change -> bank_change": 145,
+    "invoice_submission -> invoice_submission": 8728,
+    "payment_reminder -> payment_reminder": 1536,
+    "quantity_query -> quantity_query": 291
+   },
+   "redirection": {
+    "attempts": 40,
+    "true_positives": 40,
+    "false_positives": 0,
+    "missed": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "false_alarms": [],
+    "misses": []
+   },
+   "callback": {
+    "genuine_bank_changes": 105,
+    "sent_for_confirmation": 105
+   },
+   "holds": {
+    "invoices": 40,
+    "of_attempts": 40,
+    "amount": 6785864.06
+   },
+   "by_risk": {
+    "high": 40,
+    "medium": 105,
+    "low": 0,
+    "none": 10555
+   },
+   "seconds": {
+    "store": 135.5,
+    "triage": 4.55
+   }
+  }
+ ]
+}

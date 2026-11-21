@@ -8,9 +8,9 @@ Kinds of number: **measured** (a script of the repository produced it on the dat
 
 Part I. Methodology: 1 Research questions · 2 The system under test · 3 The policy as data · 4 Scores, confidence and routing · 5 Data · 6 Metrics · 7 Statistical procedure · 8 Experimental protocols · 9 Environment and reproducibility
 
-Part II. Results: 10 Controls against detectors · 11 Policy change · 12 Held-out documents · 13 Robustness of the reader · 14 Policy change in the application · 15 Every ledger through the system · 16 Scalability · 17 Policies in their own wording · 18 The language-model stages · 19 Policy search · 20 Vendor-history cap
+Part II. Results: 10 Controls against detectors · 11 Policy change · 12 Held-out documents · 13 Robustness of the reader · 14 Policy change in the application · 15 Every ledger through the system · 16 Scalability · 17 Policies in their own wording · 18 The language-model stages · 19 Policy search · 20 Vendor-history cap · 21 The intelligence layer
 
-Part III. Analysis: 21 Answers to the research questions · 22 What the errors show · 23 Threats to validity · 24 What is not measured · 25 Source files
+Part III. Analysis: 22 Answers to the research questions · 23 What the errors show · 24 Threats to validity · 25 What is not measured · 26 Source files
 
 # Part I. Methodology
 
@@ -1024,9 +1024,77 @@ Source: [`history_cap.md`](https://raw.githubusercontent.com/Chandana909/major.p
 
 Cases that lose an invoice they depend on: 0.
 
+## 21. The intelligence layer
+
+Four additions of 21 November 2026 that change no result, score or route of the audit (docs/NEW_FEATURES.md). Every ledger and mailbox below comes from the project's own generator: the numbers show that the parts work on this generator's data, not their accuracy on real invoices or real mail.
+
+### 21.1 The risk screen on ledgers it was not trained on
+
+Source: [`risk_screen/screen.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.json), [`risk_screen/screen.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.md).
+
+Gradient-boosted trees (one head for any anomaly, one per judgement rule) trained on `pilot_seed_909` only and scored on 6 held-out ledgers; the committed model is the one trained by the script.
+
+| Head | Rule | AUC, mean (min to max) | Isolation forest AUC | Recall at a 2 % budget |
+|---|---|---|---|---|
+| any | Anomalous (any rule) | 0.9995 (0.9992 to 0.9998) | 0.8531 | 0.348 |
+| 2.1.4 | Receipt remarks contradict the billed quantity | 1.0000 (1.0000 to 1.0000) | 0.4834 | 1.000 |
+| 2.1.5 | Invoice description does not match the PO | 0.9930 (0.9887 to 0.9971) | 0.4668 | 0.960 |
+| 2.2.2 | Near-duplicate invoice | 1.0000 (1.0000 to 1.0000) | 0.9752 | 1.000 |
+| 4.1.2 | Structuring across days | 1.0000 (1.0000 to 1.0000) | 0.7284 | 1.000 |
+
+
+Of the 1,040 judgement anomalies the controls alone approve, 890 (85.6%) are in the top 2 % of the invoices the controls approve: the recall ceiling of a cascade that sends that slice to the agents, not a measured recall of the agents. The suggested rule is right for 985 of 985 judgement anomalies scored at least 0.5. The two SHAP implementations (TreeSHAP and the Shapley formula) differ by at most 1.8e-15 on 200 invoices, and the values add up to the output within 1.1e-14.
+
+### 21.2 The trail investigator against planted faults
+
+Source: [`investigator/investigator.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.json), [`investigator/investigator.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.md).
+
+| Check | Planted | Found at its place | Missed | Extra | On the clean store |
+|---|---|---|---|---|---|
+| integrity | 5 | 5 | 0 | 0 | 0 |
+| completeness | 2 | 2 | 0 | 0 | 0 |
+| documentation | 8 | 8 | 0 | 0 | 0 |
+| segregation | 5 | 5 | 0 | 0 | 0 |
+| overrides | 11 | 11 | 0 | 0 | 0 |
+| overrides_pair | 1 | 1 | 0 | 0 | 0 |
+| evidence | 4 | 4 | 0 | 0 | 0 |
+| coverage | 6 | 6 | 0 | 0 | 0 |
+| model_failures | 2 | 2 | 0 | 0 | 0 |
+| superseded | 3 | 3 | 0 | 0 | 0 |
+| flips | 6 | 6 | 0 | 0 | 0 |
+| pace | 1 | 1 | 0 | 0 | 0 |
+| flips_unexplained | 3 | 3 | 0 | 0 | 0 |
+
+
+The faults are planted as the checks define them: this shows that each check finds what it says and stays quiet on a store run properly, not how often such faults occur.
+
+### 21.3 E-mail triage of generated mailboxes
+
+Source: [`triage/triage.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.json), [`triage/triage.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.md).
+
+| Ledger | E-mails | Category right | Redirection attempts | Caught | False alarms |
+|---|---|---|---|---|---|
+| bench_seed_101 | 2,102 | 100.0% | 5 | 5 | 0 |
+| bench_seed_202 | 2,105 | 100.0% | 5 | 5 | 0 |
+| collusion_seed_707 | 2,104 | 100.0% | 4 | 4 | 0 |
+| final_seed_2025 | 10,700 | 100.0% | 40 | 40 | 0 |
+
+
+### 21.4 The audit agent without a model
+
+Source: [`agent/agent.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.json), [`agent/agent.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.md).
+
+| Wording | Questions | Answered right | Expected tool chosen |
+|---|---|---|---|
+| dev | 30 | 30 | 30 |
+| test | 30 | 27 | 28 |
+
+
+Answers wrong on the test wording (kept as found; the planner was not changed after the test run): "Name the suppliers with the largest number of audit findings."; "Has anyone altered the stored audit record after the fact?"; "List possible duplicate bills submitted under a re-keyed number.". The questions were written by the planner's author; the model (ReAct) mode is built and not measured.
+
 # Part III. Analysis
 
-## 21. Answers to the research questions
+## 22. Answers to the research questions
 
 |  | Answer |
 |---|---|
@@ -1040,7 +1108,7 @@ Cases that lose an invoice they depend on: 0.
 | RQ8 | On each benchmark ledger loaded from a workbook: 300 findings, every rule-defined anomaly found, 240 invoices escalated, no finding on a hard negative or an ordinary invoice; a policy change moves the review queue without any edit of code. |
 | RQ9 | Questions in the policy's wording: yes. Held-out paraphrases: hybrid ranking after rewriting finds the answer first in 0.625 and among the top three in 0.938 (16 questions). |
 
-## 22. What the errors show
+## 23. What the errors show
 
 - **Classical detectors find what is statistically unusual, not what is against the rules.** The isolation forest reports at least 90% of classes R3, R4, R5, J1 (Section 10.6); an anomaly of each of these classes sets a feature that is rare among clean invoices (R3: `vendor_same_number`; R4: `gstin_equals_master`; R5: `gstin_equals_master`; J1: `vendor_same_amount, vendor_same_po`), and rare values are what an isolation forest isolates first. The one-class SVM reports at most 10% of the rule-defined classes R4, R5, R8, R9, each marked by binary indicators (R4: `gstin_equals_master`; R5: `gstin_equals_master`; R8: `missing_po, missing_grn`; R9: `vendor_blacklisted, vendor_registration_active`). The indicator `gstin_equals_master` alone separates R4 and R5 from every ordinary invoice on `bench_seed_101` (the GSTIN differs from the registered one on 30 of 30 R4 and 30 of 30 R5 invoices, and on 0 of 4,460 ordinary ones), yet the SVM reports 0.033 and 0.033 of them; a plausible reading, not tested here, is that an RBF kernel on standardized features gives one rare indicator little weight against the continuous features. Neither detector finds J2, J3, J4 (at most 25%): J3 and J4 change no feature the detectors read (descriptions and receipt remarks are text); a J2 invoice differs from ordinary ones only by degree (an amount just below the approver's limit, several invoices of the vendor within a week), and the forest reports 0.222 of them, the SVM 0.067. Both report near-duplicates (J1), whose copied amount and PO are unusual, but neither names a rule, so an auditor still has to find out why an invoice was flagged.
 - **A frozen system fails silently.** A tightened policy makes it miss exceptions and approve invoices the policy sends to review; nothing in its output shows the error. This is the operational argument for reading thresholds from the document instead of typing them into prompts and code.
@@ -1048,7 +1116,7 @@ Cases that lose an invoice they depend on: 0.
 - **A model's policy reading fails on use, not on transcription.** Its wrong values that passed the check are real words of the quoted passage put to the wrong use; a quote check cannot see that.
 - **The language-model stages fail on reasoning across records and on precision.** In the per-invoice tables of Section 18, near-duplicates and goods-receipt remarks are found from the records shown; structuring across days and description mismatches are mostly missed; wrong near-duplicate findings appear on hard negatives built to resemble them; the challenger removes right and wrong findings alike.
 
-## 23. Threats to validity
+## 24. Threats to validity
 
 - **Internal (circularity).** The controls and the ground truth implement the same written rules by the same authors; perfect scores on R1-R10 and adherence of 1.000 verify the implementation and the reading of each document, not the rules' ability to catch fraud. The detectors use labels for their thresholds; the controls use none.
 - **Construct (synthetic data).** The ledgers are generated; counts describe how these ledgers react, not the books of a particular organisation. Anomalies are injected one at a time into otherwise clean transactions.
@@ -1056,16 +1124,18 @@ Cases that lose an invoice they depend on: 0.
 - **Statistical (sample size).** The language-model stages were measured on 20 and 34 invoices; intervals are wide and no difference between configurations is significant. The free-form policy study has six documents written by the authors; the retrieval study sixteen questions per cell.
 - **Researcher degrees of freedom.** Prompts were tried only on the development ledger and frozen (one prompt hash for every run); the free-form policy errors were deliberately not fixed, because that would be tuning on the evaluation set; the robustness gaps were fixed and both runs are reported.
 
-## 24. What is not measured
+## 25. What is not measured
 
 - Configurations C2 to C5 on whole benchmark ledgers (about 1,200 invoices of the evaluation subset with three to five calls each); this needs a GPU or a hosted model endpoint. The paper states expected values for it, fixed before measurement (RESULTS.md, Section 10).
 - A second model on the main comparison, the consistency subset, and the policy swap under the language-model configurations.
 - A deployment on several machines.
 
-## 25. Source files
+## 26. Source files
 
 The result files of the repository, with their public raw addresses (`.jsonl` files hold one record per audited invoice):
 
+- [`auditiq/results/agent/agent.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.json)
+- [`auditiq/results/agent/agent.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.md)
 - [`auditiq/results/application_demo.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/application_demo.json)
 - [`auditiq/results/application_demo.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/application_demo.md)
 - [`auditiq/results/bench_seed_101/C0-IF.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/bench_seed_101/C0-IF.jsonl)
@@ -1122,6 +1192,8 @@ The result files of the repository, with their public raw addresses (`.jsonl` fi
 - [`auditiq/results/huge_seed_606/metrics.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/metrics.json)
 - [`auditiq/results/huge_seed_606/policy_change.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/policy_change.json)
 - [`auditiq/results/huge_seed_606/size.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/huge_seed_606/size.json)
+- [`auditiq/results/investigator/investigator.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.json)
+- [`auditiq/results/investigator/investigator.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.md)
 - [`auditiq/results/large_seed_505/C0-IF.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/large_seed_505/C0-IF.jsonl)
 - [`auditiq/results/large_seed_505/C0-SVM.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/large_seed_505/C0-SVM.jsonl)
 - [`auditiq/results/large_seed_505/C1.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/large_seed_505/C1.jsonl)
@@ -1169,6 +1241,8 @@ The result files of the repository, with their public raw addresses (`.jsonl` fi
 - [`auditiq/results/retrieval.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/retrieval.md)
 - [`auditiq/results/revisions.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.json)
 - [`auditiq/results/revisions.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/revisions.md)
+- [`auditiq/results/risk_screen/screen.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.json)
+- [`auditiq/results/risk_screen/screen.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.md)
 - [`auditiq/results/routing_demo.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/routing_demo.json)
 - [`auditiq/results/routing_demo.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/routing_demo.md)
 - [`auditiq/results/routing_huge.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/routing_huge.json)
@@ -1185,3 +1259,5 @@ The result files of the repository, with their public raw addresses (`.jsonl` fi
 - [`auditiq/results/swap_seed_404/C1_v2.5.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/swap_seed_404/C1_v2.5.jsonl)
 - [`auditiq/results/swap_seed_404/C1_v2.6.jsonl`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/swap_seed_404/C1_v2.6.jsonl)
 - [`auditiq/results/swap_seed_404/metrics.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/swap_seed_404/metrics.json)
+- [`auditiq/results/triage/triage.json`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.json)
+- [`auditiq/results/triage/triage.md`](https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.md)

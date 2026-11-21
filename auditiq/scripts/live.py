@@ -263,6 +263,23 @@ def summary(state: dict, seconds: float, rings: int | None) -> str:
     return "\n".join(lines)
 
 
+WARM = ("/api/overview", "/api/analytics", "/api/rings?limit=40", "/api/leads", "/api/process", "/api/mail",
+        "/api/model")
+
+
+def warm(url: str) -> None:
+    """Ask once, in the background, for the analyses the server keeps until the store changes, so that their pages
+    open at once (the risk screen scores every invoice the first time: half a minute on 25,000)."""
+    import threading
+
+    def run() -> None:
+        for path in WARM:
+            with contextlib.suppress(OSError):
+                urllib.request.urlopen(url + path, timeout=600).read()
+
+    threading.Thread(target=run, name="warm-pages", daemon=True).start()
+
+
 def stop(children: list[tuple[str, subprocess.Popen]], grace: float = 15.0) -> None:
     """End the processes of the run: they were asked to stop (Ctrl+C reaches them too); those still running after
     the grace period are ended."""
@@ -390,9 +407,12 @@ def run_live(args: argparse.Namespace) -> int:
                     print("\n" + summary(state, time.monotonic() - started, found_rings))
                     print(f"\nThe pipeline stays live: publish more from {url}/kafka.\n"
                           f"Overview {url}/   Review queue {url}/review   Vendor collusion {url}/rings\n"
-                          "Press Ctrl+C to stop (the Kafka broker keeps running: `start.bat stop` ends it).")
+                          f"Explainable AI {url}/explain   Audit agent {url}/agent   Trail investigator "
+                          f"{url}/investigator   Process mining {url}/process\n"
+                          "Press Ctrl+C to stop (the Kafka broker keeps running: `./run.sh stop` or `start.bat stop` ends it).")
                     if args.exit_when_done:
                         return 0
+                    warm(url)
             time.sleep(1.5 if not done else 3)
     except KeyboardInterrupt:
         interrupted = True

@@ -28,6 +28,7 @@ COPY evaluation/ evaluation/
 COPY app/ app/
 COPY scripts/ scripts/
 COPY policy/ policy/
+COPY models/ models/
 COPY data/ data/
 COPY results/ results/
 RUN pip install --no-cache-dir -e . \

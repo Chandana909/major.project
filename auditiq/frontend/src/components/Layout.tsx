@@ -24,6 +24,8 @@ const NAV: { group: string; items: NavItem[] }[] = [
     items: [
       { to: "/ai", label: "Agents & pipeline", icon: "ai" },
       { to: "/ask", label: "Ask AI", icon: "copilot" },
+      { to: "/agent", label: "Audit agent", icon: "agent" },
+      { to: "/explain", label: "Explainable AI", icon: "explain" },
     ],
   },
   {
@@ -41,6 +43,9 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { to: "/analytics", label: "Audit analytics", icon: "analytics" },
       { to: "/rings", label: "Vendor collusion", icon: "rings" },
       { to: "/assurance", label: "Assurance", icon: "assurance" },
+      { to: "/investigator", label: "Trail investigator", icon: "investigator" },
+      { to: "/mail", label: "Mail triage", icon: "mail" },
+      { to: "/process", label: "Process mining", icon: "process" },
     ],
   },
   {

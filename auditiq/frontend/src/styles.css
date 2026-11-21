@@ -876,3 +876,44 @@ h3.sub { margin: 14px 0 8px; font-size: 0.8rem; font-weight: 700; text-transform
 .a3-chip:hover { border-color: var(--kind); background: color-mix(in srgb, var(--kind) 7%, #fff); }
 @media (max-width: 900px) { .a3-stage { height: 620px; } .a3-legend { display: none; } .a3-tour { left: 8px; right: 8px; width: auto; bottom: 8px; } }
 @media (prefers-reduced-motion: reduce) { .a3-tour, .a3-tip { animation: none; } }
+
+/* ---------------------------------------------------------------- explainable AI, investigator, mail, agent */
+.shap-waterfall, .beeswarm, .lanes { width: 100%; height: auto; display: block; }
+.shap-waterfall .grid-line, .lanes .grid-line, .beeswarm .grid-line { stroke: var(--border-soft); stroke-width: 1; }
+.beeswarm .zero-line { stroke: var(--border-strong); stroke-dasharray: 3 3; }
+.shap-waterfall .axis-label, .beeswarm .axis-label, .lanes .axis-label, .viz .axis-label { font-size: 10px; fill: var(--muted); }
+.shap-waterfall .row-label, .beeswarm .row-label, .lanes .row-label { font-size: 11px; fill: var(--ink-2); }
+.shap-waterfall .row-label.strong { font-weight: 700; fill: var(--ink); }
+.shap-waterfall .row-note { font-size: 10.5px; fill: var(--muted); }
+.shap-waterfall .bar-value { font-size: 10.5px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.barlist.importance .barlist-label { font-size: 0.8rem; }
+.head-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.head-chip { display: inline-flex; gap: 8px; align-items: baseline; border: 1px solid var(--border); background: var(--surface-2); border-radius: 10px; padding: 5px 10px; cursor: pointer; font: inherit; font-size: 0.8rem; color: var(--ink-2); }
+.head-chip strong { font-variant-numeric: tabular-nums; }
+.head-chip.hot { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+.head-chip.active { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.cf-options { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.cf-option { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.story { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.story li { display: grid; grid-template-columns: 12px 1fr; gap: 10px; align-items: start; }
+.story.compact { margin-top: 12px; gap: 6px; }
+.story-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 5px; }
+.story-kind { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 650; }
+.check-list { display: grid; gap: 8px; }
+.check-card { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.check-card.check-fail { border-color: #fecaca; background: #fffafa; }
+.check-card.check-attention { border-color: #fed7aa; background: #fffcf7; }
+.check-card > header { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; padding: 10px 14px; cursor: pointer; }
+.check-count { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+.check-body { padding: 0 14px 12px; display: grid; gap: 8px; }
+.report-text { white-space: pre-wrap; font-family: var(--mono); font-size: 0.8rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; max-height: 520px; overflow: auto; }
+.agent-steps { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 10px; border-top: 1px solid var(--border-soft); padding-top: 12px; }
+.agent-steps li { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; }
+.step-n { display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 22px; border-radius: 6px; background: var(--brand-soft); color: var(--brand-2); font-weight: 700; font-size: 0.75rem; }
+
+.process-map { width: 100%; height: auto; display: block; }
+.process-map .step { fill: var(--surface); stroke: var(--brand); stroke-width: 1.5; }
+.process-map .step.escalated { stroke: var(--warn); }
+.process-map .step-name { font-size: 11px; font-weight: 650; fill: var(--ink); }
+.process-map .step-count { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.process-map .edge-label { font-size: 9.5px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }

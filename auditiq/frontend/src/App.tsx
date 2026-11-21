@@ -20,6 +20,11 @@ const RagPage = lazy(() => import("./pages/RagPage").then((m) => ({ default: m.R
 const PipelinePage = lazy(() => import("./pages/PipelinePage").then((m) => ({ default: m.PipelinePage })));
 const ArchitecturePage = lazy(() => import("./pages/ArchitecturePage").then((m) => ({ default: m.ArchitecturePage })));
 const ResultsPage = lazy(() => import("./pages/ResultsPage").then((m) => ({ default: m.ResultsPage })));
+const ExplainPage = lazy(() => import("./pages/ExplainPage").then((m) => ({ default: m.ExplainPage })));
+const AgentPage = lazy(() => import("./pages/AgentPage").then((m) => ({ default: m.AgentPage })));
+const InvestigatorPage = lazy(() => import("./pages/InvestigatorPage").then((m) => ({ default: m.InvestigatorPage })));
+const MailPage = lazy(() => import("./pages/MailPage").then((m) => ({ default: m.MailPage })));
+const ProcessPage = lazy(() => import("./pages/ProcessPage").then((m) => ({ default: m.ProcessPage })));
 
 function NotFound() {
   return (
@@ -51,6 +56,11 @@ export function App() {
           <Route path="graph" element={<GraphPage />} />
           <Route path="rag" element={<RagPage />} />
           <Route path="ask" element={<AskPage />} />
+          <Route path="agent" element={<AgentPage />} />
+          <Route path="explain" element={<ExplainPage />} />
+          <Route path="investigator" element={<InvestigatorPage />} />
+          <Route path="mail" element={<MailPage />} />
+          <Route path="process" element={<ProcessPage />} />
           <Route path="copilot" element={<Navigate to="/ask" replace />} />
           <Route path="architecture" element={<ArchitecturePage />} />
           <Route path="pipeline" element={<PipelinePage />} />

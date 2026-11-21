@@ -1,5 +1,5 @@
 // A small typed client for the AuditIQ REST API.
-import type { AiLayer, Analytics, ApplySummary, AuditProgram, CaseAnswer, CaseGraphView, ConfigName, GraphAnswer, KnowledgeLayer, Leads, MonetaryUnitSample, Reliability, PeekMessage, RagTrace, StreamLogRow, StreamSources, SystemStatus, CopilotAnswer, DataAnswer, Health, Hit, InvoiceDetail, InvoiceRow, Job, LedgerLoad, Me, Overview, Pipeline, PolicyGraphData, PolicyOverview, Preview, Proposal, QueueItem, Results, Rings, Simulation, StreamStatus, TrailCheck, VendorPoint } from "./types";
+import type { AgentAnswer, AiLayer, ProcessMining, Analytics, Explanation, Investigation, InvoiceStory, MailTriage, ModelOverview, ApplySummary, AuditProgram, CaseAnswer, CaseGraphView, ConfigName, GraphAnswer, KnowledgeLayer, Leads, MonetaryUnitSample, Reliability, PeekMessage, RagTrace, StreamLogRow, StreamSources, SystemStatus, CopilotAnswer, DataAnswer, Health, Hit, InvoiceDetail, InvoiceRow, Job, LedgerLoad, Me, Overview, Pipeline, PolicyGraphData, PolicyOverview, Preview, Proposal, QueueItem, Results, Rings, Simulation, StreamStatus, TrailCheck, VendorPoint } from "./types";
 
 const TOKEN_KEY = "auditiq.token";
 
@@ -178,6 +178,14 @@ export const api = {
     return { blob: await response.blob(), digest: response.headers.get("X-Report-Digest"), filename };
   },
   leads: () => request<Leads>("/api/leads"),
+  model: () => request<ModelOverview>("/api/model"),
+  explain: (id: string) => request<Explanation>(`/api/invoices/${encodeURIComponent(id)}/explain`),
+  story: (id: string) => request<InvoiceStory>(`/api/invoices/${encodeURIComponent(id)}/story`),
+  investigation: (slaDays = 5) => request<Investigation>(`/api/investigation?sla_days=${slaDays}`),
+  mail: () => request<MailTriage>("/api/mail"),
+  process: () => request<ProcessMining>("/api/process"),
+  agentAsk: (question: string, mode: "auto" | "rules" | "model" = "auto") =>
+    request<Job<AgentAnswer>>("/api/agent/ask", json({ question, mode })),
   sampling: (options: { confidence: number; tolerable_pct: number; expected_pct: number; seed?: number | null }) => {
     const query = new URLSearchParams({
       confidence: String(options.confidence),

@@ -185,12 +185,12 @@ export function liveBadges(f: LiveFacts): Record<string, string> {
 /** The path of one invoice through the platform, drawn in the last step of the tour. */
 export const INVOICE_PATH = ["erp", "producer", "t-invoice", "workers", "service", "extract", "controls", "math", "challenger", "confidence", "score", "route", "review", "pack", "audit", "views", "api"];
 
-/** The size of the code base, counted in the repository on 15 November 2026 (git ls-files; pytest --collect-only). */
+/** The size of the code base, counted in the repository on 21 November 2026 (git ls-files; pytest --collect-only). */
 export const CODEBASE = [
-  { label: "Python modules", value: "81", hint: "≈ 21,200 lines · auditiq, bench, evaluation, scripts" },
-  { label: "Frontend", value: "≈ 9,700", hint: "lines of TypeScript · 15 pages · 10 3D scenes" },
-  { label: "Automated tests", value: "580", hint: "519 Python (SQLite + PostgreSQL) · 61 frontend · browser e2e" },
-  { label: "REST API", value: "41", hint: "endpoints · roles · background jobs" },
+  { label: "Python modules", value: "100", hint: "≈ 26,800 lines · auditiq, bench, evaluation, scripts" },
+  { label: "Frontend", value: "≈ 13,100", hint: "lines of TypeScript · 21 pages · 10 3D scenes" },
+  { label: "Automated tests", value: "738", hint: "652 Python (SQLite + PostgreSQL) · 74 frontend · 12 browser e2e" },
+  { label: "REST API", value: "53", hint: "endpoints · roles · background jobs" },
   { label: "Database", value: "23", hint: "tables + 2 views · SQLite or PostgreSQL 17" },
 ];
 
@@ -204,4 +204,8 @@ export const HARD_PROBLEMS: { title: string; text: string; page: string }[] = [
   { title: "Statistics, not thresholds", text: "Benford tests, Gini concentration, binomial tests with false-discovery-rate control for collusion rings.", page: "/rings" },
   { title: "Grounded answers", text: "Two code-built knowledge graphs, hybrid retrieval with rank fusion, one read-only SELECT for data questions.", page: "/ask" },
   { title: "Measured and reproducible", text: "Seeded benchmark ledgers with answer keys, scale to 500,000 invoices, every number re-derivable by a script.", page: "/results" },
+  { title: "Exact explanations", text: "A gradient-boosted risk screen explained with exact TreeSHAP, checked against the Shapley formula; counterfactuals verified by running the controls again.", page: "/explain" },
+  { title: "Auditing the audit", text: "Twelve checks of the sealed record and the review: segregation of duties, rubber-stamping, overrides, rejections undone; 54 of 54 planted faults found.", page: "/investigator" },
+  { title: "Payment-redirection fraud", text: "Vendor e-mails triaged by code: look-alike domains, pressure and new bank accounts; the payment held until confirmed by telephone.", page: "/mail" },
+  { title: "Agents with tools", text: "An audit agent that plans calls to fifteen read-only tools, cites every step and lists any number no tool returned.", page: "/agent" },
 ];

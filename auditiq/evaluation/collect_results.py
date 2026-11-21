@@ -368,6 +368,58 @@ def igpu_sample() -> dict:
         "from the McNemar tests of the source.")}
 
 
+def risk_screen() -> dict:
+    r = load("risk_screen/screen.json")
+    return {"label": "measured",
+            "question": "Trained only on the development ledger, how well does the risk screen (gradient-boosted trees, "
+                        "one head per judgement rule) rank the anomalies of six ledgers it never saw, against an "
+                        "isolation forest; how many judgement anomalies that the controls approve does it put in the "
+                        "top 2 % of the approved invoices; and do its two SHAP implementations agree?",
+            "training": r["training"], "reproduces_committed_model": r["reproduces_committed_model"],
+            "summary": r["summary"], "shap": r["shap"],
+            "by_ledger": {e["ledger"]: {head: {k: h[k] for k in ("positives", "auc", "average_precision",
+                                                                  "recall_at_positives")}
+                                        for head, h in e["heads"].items()} for e in r["ledgers"]},
+            "sources": [source("risk_screen/screen.json"), source("risk_screen/screen.md")],
+            "command": "python -m evaluation.screen_eval"}
+
+
+def trail_investigator() -> dict:
+    r = load("investigator/investigator.json")
+    return {"label": "measured",
+            "question": "Does the trail investigator find faults planted in an audited store at their place (seals, "
+                        "trail stages, evidence, coverage, failed model stages, reasons, pace, segregation of duties, "
+                        "overrides, rejections undone, unexplained flips), and report nothing on a store run properly?",
+            "ledger": r["ledger"], "planted": r["scenarios"]["planted"]["comparison"],
+            "clean": {"status": r["scenarios"]["clean"]["status"], "verdict": r["scenarios"]["clean"]["verdict"]},
+            "sources": [source("investigator/investigator.json"), source("investigator/investigator.md")],
+            "command": "python -m evaluation.investigator_eval"}
+
+
+def email_triage() -> dict:
+    r = load("triage/triage.json")
+    keep = ("emails", "category_accuracy", "redirection", "callback", "holds")
+    return {"label": "measured",
+            "question": "On the generated vendor mailboxes of four ledgers, does the e-mail triage put each e-mail in "
+                        "its category, catch the payment-redirection requests from look-alike domains without false "
+                        "alarms, and send the genuine bank-detail changes for confirmation?",
+            "by_ledger": {e["ledger"]: {k: e[k] for k in keep} for e in r["ledgers"]},
+            "sources": [source("triage/triage.json"), source("triage/triage.md")],
+            "command": "python -m evaluation.triage_eval"}
+
+
+def audit_agent() -> dict:
+    r = load("agent/agent.json")
+    return {"label": "measured",
+            "question": "Without a model, does the audit agent's rules planner answer questions about the audit "
+                        "right, on a dev wording used while it was written and a test wording frozen before its run?",
+            "ledger": r["ledger"], "summary": r["summary"],
+            "wrong": [{"split": q["split"], "question": q["question"], "tools": q["tools"]}
+                      for q in r["questions"] if not q["right"]],
+            "sources": [source("agent/agent.json"), source("agent/agent.md")],
+            "command": "python -m evaluation.agent_eval"}
+
+
 def build() -> dict:
     return {
         "title": "AuditIQ: every measured result, machine-readable",
@@ -408,6 +460,10 @@ def build() -> dict:
             **full_runs(),
             **huge_ledger(),
             **kafka_ingestion(),
+            "risk_screen_on_held_out_ledgers": risk_screen(),
+            "trail_investigator_against_planted_faults": trail_investigator(),
+            "email_triage_of_generated_mailboxes": email_triage(),
+            "audit_agent_rules_planner": audit_agent(),
         }),
     }
 

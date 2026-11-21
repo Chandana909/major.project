@@ -14,6 +14,12 @@ project from that file alone (https://github.com/Chandana909/major.project/blob/
 **Writing the paper? Start with [`RESULTS.md`](RESULTS.md):** every measured
 result, with its table, figure, source file and the command that produced it.
 
+**New on 21 November 2026, the intelligence layer** ([`auditiq/docs/NEW_FEATURES.md`](auditiq/docs/NEW_FEATURES.md)):
+an explainable risk screen (gradient-boosted trees with exact SHAP values), counterfactual explanations of every
+finding, a trail investigator agent that audits the audit and reports what happened where, e-mail triage that
+catches payment-redirection fraud, a tool-using audit agent that answers questions without a model, and process
+mining of procure-to-pay (process map, variants, conformance, cycle times). Measured in `RESULTS.md`, Section 14.
+
 **The full report, methodology, every result in detail and the analysis:**
 [`REPORT.md`](REPORT.md) (https://github.com/Chandana909/major.project/blob/main/REPORT.md).
 
@@ -28,6 +34,35 @@ the command that produced it.
 |---|---|
 | [`auditiq/`](auditiq/README.md) | The system, the web application (`auditiq/frontend/`), the AuditIQ-Bench datasets, the evaluation harness, results and documentation. Start with its README. |
 | [`paper/`](paper/) | The paper (`auditiq_paper.tex`, `auditiq_paper.pdf`), the measured section on policy-driven controls (`policy_feature.tex`, `policy_feature.pdf`), a 6-page conference version with formal propositions (`paper/conference/main.tex`, `main.pdf`), and a project overview for the team (`AuditIQ_Project_Overview.pdf`, source in `paper/overview/`). |
+
+## Run everything with one command
+
+From the repository's folder (a clone, or the ZIP downloaded from GitHub and unpacked), in bash on Linux, macOS or
+Windows (Git Bash):
+
+```bash
+./run.sh
+```
+
+That is all. With Python 3.11 or later and an internet connection the first time, it installs the Python packages
+into `auditiq/.venv`, downloads what is missing into `auditiq/.tools/` (Java 17 for Kafka, Node.js 20 to build the
+web application, Kafka 4.3.2; each checked against its published checksum), starts a local Kafka broker, creates the
+store (a SQLite database: no database server is needed), starts the stream workers and the web application, streams
+the final ledger (25,000 invoices, its vendors, vendor e-mails and the policy documents) through Kafka into the
+audit, and opens the dashboard in the browser at http://127.0.0.1:8000. The first run takes a few minutes to
+install; streaming the ledger takes about four more, and the pages fill as the audit goes. Ctrl+C stops it.
+
+| Command | What it does |
+|---|---|
+| `./run.sh` | the final ledger, 25,000 invoices (the project's dataset) |
+| `./run.sh --huge` | the 500,000-invoice ledger, unpacked once from `auditiq/data_archives/` (about 2 GB); streaming it takes about an hour on a laptop |
+| `./run.sh --limit 2000` | only the first 2,000 invoices: a quick demonstration |
+| `./run.sh --keep` | open the last run again, without streaming |
+| `./run.sh stop` / `./run.sh reset` | stop the Kafka broker / also delete every run's topics |
+
+On Windows without bash, `auditiq\start.bat` does the same once Java and Kafka are installed.
+
+## Step by step
 
 Run every command from `auditiq/`. Quick start, with no model and no database
 server (Python 3.11 or later; Node 20 or later for the web application):

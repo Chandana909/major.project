@@ -1,0 +1,1457 @@
+{
+ "date": "2026-11-21",
+ "ledger": "collusion_seed_707",
+ "seconds": 36.3,
+ "summary": {
+  "dev": {
+   "questions": 30,
+   "right": 30,
+   "tool_chosen": 30,
+   "median_ms": 5.65
+  },
+  "test": {
+   "questions": 30,
+   "right": 27,
+   "tool_chosen": 28,
+   "median_ms": 4.5
+  }
+ },
+ "questions": [
+  {
+   "split": "dev",
+   "intent": "why_flagged",
+   "question": "Why was INV43820 flagged?",
+   "gold": {
+    "all": [
+     "2.1.1"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 141.9,
+   "answer": "INV43820 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 2.1.1 (high, control): Invoice amount 100528.96 differs from PO amount 92580.48 by 8.59% (tolerance 1%). [T1] The risk screen gives INV43820 an anomaly probability of 0.990 (average invoice 0.014); the largest SHAP contributions in log-odds are po_variance_pct = 8.5855 (+6.67), desc_history_overlap = 0 (+1.69), desc_po_overlap = 0 (+1.02). No judgement rule stands out (the highest, 2.1.5, has probability 0.015). Rule 2.1.1: 8.59% from the PO amount against a tolerance of "
+  },
+  {
+   "split": "dev",
+   "intent": "why_flagged",
+   "question": "Why was INV44960 flagged?",
+   "gold": {
+    "all": [
+     "3.1.3"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 119.7,
+   "answer": "INV44960 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 3.1.3 (high, control): Invoice GSTIN 24FFMMY4797A5ZR differs from the vendor master GSTIN 36FFMMY4797A9Z4. [T1] The risk screen gives INV44960 an anomaly probability of 0.950 (average invoice 0.014); the largest SHAP contributions in log-odds are gstin_mismatch = 1 (+7.69), same_receipt_before = 0 (-0.06), desc_po_overlap = 1 (-0.05). No judgement rule stands out (the highest, 2.1.4, has probability 0.000). Rule 3.1.3: Invoice GSTIN 24FFMMY4797A5ZR differs from the vendor"
+  },
+  {
+   "split": "dev",
+   "intent": "why_flagged",
+   "question": "Why was INV44028 flagged?",
+   "gold": {
+    "all": [
+     "2.1.3"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 107.9,
+   "answer": "INV44028 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 2.1.3 (high, control): Invoice has no PO reference and no GRN reference. [T1] The risk screen gives INV44028 an anomaly probability of 0.934 (average invoice 0.014); the largest SHAP contributions in log-odds are missing_reference = 2 (+7.09), desc_po_overlap = 0 (+0.38), desc_history_overlap = 1 (-0.15). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 2.1.3: Invoice has no PO reference and no GRN reference.; it would clear with: The purchas"
+  },
+  {
+   "split": "dev",
+   "intent": "approver",
+   "question": "Who approved INV43702?",
+   "gold": {
+    "all": [
+     "Christopher Gopal"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_records",
+    "audit_result"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 4.2,
+   "answer": "INV43702: invoice GOP/25-26/00486 of ₹47,311 dated 2025-12-24 from Gopal-Kanda (VEND1121), PO PO23596, GRN GRN33599, 'Pallet wrapping film (23 mic) rolls (73 rolls)'. Approved by Christopher Gopal (Manager) on 2025-12-26. [T1] INV43702 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T2]"
+  },
+  {
+   "split": "dev",
+   "intent": "approver",
+   "question": "Who approved INV44161?",
+   "gold": {
+    "all": [
+     "Widisha Gandhi"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_records",
+    "audit_result"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 3.3,
+   "answer": "INV44161: invoice NIG00297 of ₹56,921 dated 2026-01-27 from Nigam, Borde and Walia (VEND1136), PO PO24250, GRN GRN34083, 'Bearings 6205-2RS'. Approved by Widisha Gandhi (Manager) on 2026-01-28. [T1] INV44161 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T2]"
+  },
+  {
+   "split": "dev",
+   "intent": "approver",
+   "question": "Who approved INV44812?",
+   "gold": {
+    "all": [
+     "Upkaar Balan"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_records",
+    "audit_result"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 3.6,
+   "answer": "INV44812: invoice BHT00525 of ₹22,217 dated 2026-03-18 from Balakrishnan and Sons (VEND1229), PO PO24604, GRN GRN34704, 'Being charges towards 5-ply corrugated boxes'. Approved by Upkaar Balan (Manager) on 2026-03-24. [T1] INV44812 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T2]"
+  },
+  {
+   "split": "dev",
+   "intent": "approval_role",
+   "question": "Which role must approve an invoice of Rs 75,000?",
+   "gold": {
+    "all": [
+     "Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.9,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹75,000 needs a Manager (limit ₹1,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "approval_role",
+   "question": "Which role must approve an invoice of Rs 3,50,000?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.6,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹3,50,000 needs a Senior Manager (limit ₹5,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "approval_role",
+   "question": "Which role must approve an invoice of Rs 12,00,000?",
+   "gold": {
+    "all": [
+     "Director"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.5,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹12,00,000 needs a Director (limit ₹25,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "approval_role",
+   "question": "Which role must approve an invoice of Rs 40,00,000?",
+   "gold": {
+    "all": [
+     "CFO"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.5,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹40,00,000 needs a CFO (limit ₹1,00,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "waiting",
+   "question": "How many invoices are waiting for review?",
+   "gold": {
+    "all": [
+     "291"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "review_queue"
+   ],
+   "expected_tool": "review_queue",
+   "tool_chosen": true,
+   "ms": 11.5,
+   "answer": "291 invoices waiting for review; the highest first: INV40007 Narula-Varkey ₹2,46,418 CRITICAL; INV40008 More, Pandey and Kale ₹1,74,809 CRITICAL; INV40072 Kashyap, Khurana and Sachdev ₹30,13,973 CRITICAL; INV40155 Raja-Raghavan ₹42,13,300 CRITICAL; INV40240 Khatri-Sawhney ₹2,29,518 CRITICAL; INV40289 Das Ltd ₹13,161 CRITICAL; INV40298 Narula-Varkey ₹1,94,121 CRITICAL; INV40423 Nori-Gade ₹1,13,707 CRITICAL; INV40514 Wable, Mohan and Choudhury ₹1,89,709 CRITICAL; INV40623 Nori-Gade ₹2,08,206 CRITICAL. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "top_findings_vendor",
+   "question": "Which vendors have the most findings?",
+   "gold": {
+    "any": [
+     "VEND1163",
+     "VEND1087"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "top_vendors"
+   ],
+   "expected_tool": "top_vendors",
+   "tool_chosen": true,
+   "ms": 5.6,
+   "answer": "Vendors with the most findings in the latest results: Sachdev, Misra and Mukherjee (VEND1087): 11; Khatri-Sawhney (VEND1163): 11; Narula-Varkey (VEND1029): 10; Nori-Gade (VEND1239): 9; Wadhwa-Panchal (VEND1171): 8. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "top_amount_vendor",
+   "question": "Which vendor has the largest invoiced amount?",
+   "gold": {
+    "all": [
+     "VEND1075"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "top_vendors"
+   ],
+   "expected_tool": "top_vendors",
+   "tool_chosen": true,
+   "ms": 17.2,
+   "answer": "Vendors with the largest invoiced amount: Vig-Grover (VEND1075): ₹2,44,56,068; Chahal, Bhatt and Aurora (VEND1032): ₹2,39,50,015; Pradhan-Narang (VEND1153): ₹2,37,17,710; Das, Chauhan and Amble (VEND1189): ₹2,26,77,110; Palan PLC (VEND1015): ₹2,02,80,137. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "rule_text",
+   "question": "What does rule 4.1.2 say?",
+   "gold": {
+    "all": [
+     "Structuring across days"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 2.7,
+   "answer": "Rule 4.1.2 of policy v2.5, Structuring across days (high, a judgement rule for the agents); parameters guide_window_days = 7, guide_band_pct = 15. Wording: Rule 4.1.2 (HIGH), structuring across days. Invoices from one vendor for the same goods or services, dated on different days within a short period (as a guide, 7 days), each just below the approval limit of the approver who approved it (as a guide, within 15% of the limit) and together above that limit, are treated as one purchase divided to avoid a higher approval. Every invoice of the group is an exception. A single invoice near a limit i"
+  },
+  {
+   "split": "dev",
+   "intent": "rule_text",
+   "question": "What does rule 5.1.1 say?",
+   "gold": {
+    "all": [
+     "Approval limit"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 2.7,
+   "answer": "Rule 5.1.1 of policy v2.5, Approval limit (critical, decided by a control); parameters approval_limits = {'Manager': 100000, 'Senior Manager': 500000, 'Director': 2500000, 'CFO': 10000000}. Wording: Rule 5.1.1 (CRITICAL), approval limit. An invoice whose amount is greater than the approval limit of the role that approved it is an exception. An amount equal to the limit is within authority. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "rule_text",
+   "question": "What does rule 2.2.2 say?",
+   "gold": {
+    "all": [
+     "Near duplicate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 2.6,
+   "answer": "Rule 2.2.2 of policy v2.5, Near duplicate (critical, a judgement rule for the agents). Wording: Rule 2.2.2 (CRITICAL), near duplicate. An invoice that bills the same PO and GRN for the same amount as an earlier invoice from the same vendor, under an invoice number that is a re-keyed form of the earlier number (for example changed case, separators or leading zeros, an added suffix, or transposed or substituted characters), is an exception. Consecutive invoice numbers for separate POs and separate deliveries are not duplicates, even when the amounts are equal. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "redirection",
+   "question": "Are there any e-mails trying to change bank details?",
+   "gold": {
+    "all": [
+     "INV44193",
+     "INV44491",
+     "INV44700",
+     "INV44867"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "mail_alerts"
+   ],
+   "expected_tool": "mail_alerts",
+   "tool_chosen": true,
+   "ms": 963.0,
+   "answer": "2,104 vendor e-mails; 4 high-risk (payment redirection), 15 to confirm; 4 invoice(s) to hold for ₹7,38,300. High-risk: finance@chatterjeeravals.example about INV44193: sent from chatterjeeravals.example, which reads like the vendor's domain but is not it, asks to pay into another bank account, presses for an urgent payment, asks not to be called back, names the unpaid invoice INV44193; finance@nayarmitterandmanns.example about INV44491: sent from nayarmitterandmanns.example, which reads like the vendor's domain but is not it, asks to pay into another bank account, presses for an urgent payment"
+  },
+  {
+   "split": "dev",
+   "intent": "tamper",
+   "question": "Was the audit trail tampered with?",
+   "gold": {
+    "all": [
+     "The sealed record (fail)"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "trail_investigation"
+   ],
+   "expected_tool": "trail_investigation",
+   "tool_chosen": true,
+   "ms": 2560.7,
+   "answer": "The audit record needs action: 1 check(s) failed, 0 need attention, 11 passed. The sealed record (fail): 1 item(s) no longer match their seals: 1 results, 0 review states, 0 trail entries, 0 runs. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "near_duplicates",
+   "question": "Which invoices might be near duplicates?",
+   "gold": {
+    "any": [
+     "INV40712",
+     "INV41075",
+     "INV41138",
+     "INV41430",
+     "INV41486",
+     "INV41651",
+     "INV41678",
+     "INV41773",
+     "INV41863",
+     "INV42227",
+     "INV42339",
+     "INV42445",
+     "INV42528",
+     "INV42604",
+     "INV42818",
+     "INV43243",
+     "INV43495",
+     "INV43682",
+     "INV43756",
+     "INV44012",
+     "INV44082",
+     "INV44096",
+     "INV44103",
+     "INV44233",
+     "INV44282",
+     "INV44673",
+     "INV44747",
+     "INV44959",
+     "INV44972",
+     "INV44983"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "judgement_leads"
+   ],
+   "expected_tool": "judgement_leads",
+   "tool_chosen": true,
+   "ms": 186.1,
+   "answer": "30 near-duplicate lead(s) under rule 2.2.2, such as INV40712 (repeats INV40418), INV41138 (repeats INV40613), INV41075 (repeats INV40740), INV41430 (repeats INV40997), INV41678 (repeats INV41198); of their invoices the latest results approved 30. 10 structuring group(s) under rule 4.1.2, such as INV43725+INV43799+INV43818 (Pandit-Barad, ₹14,53,790 against a Senior Manager limit of ₹5,00,000), INV40127+INV40154+INV40178 (Purohit-Khosla, ₹14,06,864 against a Senior Manager limit of ₹5,00,000), INV40864+INV40883+INV40911 (Narula-Bakshi, ₹13,77,999 against a Senior Manager limit of ₹5,00,000); of "
+  },
+  {
+   "split": "dev",
+   "intent": "story",
+   "question": "Tell me the story of INV43820",
+   "gold": {
+    "all": [
+     "Agastya Bir",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 5.5,
+   "answer": "Story of INV43820 (1 audit(s)): 2025-11-28 Purchase order PO23703 for ₹92,580.48; 2025-12-24 Goods receipt GRN33710: 32 received; remark: Completion confirmed by the requester.; 2025-12-31 Invoice BRA00154 of ₹100,528.96 from Brahmbhatt-Ramachandran (VEND1103), PO PO23703, GRN GRN33710; 2026-01-05 14:57 Approved by Agastya Bir (Senior Manager); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 2.1.1 (high); trail of 3 steps (extraction > controls > scoring). Now: PENDING_REVIEW after 1 audit(s); the latest result is intact. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "story",
+   "question": "Tell me the story of INV44960",
+   "gold": {
+    "all": [
+     "Utkarsh Kulkarni",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 5.7,
+   "answer": "Story of INV44960 (1 audit(s)): 2026-02-13 Purchase order PO24715 for ₹423,405.13; 2026-03-24 Goods receipt GRN34880: 31 received; remark: Completion confirmed by the requester.; 2026-03-27 Invoice TMZ/25-26/00481 of ₹423,405.13 from Chaudhari Group (VEND1056), PO PO24715, GRN GRN34880; 2026-03-27 15:17 E-mail from accounts@chaudharigroup.example: Invoice TMZ/25-26/00481 for PO24715; 2026-03-30 14:10 Approved by Utkarsh Kulkarni (Senior Manager); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 3.1.3 (high); trail of 3 steps (extraction > controls > sco"
+  },
+  {
+   "split": "dev",
+   "intent": "story",
+   "question": "Tell me the story of INV44028",
+   "gold": {
+    "all": [
+     "Samarth Soni",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 5.4,
+   "answer": "Story of INV44028 (1 audit(s)): 2026-01-16 Invoice NAI/25-26/00198 of ₹171,030.60 from Naidu Ltd (VEND1108), PO none, GRN none; 2026-01-16 17:56 E-mail from accounts@naidultd.example: Invoice NAI/25-26/00198 for your order; 2026-01-20 13:28 Approved by Samarth Soni (Director); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 2.1.3 (high); trail of 3 steps (extraction > controls > scoring). Now: PENDING_REVIEW after 1 audit(s); the latest result is intact. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "counterfactual",
+   "question": "What would clear the finding on INV41242?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "explain_invoice",
+   "tool_chosen": true,
+   "ms": 93.7,
+   "answer": "INV41242 was audited under C1 with policy v2.5: route escalate, risk CRITICAL, score 70.0, state PENDING_REVIEW. Findings: rule 5.1.1 (critical, control): Invoice amount 174235.26 exceeds the Manager approval limit of 100000; approved by Shivansh Malhotra. [T1] The risk screen gives INV41242 an anomaly probability of 0.922 (average invoice 0.014); the largest SHAP contributions in log-odds are limit_ratio = 1.7424 (+4.75), below_limit_pct = 100 (+2.52), same_receipt_before = 0 (-0.08). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 5.1.1: ₹174,235.26 against the"
+  },
+  {
+   "split": "dev",
+   "intent": "counterfactual",
+   "question": "What would clear the finding on INV41217?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "explain_invoice",
+   "tool_chosen": true,
+   "ms": 102.8,
+   "answer": "INV41217 was audited under C1 with policy v2.5: route escalate, risk CRITICAL, score 70.0, state PENDING_REVIEW. Findings: rule 5.1.1 (critical, control): Invoice amount 240876.27 exceeds the Manager approval limit of 100000; approved by Shivansh Malhotra. [T1] The risk screen gives INV41217 an anomaly probability of 0.921 (average invoice 0.014); the largest SHAP contributions in log-odds are limit_ratio = 2.4088 (+4.75), below_limit_pct = 100 (+2.51), same_receipt_before = 0 (-0.08). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 5.1.1: ₹240,876.27 against the"
+  },
+  {
+   "split": "dev",
+   "intent": "vendor_profile",
+   "question": "Tell me about vendor Sunder Ltd",
+   "gold": {
+    "all": [
+     "25"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "vendor_profile"
+   ],
+   "expected_tool": "vendor_profile",
+   "tool_chosen": true,
+   "ms": 9.1,
+   "answer": "Sunder Ltd (VEND1226, MRO, Ahmedabad): 25 invoices for ₹12,87,071; findings in the latest results: 2.2.1 x2, 3.1.1 x1; 2 waiting for review; GST status Active. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "vendor_profile",
+   "question": "Tell me about vendor Nagar-Talwar",
+   "gold": {
+    "all": [
+     "21"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "vendor_profile"
+   ],
+   "expected_tool": "vendor_profile",
+   "tool_chosen": true,
+   "ms": 4.0,
+   "answer": "Nagar-Talwar (VEND1027, Raw Materials, Kochi): 21 invoices for ₹1,02,00,748; findings in the latest results: 2.2.1 x1, 2.1.3 x1; 2 waiting for review; GST status Active. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "rings",
+   "question": "Show me the collusion rings",
+   "gold": {
+    "each_any": [
+     [
+      "VEND1073",
+      "VEND1056"
+     ],
+     [
+      "VEND1076",
+      "VEND1044"
+     ],
+     [
+      "VEND1171",
+      "VEND1029",
+      "VEND1163",
+      "VEND1239"
+     ],
+     [
+      "VEND1087",
+      "VEND1216"
+     ]
+    ]
+   },
+   "right": true,
+   "tools": [
+    "collusion_rings"
+   ],
+   "expected_tool": "collusion_rings",
+   "tool_chosen": true,
+   "ms": 144.7,
+   "answer": "4 collusion ring(s) found: ring 1: VEND1087, VEND1216; ring 2: VEND1029, VEND1083, VEND1097, VEND1163, VEND1171, VEND1175; ring 3: VEND1056, VEND1073; ring 4: VEND1044, VEND1076. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "screen",
+   "question": "What might the controls have missed according to the model?",
+   "gold": {
+    "any": [
+     "INV40127",
+     "INV40152",
+     "INV40154",
+     "INV40178",
+     "INV40214",
+     "INV40249",
+     "INV40287",
+     "INV40348",
+     "INV40387",
+     "INV40415",
+     "INV40552",
+     "INV40559",
+     "INV40626",
+     "INV40643",
+     "INV40667",
+     "INV40677",
+     "INV40712",
+     "INV40724",
+     "INV40864",
+     "INV40883",
+     "INV40911",
+     "INV41054",
+     "INV41075",
+     "INV41130",
+     "INV41134",
+     "INV41138",
+     "INV41151",
+     "INV41221",
+     "INV41361",
+     "INV41377",
+     "INV41430",
+     "INV41473",
+     "INV41486",
+     "INV41522",
+     "INV41603",
+     "INV41643",
+     "INV41651",
+     "INV41678",
+     "INV41709",
+     "INV41713",
+     "INV41773",
+     "INV41863",
+     "INV41987",
+     "INV42005",
+     "INV42012",
+     "INV42043",
+     "INV42227",
+     "INV42274",
+     "INV42339",
+     "INV42430",
+     "INV42445",
+     "INV42488",
+     "INV42528",
+     "INV42604",
+     "INV42613",
+     "INV42707",
+     "INV42732",
+     "INV42761",
+     "INV42818",
+     "INV42957",
+     "INV42997",
+     "INV43033",
+     "INV43042",
+     "INV43140",
+     "INV43243",
+     "INV43278",
+     "INV43302",
+     "INV43318",
+     "INV43345",
+     "INV43384",
+     "INV43399",
+     "INV43402",
+     "INV43411",
+     "INV43426",
+     "INV43463",
+     "INV43495",
+     "INV43586",
+     "INV43631",
+     "INV43682",
+     "INV43695",
+     "INV43700",
+     "INV43725",
+     "INV43756",
+     "INV43798",
+     "INV43799",
+     "INV43818",
+     "INV43819",
+     "INV43857",
+     "INV43889",
+     "INV43909",
+     "INV43988",
+     "INV44012",
+     "INV44035",
+     "INV44082",
+     "INV44096",
+     "INV44098",
+     "INV44103",
+     "INV44113",
+     "INV44203",
+     "INV44233",
+     "INV44282",
+     "INV44315",
+     "INV44378",
+     "INV44476",
+     "INV44496",
+     "INV44501",
+     "INV44516",
+     "INV44523",
+     "INV44551",
+     "INV44650",
+     "INV44673",
+     "INV44741",
+     "INV44743",
+     "INV44747",
+     "INV44758",
+     "INV44782",
+     "INV44946",
+     "INV44959",
+     "INV44972",
+     "INV44983"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "screen_leads"
+   ],
+   "expected_tool": "screen_leads",
+   "tool_chosen": true,
+   "ms": 4706.2,
+   "answer": "Of the 4,708 invoices the latest results passed, the risk screen rates highest for a judgement rule (2.1.4, 2.1.5, 2.2.2, 4.1.2): INV40127 4.1.2 p=1.000; INV40152 2.1.4 p=1.000; INV40154 4.1.2 p=1.000; INV40178 4.1.2 p=1.000; INV40214 2.1.4 p=1.000; INV40287 2.1.4 p=1.000; INV40348 2.1.4 p=1.000; INV40387 2.1.4 p=1.000. A screen score is not a finding; these are for a reviewer or the agents. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "critical_queue",
+   "question": "Which critical invoices are waiting?",
+   "gold": {
+    "all": [
+     "INV40007"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "review_queue"
+   ],
+   "expected_tool": "review_queue",
+   "tool_chosen": true,
+   "ms": 3.6,
+   "answer": "134 invoices at CRITICAL waiting for review; the highest first: INV40007 Narula-Varkey ₹2,46,418 CRITICAL; INV40008 More, Pandey and Kale ₹1,74,809 CRITICAL; INV40072 Kashyap, Khurana and Sachdev ₹30,13,973 CRITICAL; INV40155 Raja-Raghavan ₹42,13,300 CRITICAL; INV40240 Khatri-Sawhney ₹2,29,518 CRITICAL; INV40289 Das Ltd ₹13,161 CRITICAL; INV40298 Narula-Varkey ₹1,94,121 CRITICAL; INV40423 Nori-Gade ₹1,13,707 CRITICAL; INV40514 Wable, Mohan and Choudhury ₹1,89,709 CRITICAL; INV40623 Nori-Gade ₹2,08,206 CRITICAL. [T1]"
+  },
+  {
+   "split": "dev",
+   "intent": "flagged_count",
+   "question": "How many invoices have findings?",
+   "gold": {
+    "all": [
+     "351"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "findings_summary"
+   ],
+   "expected_tool": "findings_summary",
+   "tool_chosen": true,
+   "ms": 35.9,
+   "answer": "5,000 of 5,000 invoices audited; 351 with at least one finding; routes: approve 4,708, escalate 292; 291 waiting for review. Findings by rule: 5.1.1 74, 3.1.3 37, 2.1.1 30, 2.1.2 30, 2.1.3 30, 2.2.1 30, 4.1.1 30, 4.4.1 30, 3.1.1 15, 3.1.2 15, 4.2.1 15, 4.3.1 15. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "why_flagged",
+   "question": "What did the audit find on invoice INV43820, and under which rule?",
+   "gold": {
+    "all": [
+     "2.1.1"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 119.3,
+   "answer": "INV43820 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 2.1.1 (high, control): Invoice amount 100528.96 differs from PO amount 92580.48 by 8.59% (tolerance 1%). [T1] The risk screen gives INV43820 an anomaly probability of 0.990 (average invoice 0.014); the largest SHAP contributions in log-odds are po_variance_pct = 8.5855 (+6.67), desc_history_overlap = 0 (+1.69), desc_po_overlap = 0 (+1.02). No judgement rule stands out (the highest, 2.1.5, has probability 0.015). Rule 2.1.1: 8.59% from the PO amount against a tolerance of "
+  },
+  {
+   "split": "test",
+   "intent": "why_flagged",
+   "question": "What did the audit find on invoice INV44960, and under which rule?",
+   "gold": {
+    "all": [
+     "3.1.3"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 120.4,
+   "answer": "INV44960 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 3.1.3 (high, control): Invoice GSTIN 24FFMMY4797A5ZR differs from the vendor master GSTIN 36FFMMY4797A9Z4. [T1] The risk screen gives INV44960 an anomaly probability of 0.950 (average invoice 0.014); the largest SHAP contributions in log-odds are gstin_mismatch = 1 (+7.69), same_receipt_before = 0 (-0.06), desc_po_overlap = 1 (-0.05). No judgement rule stands out (the highest, 2.1.4, has probability 0.000). Rule 3.1.3: Invoice GSTIN 24FFMMY4797A5ZR differs from the vendor"
+  },
+  {
+   "split": "test",
+   "intent": "why_flagged",
+   "question": "What did the audit find on invoice INV44028, and under which rule?",
+   "gold": {
+    "all": [
+     "2.1.3"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "audit_result",
+   "tool_chosen": true,
+   "ms": 104.0,
+   "answer": "INV44028 was audited under C1 with policy v2.5: route escalate, risk HIGH, score 50.0, state PENDING_REVIEW. Findings: rule 2.1.3 (high, control): Invoice has no PO reference and no GRN reference. [T1] The risk screen gives INV44028 an anomaly probability of 0.934 (average invoice 0.014); the largest SHAP contributions in log-odds are missing_reference = 2 (+7.09), desc_po_overlap = 0 (+0.38), desc_history_overlap = 1 (-0.15). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 2.1.3: Invoice has no PO reference and no GRN reference.; it would clear with: The purchas"
+  },
+  {
+   "split": "test",
+   "intent": "approver",
+   "question": "Which person signed off invoice INV43702 for payment?",
+   "gold": {
+    "all": [
+     "Christopher Gopal"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "invoice_records"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 4.0,
+   "answer": "INV43702 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T1] INV43702: invoice GOP/25-26/00486 of ₹47,311 dated 2025-12-24 from Gopal-Kanda (VEND1121), PO PO23596, GRN GRN33599, 'Pallet wrapping film (23 mic) rolls (73 rolls)'. Approved by Christopher Gopal (Manager) on 2025-12-26. [T2]"
+  },
+  {
+   "split": "test",
+   "intent": "approver",
+   "question": "Which person signed off invoice INV44161 for payment?",
+   "gold": {
+    "all": [
+     "Widisha Gandhi"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "invoice_records"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 3.7,
+   "answer": "INV44161 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T1] INV44161: invoice NIG00297 of ₹56,921 dated 2026-01-27 from Nigam, Borde and Walia (VEND1136), PO PO24250, GRN GRN34083, 'Bearings 6205-2RS'. Approved by Widisha Gandhi (Manager) on 2026-01-28. [T2]"
+  },
+  {
+   "split": "test",
+   "intent": "approver",
+   "question": "Which person signed off invoice INV44812 for payment?",
+   "gold": {
+    "all": [
+     "Upkaar Balan"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "invoice_records"
+   ],
+   "expected_tool": "invoice_records",
+   "tool_chosen": true,
+   "ms": 3.2,
+   "answer": "INV44812 was audited under C1 with policy v2.5: route approve, risk LOW, score 0.0, state AUTO_APPROVED. Findings: no finding. [T1] INV44812: invoice BHT00525 of ₹22,217 dated 2026-03-18 from Balakrishnan and Sons (VEND1229), PO PO24604, GRN GRN34704, 'Being charges towards 5-ply corrugated boxes'. Approved by Upkaar Balan (Manager) on 2026-03-24. [T2]"
+  },
+  {
+   "split": "test",
+   "intent": "approval_role",
+   "question": "If a bill comes to ₹75,000, whose approval does it need?",
+   "gold": {
+    "all": [
+     "Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.6,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹75,000 needs a Manager (limit ₹1,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "approval_role",
+   "question": "If a bill comes to ₹3,50,000, whose approval does it need?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.7,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹3,50,000 needs a Senior Manager (limit ₹5,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "approval_role",
+   "question": "If a bill comes to ₹12,00,000, whose approval does it need?",
+   "gold": {
+    "all": [
+     "Director"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.5,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹12,00,000 needs a Director (limit ₹25,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "approval_role",
+   "question": "If a bill comes to ₹40,00,000, whose approval does it need?",
+   "gold": {
+    "all": [
+     "CFO"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "approval_rule"
+   ],
+   "expected_tool": "approval_rule",
+   "tool_chosen": true,
+   "ms": 0.6,
+   "answer": "Under policy v2.5, rule 5.1.1, an invoice of ₹40,00,000 needs a CFO (limit ₹1,00,00,000), the lowest role whose limit covers it (Manager up to ₹1,00,000, Senior Manager up to ₹5,00,000, Director up to ₹25,00,000, CFO up to ₹1,00,00,000). [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "waiting",
+   "question": "How many invoices are pending in the review queue at the moment?",
+   "gold": {
+    "all": [
+     "291"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "review_queue"
+   ],
+   "expected_tool": "review_queue",
+   "tool_chosen": true,
+   "ms": 5.7,
+   "answer": "291 invoices waiting for review; the highest first: INV40007 Narula-Varkey ₹2,46,418 CRITICAL; INV40008 More, Pandey and Kale ₹1,74,809 CRITICAL; INV40072 Kashyap, Khurana and Sachdev ₹30,13,973 CRITICAL; INV40155 Raja-Raghavan ₹42,13,300 CRITICAL; INV40240 Khatri-Sawhney ₹2,29,518 CRITICAL; INV40289 Das Ltd ₹13,161 CRITICAL; INV40298 Narula-Varkey ₹1,94,121 CRITICAL; INV40423 Nori-Gade ₹1,13,707 CRITICAL; INV40514 Wable, Mohan and Choudhury ₹1,89,709 CRITICAL; INV40623 Nori-Gade ₹2,08,206 CRITICAL. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "top_findings_vendor",
+   "question": "Name the suppliers with the largest number of audit findings.",
+   "gold": {
+    "any": [
+     "VEND1163",
+     "VEND1087"
+    ]
+   },
+   "right": false,
+   "tools": [
+    "top_vendors"
+   ],
+   "expected_tool": "top_vendors",
+   "tool_chosen": true,
+   "ms": 22.3,
+   "answer": "Vendors with the largest invoiced amount: Vig-Grover (VEND1075): ₹2,44,56,068; Chahal, Bhatt and Aurora (VEND1032): ₹2,39,50,015; Pradhan-Narang (VEND1153): ₹2,37,17,710; Das, Chauhan and Amble (VEND1189): ₹2,26,77,110; Palan PLC (VEND1015): ₹2,02,80,137. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "top_amount_vendor",
+   "question": "Who is our biggest supplier by total spend?",
+   "gold": {
+    "all": [
+     "VEND1075"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "top_vendors"
+   ],
+   "expected_tool": "top_vendors",
+   "tool_chosen": true,
+   "ms": 15.0,
+   "answer": "Vendors with the largest invoiced amount: Vig-Grover (VEND1075): ₹2,44,56,068; Chahal, Bhatt and Aurora (VEND1032): ₹2,39,50,015; Pradhan-Narang (VEND1153): ₹2,37,17,710; Das, Chauhan and Amble (VEND1189): ₹2,26,77,110; Palan PLC (VEND1015): ₹2,02,80,137. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "rule_text",
+   "question": "Explain policy clause 4.1.2 to me.",
+   "gold": {
+    "all": [
+     "Structuring across days"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 3.0,
+   "answer": "Rule 4.1.2 of policy v2.5, Structuring across days (high, a judgement rule for the agents); parameters guide_window_days = 7, guide_band_pct = 15. Wording: Rule 4.1.2 (HIGH), structuring across days. Invoices from one vendor for the same goods or services, dated on different days within a short period (as a guide, 7 days), each just below the approval limit of the approver who approved it (as a guide, within 15% of the limit) and together above that limit, are treated as one purchase divided to avoid a higher approval. Every invoice of the group is an exception. A single invoice near a limit i"
+  },
+  {
+   "split": "test",
+   "intent": "rule_text",
+   "question": "Explain policy clause 5.1.1 to me.",
+   "gold": {
+    "all": [
+     "Approval limit"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 2.7,
+   "answer": "Rule 5.1.1 of policy v2.5, Approval limit (critical, decided by a control); parameters approval_limits = {'Manager': 100000, 'Senior Manager': 500000, 'Director': 2500000, 'CFO': 10000000}. Wording: Rule 5.1.1 (CRITICAL), approval limit. An invoice whose amount is greater than the approval limit of the role that approved it is an exception. An amount equal to the limit is within authority. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "rule_text",
+   "question": "Explain policy clause 2.2.2 to me.",
+   "gold": {
+    "all": [
+     "Near duplicate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "policy_rule"
+   ],
+   "expected_tool": "policy_rule",
+   "tool_chosen": true,
+   "ms": 2.3,
+   "answer": "Rule 2.2.2 of policy v2.5, Near duplicate (critical, a judgement rule for the agents). Wording: Rule 2.2.2 (CRITICAL), near duplicate. An invoice that bills the same PO and GRN for the same amount as an earlier invoice from the same vendor, under an invoice number that is a re-keyed form of the earlier number (for example changed case, separators or leading zeros, an added suffix, or transposed or substituted characters), is an exception. Consecutive invoice numbers for separate POs and separate deliveries are not duplicates, even when the amounts are equal. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "redirection",
+   "question": "Has anyone tried to redirect a vendor payment by e-mail?",
+   "gold": {
+    "all": [
+     "INV44193",
+     "INV44491",
+     "INV44700",
+     "INV44867"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "mail_alerts"
+   ],
+   "expected_tool": "mail_alerts",
+   "tool_chosen": true,
+   "ms": 2.3,
+   "answer": "2,104 vendor e-mails; 4 high-risk (payment redirection), 15 to confirm; 4 invoice(s) to hold for ₹7,38,300. High-risk: finance@chatterjeeravals.example about INV44193: sent from chatterjeeravals.example, which reads like the vendor's domain but is not it, asks to pay into another bank account, presses for an urgent payment, asks not to be called back, names the unpaid invoice INV44193; finance@nayarmitterandmanns.example about INV44491: sent from nayarmitterandmanns.example, which reads like the vendor's domain but is not it, asks to pay into another bank account, presses for an urgent payment"
+  },
+  {
+   "split": "test",
+   "intent": "tamper",
+   "question": "Has anyone altered the stored audit record after the fact?",
+   "gold": {
+    "all": [
+     "The sealed record (fail)"
+    ]
+   },
+   "right": false,
+   "tools": [],
+   "expected_tool": "trail_investigation",
+   "tool_chosen": false,
+   "ms": 1.9,
+   "answer": "I could not tell which tool answers this. Name an invoice (INV...), a vendor, a rule (5.1.1) or an amount, or ask about findings, the review queue, collusion rings, e-mails, leads, the risk screen or the audit trail."
+  },
+  {
+   "split": "test",
+   "intent": "near_duplicates",
+   "question": "List possible duplicate bills submitted under a re-keyed number.",
+   "gold": {
+    "any": [
+     "INV40712",
+     "INV41075",
+     "INV41138",
+     "INV41430",
+     "INV41486",
+     "INV41651",
+     "INV41678",
+     "INV41773",
+     "INV41863",
+     "INV42227",
+     "INV42339",
+     "INV42445",
+     "INV42528",
+     "INV42604",
+     "INV42818",
+     "INV43243",
+     "INV43495",
+     "INV43682",
+     "INV43756",
+     "INV44012",
+     "INV44082",
+     "INV44096",
+     "INV44103",
+     "INV44233",
+     "INV44282",
+     "INV44673",
+     "INV44747",
+     "INV44959",
+     "INV44972",
+     "INV44983"
+    ]
+   },
+   "right": false,
+   "tools": [],
+   "expected_tool": "judgement_leads",
+   "tool_chosen": false,
+   "ms": 2.0,
+   "answer": "I could not tell which tool answers this. Name an invoice (INV...), a vendor, a rule (5.1.1) or an amount, or ask about findings, the review queue, collusion rings, e-mails, leads, the risk screen or the audit trail."
+  },
+  {
+   "split": "test",
+   "intent": "story",
+   "question": "What happened to invoice INV43820 from start to finish?",
+   "gold": {
+    "all": [
+     "Agastya Bir",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 5.6,
+   "answer": "Story of INV43820 (1 audit(s)): 2025-11-28 Purchase order PO23703 for ₹92,580.48; 2025-12-24 Goods receipt GRN33710: 32 received; remark: Completion confirmed by the requester.; 2025-12-31 Invoice BRA00154 of ₹100,528.96 from Brahmbhatt-Ramachandran (VEND1103), PO PO23703, GRN GRN33710; 2026-01-05 14:57 Approved by Agastya Bir (Senior Manager); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 2.1.1 (high); trail of 3 steps (extraction > controls > scoring). Now: PENDING_REVIEW after 1 audit(s); the latest result is intact. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "story",
+   "question": "What happened to invoice INV44960 from start to finish?",
+   "gold": {
+    "all": [
+     "Utkarsh Kulkarni",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 6.0,
+   "answer": "Story of INV44960 (1 audit(s)): 2026-02-13 Purchase order PO24715 for ₹423,405.13; 2026-03-24 Goods receipt GRN34880: 31 received; remark: Completion confirmed by the requester.; 2026-03-27 Invoice TMZ/25-26/00481 of ₹423,405.13 from Chaudhari Group (VEND1056), PO PO24715, GRN GRN34880; 2026-03-27 15:17 E-mail from accounts@chaudharigroup.example: Invoice TMZ/25-26/00481 for PO24715; 2026-03-30 14:10 Approved by Utkarsh Kulkarni (Senior Manager); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 3.1.3 (high); trail of 3 steps (extraction > controls > sco"
+  },
+  {
+   "split": "test",
+   "intent": "story",
+   "question": "What happened to invoice INV44028 from start to finish?",
+   "gold": {
+    "all": [
+     "Samarth Soni",
+     "escalate"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "invoice_story"
+   ],
+   "expected_tool": "invoice_story",
+   "tool_chosen": true,
+   "ms": 6.9,
+   "answer": "Story of INV44028 (1 audit(s)): 2026-01-16 Invoice NAI/25-26/00198 of ₹171,030.60 from Naidu Ltd (VEND1108), PO none, GRN none; 2026-01-16 17:56 E-mail from accounts@naidultd.example: Invoice NAI/25-26/00198 for your order; 2026-01-20 13:28 Approved by Samarth Soni (Director); 2026-11-21 12:52 Audited in run 1 (C1, policy v2.5): escalate, HIGH, score 50.0; findings 2.1.3 (high); trail of 3 steps (extraction > controls > scoring). Now: PENDING_REVIEW after 1 audit(s); the latest result is intact. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "counterfactual",
+   "question": "How could invoice INV41242 have passed the controls?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "explain_invoice",
+   "tool_chosen": true,
+   "ms": 124.4,
+   "answer": "INV41242 was audited under C1 with policy v2.5: route escalate, risk CRITICAL, score 70.0, state PENDING_REVIEW. Findings: rule 5.1.1 (critical, control): Invoice amount 174235.26 exceeds the Manager approval limit of 100000; approved by Shivansh Malhotra. [T1] The risk screen gives INV41242 an anomaly probability of 0.922 (average invoice 0.014); the largest SHAP contributions in log-odds are limit_ratio = 1.7424 (+4.75), below_limit_pct = 100 (+2.52), same_receipt_before = 0 (-0.08). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 5.1.1: ₹174,235.26 against the"
+  },
+  {
+   "split": "test",
+   "intent": "counterfactual",
+   "question": "How could invoice INV41217 have passed the controls?",
+   "gold": {
+    "all": [
+     "Senior Manager"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "audit_result",
+    "explain_invoice"
+   ],
+   "expected_tool": "explain_invoice",
+   "tool_chosen": true,
+   "ms": 118.5,
+   "answer": "INV41217 was audited under C1 with policy v2.5: route escalate, risk CRITICAL, score 70.0, state PENDING_REVIEW. Findings: rule 5.1.1 (critical, control): Invoice amount 240876.27 exceeds the Manager approval limit of 100000; approved by Shivansh Malhotra. [T1] The risk screen gives INV41217 an anomaly probability of 0.921 (average invoice 0.014); the largest SHAP contributions in log-odds are limit_ratio = 2.4088 (+4.75), below_limit_pct = 100 (+2.51), same_receipt_before = 0 (-0.08). No judgement rule stands out (the highest, 2.1.5, has probability 0.000). Rule 5.1.1: ₹240,876.27 against the"
+  },
+  {
+   "split": "test",
+   "intent": "vendor_profile",
+   "question": "Give me a profile of the supplier Sunder Ltd.",
+   "gold": {
+    "all": [
+     "25"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "vendor_profile"
+   ],
+   "expected_tool": "vendor_profile",
+   "tool_chosen": true,
+   "ms": 5.4,
+   "answer": "Sunder Ltd (VEND1226, MRO, Ahmedabad): 25 invoices for ₹12,87,071; findings in the latest results: 2.2.1 x2, 3.1.1 x1; 2 waiting for review; GST status Active. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "vendor_profile",
+   "question": "Give me a profile of the supplier Nagar-Talwar.",
+   "gold": {
+    "all": [
+     "21"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "vendor_profile"
+   ],
+   "expected_tool": "vendor_profile",
+   "tool_chosen": true,
+   "ms": 2.8,
+   "answer": "Nagar-Talwar (VEND1027, Raw Materials, Kochi): 21 invoices for ₹1,02,00,748; findings in the latest results: 2.2.1 x1, 2.1.3 x1; 2 waiting for review; GST status Active. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "rings",
+   "question": "Are any vendors and approvers working together in a ring to defraud us?",
+   "gold": {
+    "each_any": [
+     [
+      "VEND1073",
+      "VEND1056"
+     ],
+     [
+      "VEND1076",
+      "VEND1044"
+     ],
+     [
+      "VEND1171",
+      "VEND1029",
+      "VEND1163",
+      "VEND1239"
+     ],
+     [
+      "VEND1087",
+      "VEND1216"
+     ]
+    ]
+   },
+   "right": true,
+   "tools": [
+    "collusion_rings"
+   ],
+   "expected_tool": "collusion_rings",
+   "tool_chosen": true,
+   "ms": 1.9,
+   "answer": "4 collusion ring(s) found: ring 1: VEND1087, VEND1216; ring 2: VEND1029, VEND1083, VEND1097, VEND1163, VEND1171, VEND1175; ring 3: VEND1056, VEND1073; ring 4: VEND1044, VEND1076. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "screen",
+   "question": "Which approved invoices does the machine learning screen consider suspicious?",
+   "gold": {
+    "any": [
+     "INV40127",
+     "INV40152",
+     "INV40154",
+     "INV40178",
+     "INV40214",
+     "INV40249",
+     "INV40287",
+     "INV40348",
+     "INV40387",
+     "INV40415",
+     "INV40552",
+     "INV40559",
+     "INV40626",
+     "INV40643",
+     "INV40667",
+     "INV40677",
+     "INV40712",
+     "INV40724",
+     "INV40864",
+     "INV40883",
+     "INV40911",
+     "INV41054",
+     "INV41075",
+     "INV41130",
+     "INV41134",
+     "INV41138",
+     "INV41151",
+     "INV41221",
+     "INV41361",
+     "INV41377",
+     "INV41430",
+     "INV41473",
+     "INV41486",
+     "INV41522",
+     "INV41603",
+     "INV41643",
+     "INV41651",
+     "INV41678",
+     "INV41709",
+     "INV41713",
+     "INV41773",
+     "INV41863",
+     "INV41987",
+     "INV42005",
+     "INV42012",
+     "INV42043",
+     "INV42227",
+     "INV42274",
+     "INV42339",
+     "INV42430",
+     "INV42445",
+     "INV42488",
+     "INV42528",
+     "INV42604",
+     "INV42613",
+     "INV42707",
+     "INV42732",
+     "INV42761",
+     "INV42818",
+     "INV42957",
+     "INV42997",
+     "INV43033",
+     "INV43042",
+     "INV43140",
+     "INV43243",
+     "INV43278",
+     "INV43302",
+     "INV43318",
+     "INV43345",
+     "INV43384",
+     "INV43399",
+     "INV43402",
+     "INV43411",
+     "INV43426",
+     "INV43463",
+     "INV43495",
+     "INV43586",
+     "INV43631",
+     "INV43682",
+     "INV43695",
+     "INV43700",
+     "INV43725",
+     "INV43756",
+     "INV43798",
+     "INV43799",
+     "INV43818",
+     "INV43819",
+     "INV43857",
+     "INV43889",
+     "INV43909",
+     "INV43988",
+     "INV44012",
+     "INV44035",
+     "INV44082",
+     "INV44096",
+     "INV44098",
+     "INV44103",
+     "INV44113",
+     "INV44203",
+     "INV44233",
+     "INV44282",
+     "INV44315",
+     "INV44378",
+     "INV44476",
+     "INV44496",
+     "INV44501",
+     "INV44516",
+     "INV44523",
+     "INV44551",
+     "INV44650",
+     "INV44673",
+     "INV44741",
+     "INV44743",
+     "INV44747",
+     "INV44758",
+     "INV44782",
+     "INV44946",
+     "INV44959",
+     "INV44972",
+     "INV44983"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "screen_leads"
+   ],
+   "expected_tool": "screen_leads",
+   "tool_chosen": true,
+   "ms": 8.1,
+   "answer": "Of the 4,708 invoices the latest results passed, the risk screen rates highest for a judgement rule (2.1.4, 2.1.5, 2.2.2, 4.1.2): INV40127 4.1.2 p=1.000; INV40152 2.1.4 p=1.000; INV40154 4.1.2 p=1.000; INV40178 4.1.2 p=1.000; INV40214 2.1.4 p=1.000; INV40287 2.1.4 p=1.000; INV40348 2.1.4 p=1.000; INV40387 2.1.4 p=1.000. A screen score is not a finding; these are for a reviewer or the agents. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "critical_queue",
+   "question": "Show the critical items in the review queue.",
+   "gold": {
+    "all": [
+     "INV40007"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "review_queue"
+   ],
+   "expected_tool": "review_queue",
+   "tool_chosen": true,
+   "ms": 5.0,
+   "answer": "134 invoices at CRITICAL waiting for review; the highest first: INV40007 Narula-Varkey ₹2,46,418 CRITICAL; INV40008 More, Pandey and Kale ₹1,74,809 CRITICAL; INV40072 Kashyap, Khurana and Sachdev ₹30,13,973 CRITICAL; INV40155 Raja-Raghavan ₹42,13,300 CRITICAL; INV40240 Khatri-Sawhney ₹2,29,518 CRITICAL; INV40289 Das Ltd ₹13,161 CRITICAL; INV40298 Narula-Varkey ₹1,94,121 CRITICAL; INV40423 Nori-Gade ₹1,13,707 CRITICAL; INV40514 Wable, Mohan and Choudhury ₹1,89,709 CRITICAL; INV40623 Nori-Gade ₹2,08,206 CRITICAL. [T1]"
+  },
+  {
+   "split": "test",
+   "intent": "flagged_count",
+   "question": "In total, how many invoices did the audit flag?",
+   "gold": {
+    "all": [
+     "351"
+    ]
+   },
+   "right": true,
+   "tools": [
+    "findings_summary"
+   ],
+   "expected_tool": "findings_summary",
+   "tool_chosen": true,
+   "ms": 38.6,
+   "answer": "5,000 of 5,000 invoices audited; 351 with at least one finding; routes: approve 4,708, escalate 292; 291 waiting for review. Findings by rule: 5.1.1 74, 3.1.3 37, 2.1.1 30, 2.1.2 30, 2.1.3 30, 2.2.1 30, 4.1.1 30, 4.4.1 30, 3.1.1 15, 3.1.2 15, 4.2.1 15, 4.3.1 15. [T1]"
+  }
+ ]
+}

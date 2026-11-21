@@ -5137,6 +5137,593 @@
     }
    ],
    "command": "python -m evaluation.stream_eval --backend postgres --workers 1 2 4"
+  },
+  "risk_screen_on_held_out_ledgers": {
+   "label": "measured",
+   "question": "Trained only on the development ledger, how well does the risk screen (gradient-boosted trees, one head per judgement rule) rank the anomalies of six ledgers it never saw, against an isolation forest; how many judgement anomalies that the controls approve does it put in the top 2 % of the approved invoices; and do its two SHAP implementations agree?",
+   "training": {
+    "ledger": "pilot_seed_909",
+    "policy_version": "2.5",
+    "invoices": 5000,
+    "heads": {
+     "any": {
+      "positives": 420,
+      "training_auc": 0.9997
+     },
+     "2.1.4": {
+      "positives": 30,
+      "training_auc": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "training_auc": 1.0
+     },
+     "2.2.2": {
+      "positives": 30,
+      "training_auc": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "training_auc": 1.0
+     }
+    },
+    "params": {
+     "n_estimators": 150,
+     "max_depth": 3,
+     "learning_rate": 0.1,
+     "subsample": 1.0,
+     "min_samples_leaf": 5,
+     "random_state": 0
+    },
+    "scikit_learn": "1.6.1",
+    "ledger_manifest_sha256": "37ab593ce7c920f2efb9a20782f4ad90e7cf5a1538156c8350967a9bfbec6df3"
+   },
+   "reproduces_committed_model": true,
+   "summary": {
+    "ledgers": [
+     "bench_seed_101",
+     "bench_seed_202",
+     "bench_seed_303",
+     "large_seed_505",
+     "collusion_seed_707",
+     "final_seed_2025"
+    ],
+    "heads": {
+     "any": {
+      "title": "Anomalous (any rule)",
+      "auc_mean": 0.9995,
+      "auc_min": 0.9992,
+      "auc_max": 0.9998,
+      "isolation_forest_auc_mean": 0.8531,
+      "recall_at_2pct_mean": 0.3478
+     },
+     "2.1.4": {
+      "title": "Receipt remarks contradict the billed quantity",
+      "auc_mean": 1.0,
+      "auc_min": 1.0,
+      "auc_max": 1.0,
+      "isolation_forest_auc_mean": 0.4834,
+      "recall_at_2pct_mean": 1.0
+     },
+     "2.1.5": {
+      "title": "Invoice description does not match the PO",
+      "auc_mean": 0.993,
+      "auc_min": 0.9887,
+      "auc_max": 0.9971,
+      "isolation_forest_auc_mean": 0.4668,
+      "recall_at_2pct_mean": 0.9604
+     },
+     "2.2.2": {
+      "title": "Near-duplicate invoice",
+      "auc_mean": 1.0,
+      "auc_min": 1.0,
+      "auc_max": 1.0,
+      "isolation_forest_auc_mean": 0.9752,
+      "recall_at_2pct_mean": 1.0
+     },
+     "4.1.2": {
+      "title": "Structuring across days",
+      "auc_mean": 1.0,
+      "auc_min": 1.0,
+      "auc_max": 1.0,
+      "isolation_forest_auc_mean": 0.7284,
+      "recall_at_2pct_mean": 1.0
+     }
+    },
+    "second_opinion_at_2pct": {
+     "found": 890,
+     "of": 1040,
+     "recall": 0.8558
+    },
+    "classification": {
+     "right": 985,
+     "of": 985,
+     "accuracy": 1.0
+    }
+   },
+   "shap": {
+    "invoices": 200,
+    "heads": 5,
+    "max_difference_between_implementations": 0.0,
+    "max_local_accuracy_error": 0.0,
+    "milliseconds_per_invoice_both_methods_all_heads": 18.33
+   },
+   "by_ledger": {
+    "bench_seed_101": {
+     "any": {
+      "positives": 420,
+      "auc": 0.9994,
+      "average_precision": 0.9954,
+      "recall_at_positives": 0.969
+     },
+     "2.1.4": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "auc": 0.9932,
+      "average_precision": 0.4417,
+      "recall_at_positives": 0.4333
+     },
+     "2.2.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    },
+    "bench_seed_202": {
+     "any": {
+      "positives": 420,
+      "auc": 0.9997,
+      "average_precision": 0.9969,
+      "recall_at_positives": 0.9643
+     },
+     "2.1.4": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "auc": 0.9952,
+      "average_precision": 0.4798,
+      "recall_at_positives": 0.3667
+     },
+     "2.2.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    },
+    "bench_seed_303": {
+     "any": {
+      "positives": 420,
+      "auc": 0.9998,
+      "average_precision": 0.9984,
+      "recall_at_positives": 0.9714
+     },
+     "2.1.4": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "auc": 0.9971,
+      "average_precision": 0.6732,
+      "recall_at_positives": 0.5333
+     },
+     "2.2.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    },
+    "large_seed_505": {
+     "any": {
+      "positives": 420,
+      "auc": 0.9992,
+      "average_precision": 0.9871,
+      "recall_at_positives": 0.9548
+     },
+     "2.1.4": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "auc": 0.9887,
+      "average_precision": 0.2169,
+      "recall_at_positives": 0.2333
+     },
+     "2.2.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    },
+    "collusion_seed_707": {
+     "any": {
+      "positives": 471,
+      "auc": 0.9997,
+      "average_precision": 0.9971,
+      "recall_at_positives": 0.966
+     },
+     "2.1.4": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 30,
+      "auc": 0.9934,
+      "average_precision": 0.376,
+      "recall_at_positives": 0.4
+     },
+     "2.2.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 30,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    },
+    "final_seed_2025": {
+     "any": {
+      "positives": 2275,
+      "auc": 0.9994,
+      "average_precision": 0.9974,
+      "recall_at_positives": 0.9824
+     },
+     "2.1.4": {
+      "positives": 141,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "2.1.5": {
+      "positives": 141,
+      "auc": 0.9906,
+      "average_precision": 0.5043,
+      "recall_at_positives": 0.4397
+     },
+     "2.2.2": {
+      "positives": 141,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     },
+     "4.1.2": {
+      "positives": 141,
+      "auc": 1.0,
+      "average_precision": 1.0,
+      "recall_at_positives": 1.0
+     }
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/risk_screen/screen.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.json"
+    },
+    {
+     "path": "auditiq/results/risk_screen/screen.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/risk_screen/screen.md"
+    }
+   ],
+   "command": "python -m evaluation.screen_eval"
+  },
+  "trail_investigator_against_planted_faults": {
+   "label": "measured",
+   "question": "Does the trail investigator find faults planted in an audited store at their place (seals, trail stages, evidence, coverage, failed model stages, reasons, pace, segregation of duties, overrides, rejections undone, unexplained flips), and report nothing on a store run properly?",
+   "ledger": "bench_seed_101",
+   "planted": {
+    "integrity": {
+     "planted": 5,
+     "found": 5,
+     "missed": [],
+     "extra": []
+    },
+    "completeness": {
+     "planted": 2,
+     "found": 2,
+     "missed": [],
+     "extra": []
+    },
+    "documentation": {
+     "planted": 8,
+     "found": 8,
+     "missed": [],
+     "extra": []
+    },
+    "segregation": {
+     "planted": 5,
+     "found": 5,
+     "missed": [],
+     "extra": []
+    },
+    "overrides": {
+     "planted": 11,
+     "found": 11,
+     "missed": [],
+     "extra": []
+    },
+    "overrides_pair": {
+     "planted": 1,
+     "found": 1,
+     "missed": [],
+     "extra": []
+    },
+    "evidence": {
+     "planted": 4,
+     "found": 4,
+     "missed": [],
+     "extra": []
+    },
+    "coverage": {
+     "planted": 6,
+     "found": 6,
+     "missed": [],
+     "extra": []
+    },
+    "model_failures": {
+     "planted": 2,
+     "found": 2,
+     "missed": [],
+     "extra": []
+    },
+    "superseded": {
+     "planted": 3,
+     "found": 3,
+     "missed": [],
+     "extra": []
+    },
+    "flips": {
+     "planted": 6,
+     "found": 6,
+     "missed": [],
+     "extra": []
+    },
+    "pace": {
+     "planted": 1,
+     "found": 1,
+     "missed": [],
+     "extra": []
+    },
+    "flips_unexplained": {
+     "planted": 3,
+     "found": 3,
+     "missed": [],
+     "extra": []
+    }
+   },
+   "clean": {
+    "status": {
+     "integrity": "pass",
+     "evidence": "pass",
+     "completeness": "pass",
+     "coverage": "pass",
+     "model_failures": "pass",
+     "backlog": "pass",
+     "documentation": "pass",
+     "pace": "pass",
+     "segregation": "pass",
+     "overrides": "pass",
+     "superseded": "pass",
+     "flips": "pass"
+    },
+    "verdict": "The audit record holds: 0 check(s) failed, 0 need attention, 12 passed."
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/investigator/investigator.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.json"
+    },
+    {
+     "path": "auditiq/results/investigator/investigator.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/investigator/investigator.md"
+    }
+   ],
+   "command": "python -m evaluation.investigator_eval"
+  },
+  "email_triage_of_generated_mailboxes": {
+   "label": "measured",
+   "question": "On the generated vendor mailboxes of four ledgers, does the e-mail triage put each e-mail in its category, catch the payment-redirection requests from look-alike domains without false alarms, and send the genuine bank-detail changes for confirmation?",
+   "by_ledger": {
+    "bench_seed_101": {
+     "emails": 2102,
+     "category_accuracy": 1.0,
+     "redirection": {
+      "attempts": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "missed": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_alarms": [],
+      "misses": []
+     },
+     "callback": {
+      "genuine_bank_changes": 17,
+      "sent_for_confirmation": 17
+     },
+     "holds": {
+      "invoices": 5,
+      "of_attempts": 5,
+      "amount": 867431.74
+     }
+    },
+    "bench_seed_202": {
+     "emails": 2105,
+     "category_accuracy": 1.0,
+     "redirection": {
+      "attempts": 5,
+      "true_positives": 5,
+      "false_positives": 0,
+      "missed": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_alarms": [],
+      "misses": []
+     },
+     "callback": {
+      "genuine_bank_changes": 15,
+      "sent_for_confirmation": 15
+     },
+     "holds": {
+      "invoices": 5,
+      "of_attempts": 5,
+      "amount": 2094493.29
+     }
+    },
+    "collusion_seed_707": {
+     "emails": 2104,
+     "category_accuracy": 1.0,
+     "redirection": {
+      "attempts": 4,
+      "true_positives": 4,
+      "false_positives": 0,
+      "missed": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_alarms": [],
+      "misses": []
+     },
+     "callback": {
+      "genuine_bank_changes": 15,
+      "sent_for_confirmation": 15
+     },
+     "holds": {
+      "invoices": 4,
+      "of_attempts": 4,
+      "amount": 738300.18
+     }
+    },
+    "final_seed_2025": {
+     "emails": 10700,
+     "category_accuracy": 1.0,
+     "redirection": {
+      "attempts": 40,
+      "true_positives": 40,
+      "false_positives": 0,
+      "missed": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "false_alarms": [],
+      "misses": []
+     },
+     "callback": {
+      "genuine_bank_changes": 105,
+      "sent_for_confirmation": 105
+     },
+     "holds": {
+      "invoices": 40,
+      "of_attempts": 40,
+      "amount": 6785864.06
+     }
+    }
+   },
+   "sources": [
+    {
+     "path": "auditiq/results/triage/triage.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.json"
+    },
+    {
+     "path": "auditiq/results/triage/triage.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/triage/triage.md"
+    }
+   ],
+   "command": "python -m evaluation.triage_eval"
+  },
+  "audit_agent_rules_planner": {
+   "label": "measured",
+   "question": "Without a model, does the audit agent's rules planner answer questions about the audit right, on a dev wording used while it was written and a test wording frozen before its run?",
+   "ledger": "collusion_seed_707",
+   "summary": {
+    "dev": {
+     "questions": 30,
+     "right": 30,
+     "tool_chosen": 30,
+     "median_ms": 5.65
+    },
+    "test": {
+     "questions": 30,
+     "right": 27,
+     "tool_chosen": 28,
+     "median_ms": 4.5
+    }
+   },
+   "wrong": [
+    {
+     "split": "test",
+     "question": "Name the suppliers with the largest number of audit findings.",
+     "tools": [
+      "top_vendors"
+     ]
+    },
+    {
+     "split": "test",
+     "question": "Has anyone altered the stored audit record after the fact?",
+     "tools": []
+    },
+    {
+     "split": "test",
+     "question": "List possible duplicate bills submitted under a re-keyed number.",
+     "tools": []
+    }
+   ],
+   "sources": [
+    {
+     "path": "auditiq/results/agent/agent.json",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.json"
+    },
+    {
+     "path": "auditiq/results/agent/agent.md",
+     "raw_url": "https://raw.githubusercontent.com/Chandana909/major.project/main/auditiq/results/agent/agent.md"
+    }
+   ],
+   "command": "python -m evaluation.agent_eval"
   }
  }
 }

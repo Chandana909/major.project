@@ -615,3 +615,62 @@ def test_the_audited_ledger_is_served_as_a_graph_and_asked_questions(client):
     done = wait(client, client.post("/api/copilot/ask", json={"question": f"Why was {invoice} flagged?"}).json())
     assert done["status"] == "done" and done["result"]["answer"] is None                  # no model: the facts are the answer
     assert done["result"]["case_facts"][0]["kind"] == "invoice" and f"i:{invoice}" in done["result"]["case_nodes"]
+
+
+def test_the_risk_screen_explains_the_ledger_and_an_invoice(client, monkeypatch):
+    monkeypatch.setattr(api, "IMPORTANCE_ROWS", 40)
+    model = client.get("/api/model").json()
+    assert model["trained"] and model["scored"] == model["invoices"] == 1200 and not model["limited"]
+    assert set(model["heads"]) == {"any", "2.1.4", "2.1.5", "2.2.2", "4.1.2"}
+    assert model["importance"]["any"]["rows"] == 40 and len(model["importance"]["any"]["features"]) == 24
+    assert sum(sum(bins) for bins in model["distribution"]["by_route"].values()) == 1200
+    assert sum(model["paper_score"].values()) == 60
+    assert all(s["route"] in ("approve", None) for s in model["second_opinion"])
+    invoice = client.get("/api/queue", params={"limit": 1}).json()["items"][0]["invoice_id"]
+    out = client.get(f"/api/invoices/{invoice}/explain").json()
+    heads = out["screen"]["heads"]
+    assert set(heads) == set(model["heads"]) and all(abs(h["check"]) < 1e-6 for h in heads.values())
+    assert out["counterfactuals"] and all(o["clears"] for c in out["counterfactuals"] for o in c["record"] + c["policy"])
+    assert client.get("/api/invoices/INV00001/explain").status_code == 404
+    assert client.get("/api/invoices/not%20an%20id/explain").status_code == 400
+    monkeypatch.setattr(api.screen.Screen, "load", classmethod(lambda cls, path=None: (_ for _ in ()).throw(
+        api.screen.ScreenUnavailable("no model"))))
+    bare = TestClient(api.create_app(client.app.state.target, token="", frontend=None))
+    assert bare.get("/api/model").json()["trained"] is False
+    assert bare.get(f"/api/invoices/{invoice}/explain").json()["screen"] is None
+
+
+def test_the_investigation_the_story_and_the_mail_triage(client):
+    report = client.get("/api/investigation").json()
+    assert report["scope"]["audited"] == 60 and {c["key"] for c in report["checks"]} >= {"integrity", "pace", "flips"}
+    coverage = next(c for c in report["checks"] if c["key"] == "coverage")
+    assert coverage["status"] == "attention" and coverage["count"] == 1140          # 60 of 1,200 invoices audited
+    assert report["markdown"].startswith("# Investigation of the audit record")
+    invoice = client.get("/api/queue", params={"limit": 1}).json()["items"][0]["invoice_id"]
+    story = client.get(f"/api/invoices/{invoice}/story").json()
+    assert story["invoice_id"] == invoice and story["audits"] == 1 and story["steps"][0]["kind"] == "ledger"
+    assert client.get("/api/invoices/INV00001/story").status_code == 404
+    mail = client.get("/api/mail").json()
+    assert mail["emails"] == 0 and mail["holds"] == [] and set(mail["by_category"]) == {
+        "bank_change", "payment_reminder", "quantity_query", "invoice_submission", "other"}
+    assert client.get(f"/api/invoices/{invoice}").json()["email_triage"] == []
+
+
+def test_the_audit_agent_answers_as_a_job_and_the_model_mode_needs_a_model(client):
+    done = wait(client, client.post("/api/agent/ask", json={"question": "How many invoices are waiting for review?",
+                                                            "mode": "rules"}).json())
+    assert done["status"] == "done", done["error"]
+    result = done["result"]
+    assert result["mode"] == "rules" and result["steps"][0]["tool"] == "review_queue"
+    assert "40 invoices waiting for review" in result["answer"] and result["model"] is None
+    json.dumps(result)                                                              # the steps' data are plain JSON
+    refused = client.post("/api/agent/ask", json={"question": "Anything?", "mode": "model"})
+    assert refused.status_code == 400 and "needs a model" in refused.json()["detail"]
+    assert client.post("/api/agent/ask", json={"question": ""}).status_code == 422
+
+
+def test_the_process_is_mined_from_the_ledger(client):
+    mined = client.get("/api/process").json()
+    assert mined["cases"] == 1200 and mined["steps"][0] == "PO raised" and mined["variants"]
+    assert {"from", "to", "cases", "median_days"} <= set(mined["edges"][0])
+    assert client.get("/api/process").json() == mined                                   # kept until the store changes

@@ -818,7 +818,7 @@ def answers_section() -> list[str]:
         ["RQ9", f"Questions in the policy's wording: yes. Held-out paraphrases: hybrid ranking after rewriting finds the "
                 f"answer first in {f3(best['Recall@1'])} and among the top three in {f3(best['Recall@3'])} (16 questions)."],
     ]
-    return ["# Part III. Analysis", "", "## 21. Answers to the research questions", "", *md(["", "Answer"], rows)]
+    return ["# Part III. Analysis", "", "## 22. Answers to the research questions", "", *md(["", "Answer"], rows)]
 
 
 # The detector features that an anomaly of each class changes (evaluation/run_c0.features).
@@ -847,7 +847,7 @@ def errors_section() -> list[str]:
     feats = lambda ks: "; ".join(f"{k}: `{CLASS_FEATURES[k]}`" for k in ks if k in CLASS_FEATURES)  # noqa: E731
     gm = gstin_mismatch(BENCH[0])
     return [
-        "## 22. What the errors show", "",
+        "## 23. What the errors show", "",
         f"- **Classical detectors find what is statistically unusual, not what is against the rules.** The isolation "
         f"forest reports at least 90% of classes {', '.join(strong_if)} (Section 10.6); an anomaly of each of these "
         f"classes sets a feature that is rare among clean invoices ({feats(strong_if)}), and rare values are what an "
@@ -880,7 +880,7 @@ def errors_section() -> list[str]:
 
 def threats_section() -> list[str]:
     return [
-        "## 23. Threats to validity", "",
+        "## 24. Threats to validity", "",
         "- **Internal (circularity).** The controls and the ground truth implement the same written rules by the same "
         "authors; perfect scores on R1-R10 and adherence of 1.000 verify the implementation and the reading of each "
         "document, not the rules' ability to catch fraud. The detectors use labels for their thresholds; the controls "
@@ -897,7 +897,7 @@ def threats_section() -> list[str]:
         "- **Researcher degrees of freedom.** Prompts were tried only on the development ledger and frozen (one prompt "
         "hash for every run); the free-form policy errors were deliberately not fixed, because that would be tuning on "
         "the evaluation set; the robustness gaps were fixed and both runs are reported.", "",
-        "## 24. What is not measured", "",
+        "## 25. What is not measured", "",
         "- Configurations C2 to C5 on whole benchmark ledgers (about 1,200 invoices of the evaluation subset with three "
         "to five calls each); this needs a GPU or a hosted model endpoint. The paper states expected values for it, "
         "fixed before measurement (RESULTS.md, Section 10).",
@@ -939,11 +939,60 @@ def routing_subsection() -> list[str]:
     ]
 
 
+def intelligence_section() -> list[str]:
+    """The risk screen, the trail investigator, the e-mail triage and the audit agent (docs/NEW_FEATURES.md)."""
+    screen_r, inv, tri, agent = (load("risk_screen/screen.json"), load("investigator/investigator.json"),
+                                 load("triage/triage.json"), load("agent/agent.json"))
+    s = screen_r["summary"]
+    out = ["## 21. The intelligence layer", "",
+           "Four additions of 21 November 2026 that change no result, score or route of the audit (docs/NEW_FEATURES.md). "
+           "Every ledger and mailbox below comes from the project's own generator: the numbers show that the parts work "
+           "on this generator's data, not their accuracy on real invoices or real mail.", "",
+           "### 21.1 The risk screen on ledgers it was not trained on", "",
+           src("risk_screen/screen.json", "risk_screen/screen.md"), "",
+           f"Gradient-boosted trees (one head for any anomaly, one per judgement rule) trained on "
+           f"`{screen_r['training']['ledger']}` only and scored on {len(s['ledgers'])} held-out ledgers; the committed "
+           f"model {'is' if screen_r['reproduces_committed_model'] else 'is not'} the one trained by the script.", "",
+           *md(["Head", "Rule", "AUC, mean (min to max)", "Isolation forest AUC", "Recall at a 2 % budget"],
+               [[h, v["title"], f"{v['auc_mean']:.4f} ({v['auc_min']:.4f} to {v['auc_max']:.4f})",
+                 f"{v['isolation_forest_auc_mean']:.4f}", f"{v['recall_at_2pct_mean']:.3f}"]
+                for h, v in s["heads"].items()]), "",
+           f"Of the {n(s['second_opinion_at_2pct']['of'])} judgement anomalies the controls alone approve, "
+           f"{n(s['second_opinion_at_2pct']['found'])} ({s['second_opinion_at_2pct']['recall']:.1%}) are in the top 2 % of "
+           "the invoices the controls approve: the recall ceiling of a cascade that sends that slice to the agents, not a "
+           f"measured recall of the agents. The suggested rule is right for {n(s['classification']['right'])} of "
+           f"{n(s['classification']['of'])} judgement anomalies scored at least 0.5. The two SHAP implementations "
+           f"(TreeSHAP and the Shapley formula) differ by at most {screen_r['shap']['max_difference_between_implementations']:.1e} "
+           f"on {screen_r['shap']['invoices']} invoices, and the values add up to the output within "
+           f"{screen_r['shap']['max_local_accuracy_error']:.1e}.", "",
+           "### 21.2 The trail investigator against planted faults", "",
+           src("investigator/investigator.json", "investigator/investigator.md"), "",
+           *md(["Check", "Planted", "Found at its place", "Missed", "Extra", "On the clean store"],
+               [[k, v["planted"], v["found"], len(v["missed"]), len(v["extra"]),
+                 inv["scenarios"]["clean"]["comparison"][k]["found"] + len(inv["scenarios"]["clean"]["comparison"][k]["extra"])]
+                for k, v in inv["scenarios"]["planted"]["comparison"].items()]), "",
+           "The faults are planted as the checks define them: this shows that each check finds what it says and stays "
+           "quiet on a store run properly, not how often such faults occur.", "",
+           "### 21.3 E-mail triage of generated mailboxes", "",
+           src("triage/triage.json", "triage/triage.md"), "",
+           *md(["Ledger", "E-mails", "Category right", "Redirection attempts", "Caught", "False alarms"],
+               [[e["ledger"], n(e["emails"]), f"{e['category_accuracy']:.1%}", e["redirection"]["attempts"],
+                 e["redirection"]["true_positives"], e["redirection"]["false_positives"]] for e in tri["ledgers"]]), "",
+           "### 21.4 The audit agent without a model", "",
+           src("agent/agent.json", "agent/agent.md"), "",
+           *md(["Wording", "Questions", "Answered right", "Expected tool chosen"],
+               [[split, v["questions"], v["right"], v["tool_chosen"]] for split, v in agent["summary"].items()]), "",
+           "Answers wrong on the test wording (kept as found; the planner was not changed after the test run): "
+           + "; ".join(f"\"{q['question']}\"" for q in agent["questions"] if q["split"] == "test" and not q["right"])
+           + ". The questions were written by the planner's author; the model (ReAct) mode is built and not measured.", ""]
+    return out
+
+
 def sources_section() -> list[str]:
     files = sorted(p.relative_to(RESULTS).as_posix() for p in RESULTS.rglob("*")
                    if p.is_file() and p.suffix in (".json", ".jsonl", ".md") and "figures" not in p.parts
                    and finished(p))
-    return ["## 25. Source files", "",
+    return ["## 26. Source files", "",
             "The result files of the repository, with their public raw addresses (`.jsonl` files hold one record per "
             "audited invoice):", "",
             *[f"- [`auditiq/results/{f}`]({RAW}auditiq/results/{f})" for f in files], ""]
@@ -968,9 +1017,10 @@ def render() -> str:
         "9 Environment and reproducibility", "",
         "Part II. Results: 10 Controls against detectors · 11 Policy change · 12 Held-out documents · 13 Robustness "
         "of the reader · 14 Policy change in the application · 15 Every ledger through the system · 16 Scalability · "
-        "17 Policies in their own wording · 18 The language-model stages · 19 Policy search · 20 Vendor-history cap", "",
-        "Part III. Analysis: 21 Answers to the research questions · 22 What the errors show · 23 Threats to validity · "
-        "24 What is not measured · 25 Source files", "",
+        "17 Policies in their own wording · 18 The language-model stages · 19 Policy search · 20 Vendor-history cap · "
+        "21 The intelligence layer", "",
+        "Part III. Analysis: 22 Answers to the research questions · 23 What the errors show · 24 Threats to validity · "
+        "25 What is not measured · 26 Source files", "",
         "# Part I. Methodology", "",
     ]
     body = (research_questions() + system() + policy_section() + scoring_section() + data_section() + metrics_section()
@@ -978,7 +1028,7 @@ def render() -> str:
             + ["# Part II. Results", ""]
             + detection_section() + revisions_section() + policy_change_section() + heldout_section() + robustness_section()
             + application_section() + routing_subsection() + ledger_runs_section() + scalability_section() + own_wording_section()
-            + llm_section() + retrieval_section() + history_section()
+            + llm_section() + retrieval_section() + history_section() + intelligence_section()
             + answers_section() + errors_section() + threats_section() + sources_section())
     return "\n".join(head + body).rstrip() + "\n"
 

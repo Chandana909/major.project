@@ -1,0 +1,2054 @@
+{
+ "date": "2026-11-21",
+ "training": {
+  "ledger": "pilot_seed_909",
+  "policy_version": "2.5",
+  "invoices": 5000,
+  "heads": {
+   "any": {
+    "positives": 420,
+    "training_auc": 0.999666
+   },
+   "2.1.4": {
+    "positives": 30,
+    "training_auc": 1.0
+   },
+   "2.1.5": {
+    "positives": 30,
+    "training_auc": 1.0
+   },
+   "2.2.2": {
+    "positives": 30,
+    "training_auc": 1.0
+   },
+   "4.1.2": {
+    "positives": 30,
+    "training_auc": 1.0
+   }
+  },
+  "params": {
+   "n_estimators": 150,
+   "max_depth": 3,
+   "learning_rate": 0.1,
+   "subsample": 1.0,
+   "min_samples_leaf": 5,
+   "random_state": 0
+  },
+  "scikit_learn": "1.6.1",
+  "ledger_manifest_sha256": "37ab593ce7c920f2efb9a20782f4ad90e7cf5a1538156c8350967a9bfbec6df3"
+ },
+ "reproduces_committed_model": true,
+ "ledgers": [
+  {
+   "ledger": "bench_seed_101",
+   "invoices": 5000,
+   "heads": {
+    "any": {
+     "positives": 420,
+     "auc": 0.9994,
+     "average_precision": 0.995404,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 50,
+       "recall": 0.119,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 100,
+       "recall": 0.2381,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 250,
+       "recall": 0.5952,
+       "precision": 1.0
+      }
+     ],
+     "recall_at_positives": 0.969,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.863396,
+      "average_precision": 0.425561,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 26,
+        "recall": 0.0619,
+        "precision": 0.52
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 57,
+        "recall": 0.1357,
+        "precision": 0.57
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 142,
+        "recall": 0.3381,
+        "precision": 0.568
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.470734,
+      "average_precision": 0.0059,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 30,
+     "auc": 0.993156,
+     "average_precision": 0.441687,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 15,
+       "recall": 0.5,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 29,
+       "recall": 0.9667,
+       "precision": 0.29
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 29,
+       "recall": 0.9667,
+       "precision": 0.116
+      }
+     ],
+     "recall_at_positives": 0.4333,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.477404,
+      "average_precision": 0.005534,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.976211,
+      "average_precision": 0.106098,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 3,
+        "recall": 0.1,
+        "precision": 0.06
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 10,
+        "recall": 0.3333,
+        "precision": 0.1
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 30,
+        "recall": 1.0,
+        "precision": 0.12
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.74053,
+      "average_precision": 0.01371,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 2,
+        "recall": 0.0667,
+        "precision": 0.008
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 4760,
+    "judgement_anomalies_among_them": 120,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 48,
+      "found": 48,
+      "recall": 0.4,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.05
+     },
+     {
+      "budget": 0.02,
+      "k": 95,
+      "found": 93,
+      "recall": 0.775,
+      "precision": 0.9789,
+      "isolation_forest_recall": 0.125
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 120,
+    "scored_at_least_half": 103,
+    "suggested_rule_right": 103,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 939.4,
+    "prediction": 65.75
+   }
+  },
+  {
+   "ledger": "bench_seed_202",
+   "invoices": 5000,
+   "heads": {
+    "any": {
+     "positives": 420,
+     "auc": 0.999703,
+     "average_precision": 0.996851,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 50,
+       "recall": 0.119,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 100,
+       "recall": 0.2381,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 250,
+       "recall": 0.5952,
+       "precision": 1.0
+      }
+     ],
+     "recall_at_positives": 0.9643,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.86291,
+      "average_precision": 0.448101,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 27,
+        "recall": 0.0643,
+        "precision": 0.54
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 60,
+        "recall": 0.1429,
+        "precision": 0.6
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 144,
+        "recall": 0.3429,
+        "precision": 0.576
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.437706,
+      "average_precision": 0.005027,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 30,
+     "auc": 0.995215,
+     "average_precision": 0.479819,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 20,
+       "recall": 0.6667,
+       "precision": 0.4
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 0.3667,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.384433,
+      "average_precision": 0.004714,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.968558,
+      "average_precision": 0.083028,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 1,
+        "recall": 0.0333,
+        "precision": 0.02
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 6,
+        "recall": 0.2,
+        "precision": 0.06
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 23,
+        "recall": 0.7667,
+        "precision": 0.092
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.727599,
+      "average_precision": 0.011529,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 4760,
+    "judgement_anomalies_among_them": 120,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 48,
+      "found": 48,
+      "recall": 0.4,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.05
+     },
+     {
+      "budget": 0.02,
+      "k": 95,
+      "found": 93,
+      "recall": 0.775,
+      "precision": 0.9789,
+      "isolation_forest_recall": 0.1333
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 120,
+    "scored_at_least_half": 101,
+    "suggested_rule_right": 101,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 1054.3,
+    "prediction": 72.63
+   }
+  },
+  {
+   "ledger": "bench_seed_303",
+   "invoices": 5000,
+   "heads": {
+    "any": {
+     "positives": 420,
+     "auc": 0.999825,
+     "average_precision": 0.998415,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 50,
+       "recall": 0.119,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 100,
+       "recall": 0.2381,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 250,
+       "recall": 0.5952,
+       "precision": 1.0
+      }
+     ],
+     "recall_at_positives": 0.9714,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.854665,
+      "average_precision": 0.424094,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 27,
+        "recall": 0.0643,
+        "precision": 0.54
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 58,
+        "recall": 0.1381,
+        "precision": 0.58
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 141,
+        "recall": 0.3357,
+        "precision": 0.564
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.381288,
+      "average_precision": 0.004548,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 30,
+     "auc": 0.99714,
+     "average_precision": 0.673163,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 23,
+       "recall": 0.7667,
+       "precision": 0.46
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 0.5333,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.454252,
+      "average_precision": 0.005312,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.978592,
+      "average_precision": 0.121882,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 3,
+        "recall": 0.1,
+        "precision": 0.06
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 10,
+        "recall": 0.3333,
+        "precision": 0.1
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 30,
+        "recall": 1.0,
+        "precision": 0.12
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.732119,
+      "average_precision": 0.011277,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 2,
+        "recall": 0.0667,
+        "precision": 0.008
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 4760,
+    "judgement_anomalies_among_them": 120,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 48,
+      "found": 48,
+      "recall": 0.4,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.0583
+     },
+     {
+      "budget": 0.02,
+      "k": 95,
+      "found": 95,
+      "recall": 0.7917,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.2
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 120,
+    "scored_at_least_half": 103,
+    "suggested_rule_right": 103,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 713.8,
+    "prediction": 24.64
+   }
+  },
+  {
+   "ledger": "large_seed_505",
+   "invoices": 20000,
+   "heads": {
+    "any": {
+     "positives": 420,
+     "auc": 0.99923,
+     "average_precision": 0.987145,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 200,
+       "found": 200,
+       "recall": 0.4762,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 400,
+       "found": 395,
+       "recall": 0.9405,
+       "precision": 0.9875
+      },
+      {
+       "budget": 0.05,
+       "k": 1000,
+       "found": 417,
+       "recall": 0.9929,
+       "precision": 0.417
+      }
+     ],
+     "recall_at_positives": 0.9548,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.779552,
+      "average_precision": 0.110004,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 200,
+        "found": 56,
+        "recall": 0.1333,
+        "precision": 0.28
+       },
+       {
+        "budget": 0.02,
+        "k": 400,
+        "found": 83,
+        "recall": 0.1976,
+        "precision": 0.2075
+       },
+       {
+        "budget": 0.05,
+        "k": 1000,
+        "found": 131,
+        "recall": 0.3119,
+        "precision": 0.131
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 200,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.15
+      },
+      {
+       "budget": 0.02,
+       "k": 400,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.075
+      },
+      {
+       "budget": 0.05,
+       "k": 1000,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.03
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.506915,
+      "average_precision": 0.001955,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 200,
+        "found": 1,
+        "recall": 0.0333,
+        "precision": 0.005
+       },
+       {
+        "budget": 0.02,
+        "k": 400,
+        "found": 1,
+        "recall": 0.0333,
+        "precision": 0.0025
+       },
+       {
+        "budget": 0.05,
+        "k": 1000,
+        "found": 2,
+        "recall": 0.0667,
+        "precision": 0.002
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 30,
+     "auc": 0.988658,
+     "average_precision": 0.216851,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 200,
+       "found": 25,
+       "recall": 0.8333,
+       "precision": 0.125
+      },
+      {
+       "budget": 0.02,
+       "k": 400,
+       "found": 27,
+       "recall": 0.9,
+       "precision": 0.0675
+      },
+      {
+       "budget": 0.05,
+       "k": 1000,
+       "found": 28,
+       "recall": 0.9333,
+       "precision": 0.028
+      }
+     ],
+     "recall_at_positives": 0.2333,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.418862,
+      "average_precision": 0.001482,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 200,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 400,
+        "found": 1,
+        "recall": 0.0333,
+        "precision": 0.0025
+       },
+       {
+        "budget": 0.05,
+        "k": 1000,
+        "found": 2,
+        "recall": 0.0667,
+        "precision": 0.002
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 200,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.15
+      },
+      {
+       "budget": 0.02,
+       "k": 400,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.075
+      },
+      {
+       "budget": 0.05,
+       "k": 1000,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.03
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.981576,
+      "average_precision": 0.044106,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 200,
+        "found": 11,
+        "recall": 0.3667,
+        "precision": 0.055
+       },
+       {
+        "budget": 0.02,
+        "k": 400,
+        "found": 16,
+        "recall": 0.5333,
+        "precision": 0.04
+       },
+       {
+        "budget": 0.05,
+        "k": 1000,
+        "found": 30,
+        "recall": 1.0,
+        "precision": 0.03
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 200,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.15
+      },
+      {
+       "budget": 0.02,
+       "k": 400,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.075
+      },
+      {
+       "budget": 0.05,
+       "k": 1000,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.03
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.808247,
+      "average_precision": 0.005712,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 200,
+        "found": 2,
+        "recall": 0.0667,
+        "precision": 0.01
+       },
+       {
+        "budget": 0.02,
+        "k": 400,
+        "found": 3,
+        "recall": 0.1,
+        "precision": 0.0075
+       },
+       {
+        "budget": 0.05,
+        "k": 1000,
+        "found": 8,
+        "recall": 0.2667,
+        "precision": 0.008
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 19760,
+    "judgement_anomalies_among_them": 120,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 198,
+      "found": 105,
+      "recall": 0.875,
+      "precision": 0.5303,
+      "isolation_forest_recall": 0.125
+     },
+     {
+      "budget": 0.02,
+      "k": 395,
+      "found": 117,
+      "recall": 0.975,
+      "precision": 0.2962,
+      "isolation_forest_recall": 0.1917
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 120,
+    "scored_at_least_half": 99,
+    "suggested_rule_right": 99,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 382.9,
+    "prediction": 22.08
+   }
+  },
+  {
+   "ledger": "collusion_seed_707",
+   "invoices": 5000,
+   "heads": {
+    "any": {
+     "positives": 471,
+     "auc": 0.999725,
+     "average_precision": 0.997114,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 50,
+       "recall": 0.1062,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 100,
+       "recall": 0.2123,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 250,
+       "recall": 0.5308,
+       "precision": 1.0
+      }
+     ],
+     "recall_at_positives": 0.966,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.858954,
+      "average_precision": 0.445891,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 24,
+        "recall": 0.051,
+        "precision": 0.48
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 54,
+        "recall": 0.1146,
+        "precision": 0.54
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 155,
+        "recall": 0.3291,
+        "precision": 0.62
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.44833,
+      "average_precision": 0.00531,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 30,
+     "auc": 0.993434,
+     "average_precision": 0.376003,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 18,
+       "recall": 0.6,
+       "precision": 0.36
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 29,
+       "recall": 0.9667,
+       "precision": 0.29
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 0.4,
+     "hard_negatives_in_top": {
+      "HN_DAILY_LIMIT": 1
+     },
+     "isolation_forest": {
+      "auc": 0.423501,
+      "average_precision": 0.0049,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.976808,
+      "average_precision": 0.107918,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 8,
+        "recall": 0.2667,
+        "precision": 0.08
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 30,
+        "recall": 1.0,
+        "precision": 0.12
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 30,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 50,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.6
+      },
+      {
+       "budget": 0.02,
+       "k": 100,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.3
+      },
+      {
+       "budget": 0.05,
+       "k": 250,
+       "found": 30,
+       "recall": 1.0,
+       "precision": 0.12
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.65611,
+      "average_precision": 0.008307,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 50,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 100,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 4709,
+    "judgement_anomalies_among_them": 120,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 47,
+      "found": 47,
+      "recall": 0.3917,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.0417
+     },
+     {
+      "budget": 0.02,
+      "k": 94,
+      "found": 92,
+      "recall": 0.7667,
+      "precision": 0.9787,
+      "isolation_forest_recall": 0.1667
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 120,
+    "scored_at_least_half": 100,
+    "suggested_rule_right": 100,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 370.0,
+    "prediction": 31.56
+   }
+  },
+  {
+   "ledger": "final_seed_2025",
+   "invoices": 25000,
+   "heads": {
+    "any": {
+     "positives": 2275,
+     "auc": 0.999414,
+     "average_precision": 0.99743,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 250,
+       "found": 250,
+       "recall": 0.1099,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.02,
+       "k": 500,
+       "found": 500,
+       "recall": 0.2198,
+       "precision": 1.0
+      },
+      {
+       "budget": 0.05,
+       "k": 1250,
+       "found": 1250,
+       "recall": 0.5495,
+       "precision": 1.0
+      }
+     ],
+     "recall_at_positives": 0.9824,
+     "hard_negatives_in_top": null,
+     "isolation_forest": {
+      "auc": 0.898876,
+      "average_precision": 0.541686,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 250,
+        "found": 176,
+        "recall": 0.0774,
+        "precision": 0.704
+       },
+       {
+        "budget": 0.02,
+        "k": 500,
+        "found": 335,
+        "recall": 0.1473,
+        "precision": 0.67
+       },
+       {
+        "budget": 0.05,
+        "k": 1250,
+        "found": 836,
+        "recall": 0.3675,
+        "precision": 0.6688
+       }
+      ]
+     }
+    },
+    "2.1.4": {
+     "positives": 141,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.564
+      },
+      {
+       "budget": 0.02,
+       "k": 500,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.282
+      },
+      {
+       "budget": 0.05,
+       "k": 1250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.1128
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.655652,
+      "average_precision": 0.011613,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 500,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 1250,
+        "found": 12,
+        "recall": 0.0851,
+        "precision": 0.0096
+       }
+      ]
+     }
+    },
+    "2.1.5": {
+     "positives": 141,
+     "auc": 0.990607,
+     "average_precision": 0.504338,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 250,
+       "found": 88,
+       "recall": 0.6241,
+       "precision": 0.352
+      },
+      {
+       "budget": 0.02,
+       "k": 500,
+       "found": 131,
+       "recall": 0.9291,
+       "precision": 0.262
+      },
+      {
+       "budget": 0.05,
+       "k": 1250,
+       "found": 135,
+       "recall": 0.9574,
+       "precision": 0.108
+      }
+     ],
+     "recall_at_positives": 0.4397,
+     "hard_negatives_in_top": {
+      "HN_NEAR_LIMIT": 2
+     },
+     "isolation_forest": {
+      "auc": 0.642646,
+      "average_precision": 0.013931,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 250,
+        "found": 6,
+        "recall": 0.0426,
+        "precision": 0.024
+       },
+       {
+        "budget": 0.02,
+        "k": 500,
+        "found": 8,
+        "recall": 0.0567,
+        "precision": 0.016
+       },
+       {
+        "budget": 0.05,
+        "k": 1250,
+        "found": 25,
+        "recall": 0.1773,
+        "precision": 0.02
+       }
+      ]
+     }
+    },
+    "2.2.2": {
+     "positives": 141,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.564
+      },
+      {
+       "budget": 0.02,
+       "k": 500,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.282
+      },
+      {
+       "budget": 0.05,
+       "k": 1250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.1128
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.969204,
+      "average_precision": 0.076376,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 250,
+        "found": 5,
+        "recall": 0.0355,
+        "precision": 0.02
+       },
+       {
+        "budget": 0.02,
+        "k": 500,
+        "found": 16,
+        "recall": 0.1135,
+        "precision": 0.032
+       },
+       {
+        "budget": 0.05,
+        "k": 1250,
+        "found": 128,
+        "recall": 0.9078,
+        "precision": 0.1024
+       }
+      ]
+     }
+    },
+    "4.1.2": {
+     "positives": 141,
+     "auc": 1.0,
+     "average_precision": 1.0,
+     "budgets": [
+      {
+       "budget": 0.01,
+       "k": 250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.564
+      },
+      {
+       "budget": 0.02,
+       "k": 500,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.282
+      },
+      {
+       "budget": 0.05,
+       "k": 1250,
+       "found": 141,
+       "recall": 1.0,
+       "precision": 0.1128
+      }
+     ],
+     "recall_at_positives": 1.0,
+     "hard_negatives_in_top": {},
+     "isolation_forest": {
+      "auc": 0.705842,
+      "average_precision": 0.009594,
+      "budgets": [
+       {
+        "budget": 0.01,
+        "k": 250,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.02,
+        "k": 500,
+        "found": 0,
+        "recall": 0.0,
+        "precision": 0.0
+       },
+       {
+        "budget": 0.05,
+        "k": 1250,
+        "found": 7,
+        "recall": 0.0496,
+        "precision": 0.0056
+       }
+      ]
+     }
+    }
+   },
+   "second_opinion": {
+    "approved_by_c1": 23342,
+    "judgement_anomalies_among_them": 440,
+    "budgets": [
+     {
+      "budget": 0.01,
+      "k": 233,
+      "found": 233,
+      "recall": 0.5295,
+      "precision": 1.0,
+      "isolation_forest_recall": 0.0864
+     },
+     {
+      "budget": 0.02,
+      "k": 467,
+      "found": 400,
+      "recall": 0.9091,
+      "precision": 0.8565,
+      "isolation_forest_recall": 0.25
+     }
+    ]
+   },
+   "classification": {
+    "judgement_anomalies": 564,
+    "scored_at_least_half": 479,
+    "suggested_rule_right": 479,
+    "accuracy": 1.0
+   },
+   "microseconds_per_invoice": {
+    "features": 340.9,
+    "prediction": 21.58
+   }
+  }
+ ],
+ "shap": {
+  "invoices": 200,
+  "heads": 5,
+  "max_difference_between_implementations": 1.7763568394002505e-15,
+  "max_local_accuracy_error": 1.0658141036401503e-14,
+  "milliseconds_per_invoice_both_methods_all_heads": 18.33
+ },
+ "summary": {
+  "ledgers": [
+   "bench_seed_101",
+   "bench_seed_202",
+   "bench_seed_303",
+   "large_seed_505",
+   "collusion_seed_707",
+   "final_seed_2025"
+  ],
+  "heads": {
+   "any": {
+    "title": "Anomalous (any rule)",
+    "auc_mean": 0.9995,
+    "auc_min": 0.99923,
+    "auc_max": 0.999825,
+    "isolation_forest_auc_mean": 0.8531,
+    "recall_at_2pct_mean": 0.3478
+   },
+   "2.1.4": {
+    "title": "Receipt remarks contradict the billed quantity",
+    "auc_mean": 1.0,
+    "auc_min": 1.0,
+    "auc_max": 1.0,
+    "isolation_forest_auc_mean": 0.4834,
+    "recall_at_2pct_mean": 1.0
+   },
+   "2.1.5": {
+    "title": "Invoice description does not match the PO",
+    "auc_mean": 0.993,
+    "auc_min": 0.988658,
+    "auc_max": 0.99714,
+    "isolation_forest_auc_mean": 0.4668,
+    "recall_at_2pct_mean": 0.9604
+   },
+   "2.2.2": {
+    "title": "Near-duplicate invoice",
+    "auc_mean": 1.0,
+    "auc_min": 1.0,
+    "auc_max": 1.0,
+    "isolation_forest_auc_mean": 0.9752,
+    "recall_at_2pct_mean": 1.0
+   },
+   "4.1.2": {
+    "title": "Structuring across days",
+    "auc_mean": 1.0,
+    "auc_min": 1.0,
+    "auc_max": 1.0,
+    "isolation_forest_auc_mean": 0.7284,
+    "recall_at_2pct_mean": 1.0
+   }
+  },
+  "second_opinion_at_2pct": {
+   "found": 890,
+   "of": 1040,
+   "recall": 0.8558
+  },
+  "classification": {
+   "right": 985,
+   "of": 985,
+   "accuracy": 1.0
+  }
+ }
+}

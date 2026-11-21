@@ -10,6 +10,7 @@ import {
   aiLayer, analytics, auditProgram, caseAnswer, caseGraph, graphAnswer, health, invoice, judgementLeads, knowledge, monetaryUnitSample, noRings, overview, policy, policyGraph,
   preview, queue, ragTrace, reliabilityReport, results, rings, streamSources, streamStatus, system, trailCheck,
 } from "../test/fixtures";
+import { explanation, highRiskMail, story } from "../test/fixturesIntel";
 import { error, mockApi } from "../test/mockApi";
 import { InvoicePage } from "./InvoicePage";
 import { AiLayerPage } from "./AiLayerPage";
@@ -198,6 +199,8 @@ describe("an invoice", () => {
         decided = JSON.parse(String(init?.body));
         return { result_id: 7, invoice_id: "INV40237", workflow_status: "REVIEW_APPROVED" };
       }],
+      ["/api/invoices/INV40237/explain", () => explanation],
+      ["/api/invoices/INV40237/story", () => story],
       ["/api/invoices/INV40237", () => {
         reads += 1;
         return invoice;
@@ -257,13 +260,30 @@ describe("an invoice's vendor e-mails", () => {
   it("lists the e-mails that name the invoice, with their text on demand", async () => {
     const mail = { message_id: "<a1@kurian.example>", sender: "accounts@kurian.example", subject: "Invoice KUR/001 for PO20001", sent_at: "2025-04-03 10:15:00", body: "Please find our invoice KUR/001." };
     mockApi([
-      ["/api/invoices/INV40237", () => ({ ...invoice, emails: [mail] })],
+      ["/api/invoices/INV40237/explain", () => explanation],
+      ["/api/invoices/INV40237/story", () => story],
+      ["/api/invoices/INV40237", () => ({ ...invoice, emails: [mail], email_triage: [] })],
       ["/api/health", () => health],
     ]);
     renderAt("/invoice/INV40237", "/invoice/:id", <InvoicePage />);
     expect(await screen.findByText("Vendor e-mails (1)")).toBeInTheDocument();
     expect(screen.getByText("Invoice KUR/001 for PO20001")).toBeInTheDocument();
     expect(screen.getByText("accounts@kurian.example · 2025-04-03 10:15:00")).toBeInTheDocument();
+    expect(screen.queryByText(/high risk/)).not.toBeInTheDocument();
+  });
+
+  it("marks an e-mail that tries to redirect the payment, with its reasons and the action", async () => {
+    const mail = { message_id: "<a1@kurian.example>", sender: "finance@kurian-accounts.example", subject: "URGENT: new bank account for invoice INV40237", sent_at: "2026-01-30 14:13:00", body: "Pay today to our new account." };
+    mockApi([
+      ["/api/invoices/INV40237/explain", () => explanation],
+      ["/api/invoices/INV40237/story", () => story],
+      ["/api/invoices/INV40237", () => ({ ...invoice, emails: [mail], email_triage: [highRiskMail] })],
+      ["/api/health", () => health],
+    ]);
+    renderAt("/invoice/INV40237", "/invoice/:id", <InvoicePage />);
+    expect(await screen.findByText("high risk")).toBeInTheDocument();
+    expect(screen.getByText(/reads like the vendor's domain but is not it/)).toBeInTheDocument();
+    expect(screen.getByText(/Hold the payment; confirm the request by telephone/)).toBeInTheDocument();
   });
 });
 

@@ -34,6 +34,7 @@ Kafka topics      -> stream workers (invoice, vendor, email, compliance) -> the 
 |---|---|
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | **The whole project in one file** (14 November 2026): what it is, what changed between versions, every design decision with its alternatives, how to run it, the datasets and how each error is designed, the analytics, both knowledge graphs, the demonstration policies, what was measured, the limits, and the full technical reference. Written so that a reader with no other access can answer questions about the project |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The design: principles, pipeline, agents, scoring, storage, retrieval, copilot, evaluation |
+| [docs/NEW_FEATURES.md](docs/NEW_FEATURES.md) | **The intelligence layer (21 November 2026)**: the brainstormed ideas, and the five built: the explainable risk screen (gradient-boosted trees, exact TreeSHAP), counterfactual explanations of findings, the trail investigator agent, e-mail triage with payment-redirection detection, and the tool-using audit agent; how to run each and what it measured |
 | [docs/POLICY_DEMO.md](docs/POLICY_DEMO.md) | The five demonstration policies (and an incomplete draft that is refused): the steps and the measured effect on the final ledger (generated) |
 | [docs/ANALYTICS.md](docs/ANALYTICS.md) | The forensic analytics, the coverage of the results against the answer key, and how collusion rings are tested |
 | [docs/POLICY_GRAPH.md](docs/POLICY_GRAPH.md) | The policy as a knowledge graph built by code, how Ask AI uses it, and its evaluation against passage retrieval |
@@ -55,7 +56,12 @@ Kafka topics      -> stream workers (invoice, vendor, email, compliance) -> the 
 
 ## Quick start
 
-Python 3.11 or later. Neither a model nor a database server is needed for this.
+**One command** (bash on Linux, macOS or Windows Git Bash), from the repository's root: `./run.sh`. It installs
+the packages and whatever is missing (Java, Node.js, Kafka, checked against their checksums), starts Kafka, streams
+the final 25,000-invoice ledger through it into the audit and opens the dashboard; `./run.sh --huge` uses the
+500,000-invoice ledger. Details in the repository's README and in `scripts/bootstrap.py`.
+
+Step by step: Python 3.11 or later. Neither a model nor a database server is needed for this.
 
 ```bash
 pip install -e ".[dev]"
@@ -217,6 +223,11 @@ Measured, by scripts in this repository:
 - **Policies in their own wording** read by the local model, verified by code
   and confirmed by a person: six documents, 84 values,
   `results/policy_llm.md` (`python -m evaluation.policy_llm_eval`).
+- **The intelligence layer** (21 November 2026, [docs/NEW_FEATURES.md](docs/NEW_FEATURES.md)): the risk screen
+  with exact SHAP values on six held-out ledgers (`results/risk_screen/screen.md`, `python -m evaluation.screen_eval`),
+  the trail investigator against planted faults (`results/investigator/`, `python -m evaluation.investigator_eval`),
+  e-mail triage of generated mailboxes (`results/triage/`, `python -m evaluation.triage_eval`) and the audit agent
+  without a model (`results/agent/`, `python -m evaluation.agent_eval`). All on the generator's data.
 
 Not measured:
 

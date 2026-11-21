@@ -462,6 +462,7 @@ export interface InvoiceDetail {
   history: { total: number; items: RecordMap[] };
   result: InvoiceResult | null;
   emails?: VendorEmail[];
+  email_triage?: EmailVerdict[];
   benchmark_label?: { label: string; class_id: string; clause_ids: string; hard_negative_type: string; note: string } | null;
 }
 
@@ -1040,4 +1041,225 @@ export interface CaseAnswer {
   recognised: Record<string, unknown>;
   facts: GraphFact[];
   nodes: string[];
+}
+
+// ---------------------------------------------------------------- explainable AI, investigation, triage, agent
+/** One feature's share of a head's output for one invoice (SHAP, in log-odds). */
+export interface ShapContribution {
+  feature: string;
+  meaning: string;
+  value: number;
+  shap: number;
+}
+
+export interface ScreenHead {
+  title: string;
+  probability: number;
+  raw: number;
+  base: number;
+  base_probability: number;
+  contributions: ShapContribution[];
+  other: number;
+  check: number;
+}
+
+export interface CounterfactualOption {
+  change: string;
+  edit?: Record<string, unknown>;
+  parameter?: string;
+  from?: unknown;
+  to?: unknown;
+  clears: boolean;
+  raises: string[];
+  also_clears?: number | null;
+  caution?: string;
+}
+
+export interface Counterfactual {
+  clause: string;
+  title: string;
+  severity: string;
+  message: string;
+  margin: { value: number | null; unit: string | null; text: string };
+  record: CounterfactualOption[];
+  policy: CounterfactualOption[];
+  no_parameter: boolean;
+}
+
+export interface Explanation {
+  invoice_id: string;
+  policy_version: string;
+  screen: { heads: Record<string, ScreenHead>; suggested_rule: string; values: Record<string, number> } | null;
+  counterfactuals: Counterfactual[];
+}
+
+export interface ImportanceHead {
+  title: string;
+  base: number;
+  rows: number;
+  features: { feature: string; meaning: string; mean_abs_shap: number }[];
+  points: { feature: string; shap: number[]; rank: number[] }[];
+}
+
+export interface HeadSummary {
+  title: string;
+  auc_mean: number;
+  auc_min: number;
+  auc_max: number;
+  isolation_forest_auc_mean: number;
+  recall_at_2pct_mean: number;
+}
+
+export interface SecondOpinion {
+  invoice_id: string;
+  route: string | null;
+  suggested_rule: string;
+  rule_title: string;
+  probability: number;
+  any: number;
+  vendor_name: string;
+  amount: number;
+  date: string;
+}
+
+export interface ModelOverview {
+  trained: boolean;
+  detail?: string;
+  training?: { ledger: string; policy_version: string; invoices: number; params: Record<string, number>; scikit_learn: string; heads: Record<string, { positives: number; training_auc: number | null }> };
+  heads?: Record<string, string>;
+  features?: { feature: string; meaning: string }[];
+  invoices?: number;
+  scored?: number;
+  limited?: boolean;
+  importance?: Record<string, ImportanceHead>;
+  distribution?: { bins: number; by_route: Record<string, number[]> };
+  paper_score?: Record<string, number>;
+  above_half?: { any: number; judgement: number };
+  second_opinion?: SecondOpinion[];
+  evaluation?: {
+    ledgers: string[];
+    heads: Record<string, HeadSummary>;
+    second_opinion_at_2pct: { found: number; of: number; recall: number | null };
+    classification: { right: number; of: number; accuracy: number | null };
+  } | null;
+}
+
+export interface StoryStep {
+  at: string;
+  kind: "ledger" | "approval" | "email" | "audit" | "review";
+  what: string;
+  result_id?: number;
+}
+
+export interface InvoiceStory {
+  invoice_id: string;
+  vendor_id: string;
+  steps: StoryStep[];
+  audits: number;
+  state: string;
+}
+
+export interface InvestigationItem {
+  where: string;
+  what: string;
+  invoice_id?: string;
+  result_id?: number;
+  reviewer?: string;
+  [key: string]: unknown;
+}
+
+export interface InvestigationCheck {
+  key: string;
+  title: string;
+  standard: string;
+  status: "pass" | "attention" | "fail";
+  summary: string;
+  count: number;
+  items: InvestigationItem[];
+  why: string;
+  action: string;
+}
+
+export interface Investigation {
+  verdict: string;
+  status: Partial<Record<"pass" | "attention" | "fail", number>>;
+  scope: { ledger: string | null; invoices: number; audited: number; results: number; runs: number; decisions: number; reviewers: number; trail_entries: number; first: string; last: string; digest: string | null; generated: string };
+  checks: InvestigationCheck[];
+  timeline: { events: { at: string; kind: string; where: string; what: string }[]; total: number; by_kind: Record<string, number> };
+  reviewers: { reviewer: string; decisions: number; approve?: number; reject?: number; override?: number; critical_cleared: number; without_reason: number }[];
+  markdown: string;
+}
+
+export interface EmailVerdict {
+  message_id: string;
+  sent_at: string;
+  sender: string;
+  sender_domain: string;
+  subject: string;
+  invoice_id: string | null;
+  vendor_id: string | null;
+  category: string;
+  scores: Record<string, number>;
+  signals: Record<string, boolean>;
+  risk: "high" | "medium" | "low" | "none";
+  reasons: string[];
+  action: string;
+}
+
+export interface MailTriage {
+  emails: number;
+  linked: number;
+  by_category: Record<string, number>;
+  by_risk: Record<string, number>;
+  signals: Record<string, number>;
+  alerts: EmailVerdict[];
+  alerts_total: number;
+  holds: { invoice_id: string; vendor_id: string; amount: number; message_id: string; sender: string; subject: string }[];
+  hold_amount: number;
+  titles: Record<string, string>;
+  recent: EmailVerdict[];
+}
+
+export interface AgentStep {
+  n: number;
+  tool: string;
+  args: Record<string, unknown>;
+  summary: string;
+  refs: string[];
+  ms: number;
+  thought?: string;
+  data?: unknown;
+}
+
+export interface AgentAnswer {
+  question: string;
+  mode: "rules" | "model" | null;
+  steps: AgentStep[];
+  answer: string;
+  citations: string[];
+  unverified_numbers: string[];
+  model?: string | null;
+}
+
+export interface ProcessStats {
+  cases: number;
+  median: number | null;
+  p90: number | null;
+}
+
+export interface ProcessMining {
+  cases: number;
+  events: number;
+  steps: string[];
+  reference: string[];
+  conformant: number;
+  conformant_share: number | null;
+  activities: { step: string; cases: number }[];
+  edges: { from: string; to: string; cases: number; median_days: number }[];
+  variants: { steps: string[]; cases: number; share: number; follows_reference: boolean; examples: string[] }[];
+  variant_count: number;
+  deviations: { kind: string; cases: number; flagged_by_audit: number; audited: number; examples: string[] }[];
+  cycle_times: ({ stage: string } & ProcessStats)[];
+  approval_by_role: ({ role: string } & ProcessStats)[];
+  escalations: { times: number; cases: number }[];
 }

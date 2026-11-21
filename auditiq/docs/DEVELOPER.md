@@ -73,6 +73,13 @@ auditiq/                  the Python project (run every command from here)
 | `policy_graph.py` | The policy as a knowledge graph built by code (registry, documents, the code that checks each rule) and the facts it derives for a question; used by Ask AI (docs/POLICY_GRAPH.md) |
 | `case_graph.py` | The audited ledger as a knowledge graph built by code (vendors, invoices with findings, rules, approvers, rings) and the facts it derives for a question; used by Ask AI (docs/CASE_GRAPH.md) |
 | `rings.py` | Collusion rings: identity links and approval links tested against the rate of the approver's role with a false-discovery-rate correction; the watch list (docs/ANALYTICS.md) |
+| `screen.py` | The risk screen: 24 features of a transaction under the policy in force, five gradient-boosted heads (any anomaly and one per judgement rule) trained on the development ledger and stored as arrays in `models/risk_screen.json`, prediction, explanation and importance (docs/NEW_FEATURES.md) |
+| `treeshap.py` | Exact SHAP values of tree ensembles: TreeSHAP (Algorithm 2) for one row and the Shapley formula over a tree's features, vectorised, for many |
+| `counterfactual.py` | For each control finding: the margin past its rule and the record or policy changes that clear it, verified by running the controls again, with how many other findings a policy change would also clear |
+| `investigator.py` | The trail investigator: twelve checks of the stored record and the review, the timeline, the story of an invoice, the report as Markdown |
+| `triage.py` | Vendor e-mail triage: category, payment-redirection signals, text addressed to a model, risk, action, payments to hold; loads an mbox file without Kafka |
+| `audit_agent.py` | The audit agent: fifteen read-only tools, a rules planner and a ReAct model planner, citations and the check of every number against the observations |
+| `process_mining.py` | Process mining of procure-to-pay: the event log of every invoice from the ledger's own dates, the directly-follows graph, variants, conformance to the reference path, cycle times |
 
 **The store and the data.**
 
@@ -91,7 +98,7 @@ auditiq/                  the Python project (run every command from here)
 | `apidoc.py` | Writes `docs/API.md` from the application |
 | `copilot.py` | Questions about the policy (answered from passages, with citations) and about the data (one checked, read-only SELECT) |
 | `app/dashboard.py` | The Streamlit dashboard |
-| `frontend/src/` | The web application: `api/` (client and types), `pages/` (seven pages), `three/` (the 3D views), `components/` |
+| `frontend/src/` | The web application: `api/` (client and types), `pages/` (the pages), `three/` (the 3D views), `components/` |
 
 **Models and settings.** `llm.py` is the only code that talks to a chat
 model: one OpenAI-compatible endpoint, retries with backoff, a context-size

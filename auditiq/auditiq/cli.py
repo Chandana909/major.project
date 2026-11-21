@@ -12,6 +12,15 @@ Audit:
     python -m auditiq show --invoice INV40042              stored audit pack and audit trail
     python -m auditiq verify                               no stored result, trail entry or run changed (seals)
     python -m auditiq workpapers --out engagement.xlsx     the working papers, with a digest tied to the store
+    python -m auditiq investigate --out investigation.md   audit the audit: seals, coverage, review quality, flips
+    python -m auditiq investigate --invoice INV40042       the story of one invoice, in order
+
+Explain and triage:
+    python -m auditiq model train                          the risk screen, trained on data/pilot_seed_909
+    python -m auditiq model explain --invoice INV40042     SHAP values of the screen and counterfactuals
+    python -m auditiq mail load vendor_mail.mbox           store vendor e-mails without Kafka
+    python -m auditiq mail triage                          categories and payment-redirection fraud
+    python -m auditiq agent "Why was INV40042 escalated?"  the audit agent: tools planned, run and cited
 
 Review:
     python -m auditiq queue
@@ -545,6 +554,123 @@ def cmd_workpapers(args: argparse.Namespace) -> int:
     return 0
 
 
+def say(text: str = "") -> None:
+    """Print, writing the rupee sign as "Rs " where the console cannot show it (a Windows code page)."""
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        encoding = sys.stdout.encoding or "ascii"
+        print(text.replace("₹", "Rs ").encode(encoding, "replace").decode(encoding))
+
+
+def cmd_model(args: argparse.Namespace) -> int:
+    """The risk screen: train it on a ledger with an answer key, or explain one invoice of the store."""
+    from . import screen
+
+    if args.action == "train":
+        dataset = Path(args.dataset or Path("data") / screen.TRAINING_LEDGER)
+        trained = screen.train(dataset, load_policy(args.policy))
+        path = trained.save(Path(args.out) if args.out else screen.MODEL_FILE)
+        say(f"trained on {trained.training['ledger']} ({trained.training['invoices']:,} invoices, policy "
+              f"v{trained.training['policy_version']}) in {trained.training['seconds']} s; wrote {path}")
+        for name, head in trained.training["heads"].items():
+            say(f"  {name:6s} {screen.HEADS[name]:48s} {head['positives']:4d} positives, training AUC "
+                  f"{head['training_auc']}")
+        return 0
+    if not args.invoice:
+        print("error: model explain needs --invoice", file=sys.stderr)
+        return 2
+    conn = open_db(args)
+    from . import counterfactual
+
+    txn = db.extract_one(conn, args.invoice.upper())
+    if txn is None:
+        print(f"error: {args.invoice} is not in the ledger", file=sys.stderr)
+        return 2
+    version = db.versions_in_force(conn, [txn["invoice"]["invoice_id"]]).get(txn["invoice"]["invoice_id"])
+    policy = db.read_policy(conn, version)
+    values = screen.features(txn, screen.policy_parameters(policy))
+    explained = screen.explain_row(screen.Screen.load(), [values[n] for n in screen.FEATURE_NAMES])
+    for name, head in explained.items():
+        say(f"{name:6s} {head['title']}: probability {head['probability']:.4f} (average invoice "
+              f"{head['base_probability']:.4f})")
+        for c in head["contributions"][:5]:
+            say(f"         {c['shap']:+8.3f}  {c['feature']} = {c['value']:g}  ({c['meaning']})")
+    for f in counterfactual.explain(txn, policy):
+        say(f"\nrule {f['clause']} {f['title']}: {f['margin']['text']}")
+        for option in f["record"] + f["policy"]:
+            extra = f"; would also clear {option['also_clears']} other invoices" if option.get("also_clears") else ""
+            raises = f"; would raise {', '.join(option['raises'])}" if option["raises"] else ""
+            say(f"  - {option['change']}{raises}{extra}")
+    return 0
+
+
+def cmd_investigate(args: argparse.Namespace) -> int:
+    """Investigate the audit record: integrity, coverage, review quality, outcomes that changed; write the report."""
+    from . import investigator
+
+    conn = open_db(args)
+    if args.invoice:
+        told = investigator.story(conn, args.invoice.upper())
+        if told is None:
+            print(f"error: {args.invoice} is not in the ledger", file=sys.stderr)
+            return 2
+        for step in told["steps"]:
+            say(f"{step['at'][:19]:19s}  {step['kind']:8s}  {step['what']}")
+        say(f"now: {told['state']}")
+        return 0
+    report = investigator.investigate(conn, sla_days=args.sla_days)
+    if args.out:
+        Path(args.out).write_text(report["markdown"], encoding="utf-8")
+        say(f"wrote {args.out}")
+    if args.json:
+        say(investigator.to_json({k: v for k, v in report.items() if k != "markdown"}))
+    else:
+        say(report["verdict"])
+        for c in report["checks"]:
+            say(f"  {c['status']:9s} {c['title']}: {c['summary']}")
+    return 1 if report["status"].get("fail") else 0
+
+
+def cmd_mail(args: argparse.Namespace) -> int:
+    """Vendor e-mails: store an mbox file without Kafka, or triage the stored e-mails."""
+    from . import triage
+
+    conn = open_db(args)
+    if args.action == "load":
+        if not args.mbox:
+            print("error: mail load needs an mbox file", file=sys.stderr)
+            return 2
+        say(f"stored {triage.load_mailbox(conn, Path(args.mbox)):,} e-mails from {args.mbox}")
+        return 0
+    found = triage.triage_store(conn)
+    say(f"{found['emails']:,} e-mails, {found['linked']:,} linked to an invoice")
+    say("  " + ", ".join(f"{triage.CATEGORY_TITLES[c]} {n:,}" for c, n in found["by_category"].items()))
+    say("  risk: " + ", ".join(f"{r} {n:,}" for r, n in found["by_risk"].items()))
+    for alert in found["alerts"][: args.limit]:
+        say(f"  {alert['risk']:6s} {alert['sent_at'][:16]}  {alert['sender']}  {alert['invoice_id'] or '-'}: "
+              f"{'; '.join(alert['reasons'])}")
+    if found["holds"]:
+        say(f"hold {len(found['holds'])} invoice(s), ₹{found['hold_amount']:,.2f}: "
+              + ", ".join(h["invoice_id"] for h in found["holds"]))
+    return 0
+
+
+def cmd_agent(args: argparse.Namespace) -> int:
+    """Ask the audit agent: tools chosen by rules (no model) or by the model, every step shown."""
+    from . import audit_agent
+
+    conn = open_db(args)
+    client = make_client() if args.mode == "model" else None
+    out = audit_agent.ask(args.question, conn, client=client, mode=args.mode if args.mode != "model" else "model")
+    for step in out["steps"]:
+        say(f"[T{step['n']}] {step['tool']}({json.dumps(step['args'])})  {step['ms']} ms")
+    say(f"\n{out['answer']}")
+    if out["unverified_numbers"]:
+        say(f"\nnumbers no tool returned: {', '.join(out['unverified_numbers'])}")
+    return 0
+
+
 def cmd_graph(args: argparse.Namespace) -> int:
     from .llm import ScriptedClient
     config = preset(args.config, review=args.review)
@@ -747,6 +873,36 @@ def main(argv: list[str] | None = None) -> int:
     target.add_argument("--check", help="a workbook written before")
     papers.add_argument("--seed", type=int, help="the sample's seed (default: from the digest of the sealed runs)")
     papers.set_defaults(run=cmd_workpapers)
+
+    model = sub.add_parser("model", help="the risk screen: train it on a ledger with an answer key, or explain an "
+                                         "invoice with SHAP values and counterfactuals")
+    model.add_argument("action", choices=["train", "explain"])
+    model.add_argument("--dataset", help="train: the ledger folder with labels.csv (default: data/pilot_seed_909)")
+    model.add_argument("--policy", default="2.5", help="train: the policy version the ledger is audited under")
+    model.add_argument("--out", help="train: where to write the model (default: models/risk_screen.json)")
+    model.add_argument("--invoice", help="explain: the invoice")
+    model.set_defaults(run=cmd_model)
+
+    inv = sub.add_parser("investigate", help="the trail investigator: check the audit record and the review, and "
+                                             "report what happened where")
+    inv.add_argument("--out", help="write the report as Markdown")
+    inv.add_argument("--json", action="store_true", help="the full report as JSON")
+    inv.add_argument("--invoice", help="tell the story of one invoice instead")
+    inv.add_argument("--sla-days", type=float, default=5.0, help="days a review may wait (default 5)")
+    inv.set_defaults(run=cmd_investigate)
+
+    mail = sub.add_parser("mail", help="vendor e-mails: load an mbox file into the store, or triage the stored ones "
+                                       "(payment-redirection fraud)")
+    mail.add_argument("action", choices=["load", "triage"])
+    mail.add_argument("mbox", nargs="?", help="load: the mbox file")
+    mail.add_argument("--limit", type=int, default=20, help="triage: alerts shown")
+    mail.set_defaults(run=cmd_mail)
+
+    agent = sub.add_parser("agent", help="ask the audit agent, which plans tool calls over the audit and cites them")
+    agent.add_argument("question")
+    agent.add_argument("--mode", choices=["auto", "rules", "model"], default="auto",
+                       help="rules: no model; model: the configured model plans (ReAct)")
+    agent.set_defaults(run=cmd_agent)
 
     user = sub.add_parser("user", help="users of the REST API and their roles: add (prints the token once), list, "
                                        "disable")

@@ -1,6 +1,6 @@
 # REST API reference
 
-All 46 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m auditiq serve`). **This file is generated** from the application by `python -m auditiq.apidoc`; a test checks that it is current. How to use the API (jobs, errors, the token, how the web application calls it) is in [`WEB.md`](WEB.md), Section 4; the interactive version of this reference is at `/api/docs` on a running server.
+All 53 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m auditiq serve`). **This file is generated** from the application by `python -m auditiq.apidoc`; a test checks that it is current. How to use the API (jobs, errors, the token, how the web application calls it) is in [`WEB.md`](WEB.md), Section 4; the interactive version of this reference is at `/api/docs` on a running server.
 
 **Common to every endpoint.** Requests and answers are JSON, except the two uploads (multipart). An error answer carries `detail`: a message, or `{"message", "problems"}`. When the server has users (`python -m auditiq user add`) or a shared token (`AUDITIQ_API_TOKEN`), every endpoint but the open ones needs the header `Authorization: Bearer <token>`, and the token's role must be at least the one listed: a `viewer` reads, a `reviewer` also records decisions and audits invoices again, an `admin` also changes the policy and the ledger. The shared token acts as an admin; a server with neither is open. Every answer carries `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` and `Referrer-Policy: no-referrer`.
 
@@ -50,6 +50,13 @@ All 46 endpoints of the AuditIQ API (`auditiq/api.py`, served by `python -m audi
 | GET | [`/api/policy/graph/ask`](#get-apipolicygraphask) | viewer | 200, 400, 401, 404, 422, 503 |
 | GET | [`/api/case-graph`](#get-apicase-graph) | viewer | 200, 401, 404, 422, 503 |
 | GET | [`/api/case-graph/ask`](#get-apicase-graphask) | viewer | 200, 400, 401, 422, 503 |
+| GET | [`/api/model`](#get-apimodel) | viewer | 200, 401, 503 |
+| GET | [`/api/invoices/{invoice_id}/explain`](#get-apiinvoicesinvoice_idexplain) | viewer | 200, 400, 401, 404, 422, 503 |
+| GET | [`/api/invoices/{invoice_id}/story`](#get-apiinvoicesinvoice_idstory) | viewer | 200, 400, 401, 404, 422, 503 |
+| GET | [`/api/investigation`](#get-apiinvestigation) | viewer | 200, 401, 422, 503 |
+| GET | [`/api/mail`](#get-apimail) | viewer | 200, 401, 503 |
+| GET | [`/api/process`](#get-apiprocess) | viewer | 200, 401, 503 |
+| POST | [`/api/agent/ask`](#post-apiagentask) | viewer | 202, 400, 401, 422, 503 |
 | POST | [`/api/copilot/ask`](#post-apicopilotask) | viewer | 202, 401, 422, 503 |
 | POST | [`/api/copilot/data`](#post-apicopilotdata) | viewer | 202, 400, 401, 422, 503 |
 | GET | [`/api/jobs/{job_id}`](#get-apijobsjob_id) | viewer | 200, 401, 404, 422, 503 |
@@ -325,6 +332,18 @@ Answers:
 - **400**: the request was refused; `detail` says why
 - **401**: the server requires a token, and the request has none or a wrong one
 - **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/process`
+
+Process mining of procure-to-pay (auditiq/process_mining.py): the event log of every invoice (PO raised, goods received, invoice dated, escalations, approval, due date), the process map (how often one step directly follows another and the median days between them), the variants, conformance to the reference path with how many deviating invoices the audit already flagged, cycle times by stage and approval time by role. Kept until the store changes.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
 - **503**: the database cannot be reached
 
 ## Stream (Kafka)
@@ -821,7 +840,109 @@ Answers:
 - **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
 - **503**: the database cannot be reached
 
-## Ask AI (copilot)
+## Explainable AI, investigation and e-mail triage
+
+### GET `/api/model`
+
+The risk screen (auditiq/screen.py): how it was trained, its five heads (any anomaly and one per judgement rule), each feature's importance over the store's invoices (mean absolute SHAP value, exact TreeSHAP) with a dot plot of a sample, the distribution of its probability by route next to the paper's score, the invoices the audit passed that the screen rates highest for a judgement rule (a second opinion, not a finding), and its measured accuracy on ledgers it was not trained on. Kept until the store changes.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+### GET `/api/invoices/{invoice_id}/explain`
+
+Why an invoice scores as it does: each head of the risk screen with its probability and the SHAP value of every feature (they add up to the model's output exactly), and for each finding of a control its margin beyond the rule and the changes of the records or of the policy that would clear it, each verified by running the controls again, with how many other findings a policy change would also clear.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `invoice_id` | path | string | required |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **400**: the request was refused; `detail` says why
+- **401**: the server requires a token, and the request has none or a wrong one
+- **404**: no such record
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/invoices/{invoice_id}/story`
+
+The life of an invoice in order: its purchase order, goods receipt, approvals, the vendor e-mails that name it, every audit of it with its findings and trail, every review decision, and where it stands now.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `invoice_id` | path | string | required |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **400**: the request was refused; `detail` says why
+- **401**: the server requires a token, and the request has none or a wrong one
+- **404**: no such record
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/investigation`
+
+The trail investigator (auditiq/investigator.py) audits the audit: the seals, the evidence, the stages of every trail, coverage under the policy in force, failed model stages, the review backlog, reasons given, the pace of decisions, segregation of duties, critical findings cleared, rejections undone by a later audit and outcomes that changed between audits; each check with what it found and where, the timeline, the reviewers, and the report as Markdown. Not cached: a change made directly in the store must show at once.
+
+Role: at least `viewer` when the server has users or a token.
+
+| Parameter | In | Type | Default |
+|---|---|---|---|
+| `sla_days` | query | number | `annotation=float required=False default=5.0 alias='sla_days' metadata=[Gt(gt=0), Le(le=365)]` |
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
+
+### GET `/api/mail`
+
+Every stored vendor e-mail triaged by code (auditiq/triage.py): its category, the signals of payment redirection (a look-alike or new domain, urgency, secrecy, an account change, an unpaid invoice) and text addressed to a model, its risk and the action; the alerts, and the invoices whose payment to hold. Kept until the store changes.
+
+Role: at least `viewer` when the server has users or a token.
+
+Answers:
+
+- **200**: the answer, as JSON
+- **401**: the server requires a token, and the request has none or a wrong one
+- **503**: the database cannot be reached
+
+## Ask AI (copilot) and the audit agent
+
+### POST `/api/agent/ask`
+
+The audit agent (auditiq/audit_agent.py), a job: the question is turned into calls to tools that read the audit (results, records, the screen's SHAP values, counterfactuals, stories, leads, rings, e-mail triage, the trail investigation), planned by rules or, in the model mode, by the model in a ReAct loop; the answer cites each observation, and numbers no tool returned are listed.
+
+Role: at least `viewer` when the server has users or a token. Starts a background job of kind `agent`.
+
+JSON body (`AgentIn`):
+
+| Field | Type | Default | Limits |
+|---|---|---|---|
+| `question` | string | required | at least 1 characters; at most 2000 characters |
+| `mode` | `auto` or `rules` or `model` | `auto` | rules: tools chosen by the question's words, no model; model: the model plans (ReAct); auto: rules when they recognise the question, else the model |
+
+Answers:
+
+- **202**: a background job was started: poll `GET /api/jobs/{id}` until `status` is `done` or `failed`
+- **400**: the request was refused; `detail` says why
+- **401**: the server requires a token, and the request has none or a wrong one
+- **422**: the parameters or the body are not valid, or the document cannot be executed; `detail` lists why
+- **503**: the database cannot be reached
 
 ### POST `/api/copilot/ask`
 

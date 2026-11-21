@@ -75,6 +75,7 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 11. [Limitations to state in the paper](#11-limitations-to-state-in-the-paper)
 12. [Figures](#12-figures)
 13. [How to reproduce every number](#13-how-to-reproduce-every-number)
+14. [The intelligence layer: risk screen, investigator, e-mail triage, audit agent](#14-the-intelligence-layer-risk-screen-investigator-e-mail-triage-audit-agent)
 
 ## 1. The results at a glance
 
@@ -98,6 +99,10 @@ https://raw.githubusercontent.com/Chandana909/major.project/main/RESULTS.md.
 | 16 | Does a ledger streamed through Kafka give the batch audit's findings, and does it scale? | 5,000 invoices, 250 vendors and 2,105 e-mails through four topics: every invoice has the batch audit's findings (F1 0.833) on SQLite and PostgreSQL, with 1, 2 or 4 workers, no message in error; on PostgreSQL 4 workers finish in 18.04 s against 27.2 s for one (1.51 times faster). | Measured | 5.2 |
 | 17 | Does a knowledge graph of the policy give a model what questions that join several facts need? | 23 held-out questions: the evidence was complete for 22 with the graph and the lexical ranker (what Ask AI is given) and for 21 with the graph alone, against at most 13 for a passage ranker (lexical, dense or hybrid); the graph stated the derived answer (the role an amount needs, what changed, what checks a rule) for 17 of 19. | Measured (small; questions by the authors) | 8 |
 | 18 | Does the audit send the right invoices to a person? | Demonstration store (5,000 invoices of ledger 202): 281 (5.6%) sent to a person, 97.2% of them anomalous, 0 clean. 500,000-invoice ledger with a later policy (v3.12) applied to every invoice: 160,068 (32.0%), 4.7% anomalous; with each invoice under the version in force on its date: 5,712 (1.1%), 100.0% anomalous. | Measured | 3.9 |
+| 19 | Can a learned screen find the judgement anomalies the controls let through, and explain itself? | Trained on the development ledger only, on six held-out ledgers: AUC 1.000 (2.1.4, 2.2.2, 4.1.2) and 0.993 (2.1.5), against 0.47 to 0.98 for an isolation forest; 890 of the 1,040 judgement anomalies the controls approve (85.6%) are in the top 2% of the invoices the controls approve; the two SHAP implementations agree within 1.8e-15. | Measured (generator data) | 14.1 |
+| 20 | Does the trail investigator find faults in the audit record? | 54 faults of 11 kinds planted in an audited store: all found at their place, 0 missed, 0 extra; nothing reported on a store run properly. | Measured (planted faults) | 14.3 |
+| 21 | Does the e-mail triage catch payment-redirection requests? | 17,011 generated e-mails of four ledgers: categories 100% right, 54 of 54 redirection requests caught, 0 false alarms, 152 of 152 genuine bank changes sent for confirmation. | Measured (template data) | 14.4 |
+| 22 | Does the audit agent answer audit questions without a model? | 17 kinds of question: 30 of 30 in the wording used while it was written, 27 of 30 in a frozen test wording; a few milliseconds per question. | Measured (small; questions by the author) | 14.5 |
 
 ## 2. Data
 
@@ -1041,3 +1046,107 @@ every result file identical to the committed one apart from dates and timings
 every row). Step 13 was run for the first time on that day. The Python test
 suite (SQLite and PostgreSQL) and the frontend checks (lint, types, tests,
 build, dependency audit) passed.
+
+## 14. The intelligence layer: risk screen, investigator, e-mail triage, audit agent
+
+Added on 21 November 2026 (`auditiq/docs/NEW_FEATURES.md`). None of it changes a result, score or route of the
+audit: equations (2) to (5) of the paper are untouched. **Every ledger and mailbox below comes from the project's
+own generator**, so these numbers show that the parts work on this generator's data, not their accuracy on real
+invoices or real mail; write them that way.
+
+### 14.1 The risk screen on ledgers it was not trained on (Measured)
+
+Source: `results/risk_screen/screen.md` and `.json`, `python -m evaluation.screen_eval`. A scikit-learn
+gradient-boosted classifier per head (150 trees of depth 3; one head for any anomaly and one per judgement rule)
+is trained on `pilot_seed_909` only, stored as plain arrays in `models/risk_screen.json`, and scored on
+`bench_seed_101`, `_202`, `_303`, `large_seed_505`, `collusion_seed_707` and `final_seed_2025`. The script trains
+the screen again and checks that it is the committed model (it is).
+
+| Head | Rule | AUC, mean (min to max) | Isolation forest AUC, mean | Recall at a 2% budget, mean |
+|---|---|---|---|---|
+| any | Anomalous (any rule) | 0.9995 (0.9992 to 0.9998) | 0.8531 | 0.348 |
+| 2.1.4 | Receipt remarks contradict the billed quantity | 1.0000 (1.0000 to 1.0000) | 0.4834 | 1.000 |
+| 2.1.5 | Invoice description does not match the PO | 0.9930 (0.9887 to 0.9971) | 0.4668 | 0.960 |
+| 2.2.2 | Near-duplicate invoice | 1.0000 (1.0000 to 1.0000) | 0.9752 | 1.000 |
+| 4.1.2 | Structuring across days | 1.0000 (1.0000 to 1.0000) | 0.7284 | 1.000 |
+
+- **Second opinion.** Of the 1,040 judgement anomalies that the controls alone (C1) approve on the six ledgers,
+  890 (85.6%) are in the top 2% of the invoices C1 approves. This is the recall ceiling of a cascade that sends
+  only that slice to the language-model agents (which take minutes per invoice), not a measured recall of the
+  agents.
+- **Classification.** For 985 of the 985 judgement anomalies scored at least 0.5, the head with the highest
+  probability names a rule the invoice breaks.
+- The "any" head's recall at 2% is capped by the budget (8.4% of a benchmark ledger is anomalous); its precision
+  at 2% is 1.000 on every benchmark ledger.
+- Features cost 0.34 to 1.05 ms per invoice in Python, prediction 22 to 73 µs (all heads), measured once per ledger
+  on the laptop (timings vary with its load).
+- Protocol: features and parameters were fixed before the held-out ledgers were scored; one exploratory look at
+  `bench_seed_101` and `final_seed_2025` was taken with the same features and parameters, and nothing was changed
+  after it.
+
+### 14.2 Exact SHAP values (Measured)
+
+`auditiq/treeshap.py` holds two implementations of the same quantity: TreeSHAP (Algorithm 2 of Lundberg, Erion and
+Lee, 2018) and the Shapley formula itself over the features each tree splits on, vectorised with numpy. On 200
+invoices and all five heads they differ by at most 1.8e-15, and base value plus SHAP values equal the model's output
+within 1.1e-14 (log-odds). The tests also check both against a brute-force enumeration over every feature
+(`tests/test_screen.py`).
+
+### 14.3 The trail investigator against planted faults (Measured)
+
+Source: `results/investigator/investigator.md` and `.json`, `python -m evaluation.investigator_eval`. Ledger
+`bench_seed_101` audited under C1; on one copy three reviewers decide 60 invoices properly; on another copy 54 faults
+of 11 kinds are planted at known places as well (decisions with the reason "ok", a burst of 12 decisions 5 s apart,
+5 decisions by the invoice's own approver, 3 critical invoices of one vendor cleared by one reviewer, 3 rejections
+undone by an audit under another policy version, 3 forged results with another route, 2 results and 1 trail entry
+edited, 2 trail stages deleted, 4 records changed after the audit, 3 invoices added after it, 2 results with failed
+model stages).
+
+| Check | Planted | Found at its place | Missed | Extra places | On the clean store |
+|---|---|---|---|---|---|
+| integrity | 5 | 5 | 0 | 0 | 0 |
+| completeness | 2 | 2 | 0 | 0 | 0 |
+| documentation | 8 | 8 | 0 | 0 | 0 |
+| segregation | 5 | 5 | 0 | 0 | 0 |
+| overrides (and the repeated pair) | 11 (1) | 11 (1) | 0 | 0 | 0 |
+| evidence | 4 | 4 | 0 | 0 | 0 |
+| coverage | 6 | 6 | 0 | 0 | 0 |
+| model failures | 2 | 2 | 0 | 0 | 0 |
+| superseded rejections | 3 | 3 | 0 | 0 | 0 |
+| flips (unexplained) | 6 (3) | 6 (3) | 0 | 0 | 0 |
+| pace (bursts) | 1 | 1 | 0 | 0 | 0 |
+
+The faults are planted as the checks define them: this shows that each check finds what it says and stays quiet on
+a store run properly, not how often such faults occur, nor that an insider who also recomputes every seal is caught.
+
+### 14.4 E-mail triage of generated mailboxes (Measured)
+
+Source: `results/triage/triage.md` and `.json`, `python -m evaluation.triage_eval`.
+
+| Ledger | E-mails | Category right | Redirection attempts | Caught | False alarms | Genuine bank changes sent for confirmation |
+|---|---|---|---|---|---|---|
+| bench_seed_101 | 2,102 | 100.0% | 5 | 5 | 0 | 17 of 17 |
+| bench_seed_202 | 2,105 | 100.0% | 5 | 5 | 0 | 15 of 15 |
+| collusion_seed_707 | 2,104 | 100.0% | 4 | 4 | 0 | 15 of 15 |
+| final_seed_2025 | 10,700 | 100.0% | 40 | 40 | 0 | 105 of 105 |
+
+The generator writes each kind of e-mail from fixed templates and makes a look-alike domain in one of four ways:
+agreement shows that the rules do what they say on this mailbox, not how they read real mail (a compromised genuine
+account, for one, writes from the right domain).
+
+### 14.5 The audit agent without a model (Measured, small)
+
+Source: `results/agent/agent.md` and `.json`, `python -m evaluation.agent_eval`; questions in
+`evaluation/agent_questions.json`. Ledger `collusion_seed_707` audited under C1, with its mailbox and one edited
+result; 17 kinds of question with gold answers computed by the script's own SQL, the answer key and the manifest.
+
+| Wording | Questions | Answered right | Expected tool chosen | Median time |
+|---|---|---|---|---|
+| dev (used while the planner was written) | 30 | 30 | 30 | 6 ms |
+| test (frozen before its run) | 30 | 27 | 28 | 4 ms |
+
+The three test questions answered wrongly are kept as found: "Name the suppliers with the largest number of audit
+findings" (ranked by amount: "largest" chose the wrong ranking), "Has anyone altered the stored audit record after
+the fact?" and "List possible duplicate bills submitted under a re-keyed number" (no tool chosen). The questions were
+written by the planner's author. The model (ReAct) mode is built and tested with a scripted stand-in, not measured
+with a real model.
