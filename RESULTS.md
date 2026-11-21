@@ -111,7 +111,7 @@ receipts, invoices, approval logs and the ground truth of every invoice.
 | `pilot_seed_909` | 5,000 | 420 | Development only: the only ledger on which prompts were tried |
 | `swap_seed_404` | 5,000 | 150 invoices at the boundary between versions 2.5 and 2.6 | The policy-swap check |
 | `large_seed_505` | 20,000 | 420 (2.1%) | The application; a realistic anomaly rate |
-| `huge_seed_606` | 500,000 (15,000 vendors) | 9,996 (2.0%), 714 in each of 14 classes; plus 720 hard negatives | Every measurement without a model at scale (Section 5.1). Generated only on request; its files (about 330 MB) are not committed, their hashes are |
+| `huge_seed_606` | 500,000 (15,000 vendors) | 9,996 (2.0%), 714 in each of 14 classes; plus 720 hard negatives | Every measurement without a model at scale (Section 5.1). Its files (about 330 MB) are committed compressed (`auditiq/data_archives/huge_seed_606.tar.xz`, 52 MB) and can be generated again from the seed; their hashes are |
 
 The 14 anomaly classes: R1 to R10 are decidable from field values (amount,
 quantity, exact duplicate, GSTIN format or state code, GSTIN against the vendor

@@ -4,9 +4,10 @@
     python -m evaluation.huge --work D:/auditiq-huge           # keep the 2 GB of working files elsewhere
     python -m evaluation.huge --steps detection report         # some steps again
 
-The ledger is too large for the repository (about 330 MB of CSV; with its predictions and the database another
-2 GB), so it is generated from its seed into a work folder (default data_huge/, not committed). Its file hashes
-are committed in results/huge_seed_606/manifest.json: a regenerated ledger must match them byte for byte.
+The ledger is too large for the repository as CSV (about 330 MB; with its predictions and the database another
+2 GB), so it lives in a work folder (default data_huge/, not committed): generated from its seed, or extracted
+from the compressed copy that is committed (data_archives/huge_seed_606.tar.xz, see its README). Its file hashes
+are committed in results/huge_seed_606/manifest.json: the ledger in the work folder must match them byte for byte.
 
 Each step runs in its own process, so that memory is returned between steps, and writes results/huge_seed_606/:
   generate     the ledger, checked against the committed hashes (or, the first time, recorded)

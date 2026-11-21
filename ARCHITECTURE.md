@@ -810,7 +810,7 @@ Everything is synthetic: no vendor, person, GSTIN or invoice is real.
 | `large_seed_505` | 505 | 1,000 | 19,920 | 19,910 | 20,000 | 22,665 | 83,495 | 420 (2.1%) | 240 | 1,200 | the application demonstrations and precision at a realistic rate |
 | `collusion_seed_707` | 707 | 250 | 4,920 | 4,910 | 5,000 | 5,701 | 20,781 | 471 (9.4%) | 120 | 1,251 | planted collusion rings; the ring detector was designed on it |
 | **`final_seed_2025`** | 2025 | 1,250 | 24,624 | 24,577 | 25,000 | 28,290 | 103,741 | 2,275 (9.1%) | 300 | 3,657 | **the final ledger: the default of `start.bat` and of every demonstration** |
-| `huge_seed_606` (on request) | 606 | 15,000 | 498,096 | 497,858 | 500,000 | 567,123 | 2,078,077 | 9,996 (2.0%) | 720 | 12,744 | every measurement without a model at scale; not committed (about 330 MB), its file hashes are in `results/huge_seed_606/manifest.json` |
+| `huge_seed_606` (on request) | 606 | 15,000 | 498,096 | 497,858 | 500,000 | 567,123 | 2,078,077 | 9,996 (2.0%) | 720 | 12,744 | every measurement without a model at scale; about 330 MB of CSV, committed compressed as `auditiq/data_archives/huge_seed_606.tar.xz` (52 MB, extracted into `data_huge/`) or generated from its seed; its file hashes are in `results/huge_seed_606/manifest.json` |
 
 `collusion_seed_808`, the held-out twin of 707, is **defined** in `auditiq_bench/__main__.py` but has **not been generated**.
 The datasheet of each committed dataset is `data/<name>/README.md`; the generated overview is `docs/DATASETS.md`.
@@ -3318,7 +3318,7 @@ database through the same modules. Pages: **Overview** (counts by status, findin
 | `large_seed_505` | 505 | 1,000 | 20,000 | 420 (2.1%) | 240 | demonstration ledger; precision at a realistic anomaly rate |
 | `collusion_seed_707` | 707 | 250 | 5,000 | 471 (9.4%) | 120 | planted collusion rings (two shell pairs, two approver rings); the ring detector was designed on it. `collusion_seed_808` (held out) is defined and not generated |
 | `final_seed_2025` | 2025 | 1,250 | 25,000 | 2,275 (9.1%) | 300 | the final ledger: 141 invoices per class, compound frauds, four shell pairs, six approver rings; the default of `start.bat` (Part IV, sections 6 and 7) |
-| `huge_seed_606` (on request) | 606 | 15,000 | 500,000 | 2% | | scale; files kept outside the repository, hashes committed |
+| `huge_seed_606` (on request) | 606 | 15,000 | 500,000 | 2% | | scale; committed compressed (`auditiq/data_archives/huge_seed_606.tar.xz`), hashes committed |
 
 Files of a dataset: the five ledger CSVs, `labels.csv` (`invoice_id, label, class_id, clause_ids, severity, group_id,
 related_invoice_id, hard_negative_type, note`), `eval_subset.csv` (`invoice_id, stratum, weight`), `manifest.json`

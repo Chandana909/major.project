@@ -8,6 +8,7 @@
 *.ico binary
 *.db binary
 *.sqlite binary
+*.xz binary
 *.xlsx binary
 # The datasets keep LF line endings on every platform, so that the SHA-256 of each file
 # in its manifest.json holds after a checkout on Windows too.

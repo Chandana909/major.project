@@ -164,7 +164,7 @@ and the ground truth of every invoice.
 | `large_seed_505` | 20,000 | 83,495 | the application; a realistic anomaly rate (2.1%) |
 | `collusion_seed_707` | 5,000 | 20,781 | planted collusion rings; the ring detector was designed on it |
 | `final_seed_2025` | 25,000 | 103,741 | **the final ledger**: compound frauds, four shell-vendor pairs, six approver rings; the default of `start.bat` |
-| `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale, and the web application on half a million invoices; generated only on request (`python -m evaluation.huge`), not committed |
+| `huge_seed_606` | 500,000 | 2,078,077 | every measurement without a model at scale, and the web application on half a million invoices; committed compressed (`data_archives/huge_seed_606.tar.xz`, 52 MB; extract it, or generate it with `python -m evaluation.huge`) |
 
 `python -m auditiq_bench` regenerates them byte-identically;
 `python -m auditiq_bench.overview --verify` checks the files against their
